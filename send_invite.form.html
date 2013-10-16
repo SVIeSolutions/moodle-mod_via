@@ -1,0 +1,13 @@
+
+<form id="sendinvite" method="post" action="<?php echo 'send_invite.php?id='.$id;?>">
+  <p>
+  <input type="hidden" name="id" value="<?php echo $id?>" />
+ 
+  
+  <?php echo get_string("personalinvitemsg", "via");?> </p>
+   <p> <textarea name="msg" id="msg" cols="70" rows="10"><?php echo isset($via->invitemsg)? $via->invitemsg : "";?></textarea></p>
+    <p>  <input name="send" id="send" type="submit" value="<?php echo get_string('submitinvite', 'via'); ?>" />
+  </p>
+</form>
+
+

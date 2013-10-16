@@ -1,0 +1,137 @@
+/* VIA */
+
+table#via_activity.generaltable,
+table.via_recordings{
+    border: 1px solid #c5c5c5;
+}
+
+table#via_activity TD{
+    border-top: 1px solid #c5c5c5;
+    border-bottom: 1px solid #c5c5c5;
+    background:#fff !important;
+    padding: 1em 0.5em;
+}
+
+.recordwarning A,
+table#via_activity A,
+table#via_recordings A{    
+    padding: 10px;
+    color:#fff !important;
+    font-weight:bold;
+    white-space:nowrap;
+}
+
+.recordwarning A,
+table#via_activity A,
+table#via_recordings A{
+    margin:0 20px;
+    text-align:center;
+}
+FORM.playback,
+A.accessbutton{    
+    background-color:#6ab605;
+}
+FORM.modify,
+A.button{    
+    background-color:#5c707c;
+}
+FORM.playback,
+FORM.modify{    
+    color:#fff !important;
+    font-weight:bold;
+    white-space:nowrap;
+    padding:4px 0;
+    margin-top:5px
+}
+
+INPUT.accessbutton{vertical-align:middle;}
+FORM.playback LABEL{margin-bottom:5px;}
+A.accessbutton.inactive{
+    background-color:#CCC;
+}
+
+table#via_activity .title{
+    text-align:left;
+    font-weight:bold;
+}
+.accessbutton IMG,
+.button IMG{
+    position:relative;
+    top:8px;
+}
+table#via_recordings{
+	width:90%;
+}
+
+table#via_recordings tr{
+	border-top:1px solid #ccc;
+}
+
+table#via_recordings tr{
+	border-top:1px solid #ccc;
+}
+
+table#via_recordings tr.atelier{
+	background-color:#f5f5f5;
+	border-top:none;
+}
+
+table#via_recordings td{
+	padding: 1em 0.5em;
+	text-align:left;
+}
+
+table#via_recordings td.dimmed_text, table#via_recordings td.dimmed_text span.center{
+	text-align:center;
+}
+
+table#via_recordings td.dimmed_text, table#via_recordings td.dimmed_text a{
+	color:#AAAAAA;
+}
+
+table#via_recordings td.title{
+	font-size:1em;	
+	width:40%
+}
+
+table#via_recordings td.atelier{
+	padding-left:4em;
+	font-size:0.8em;
+	width:30%
+}
+table#via_recordings td.modify{
+    border-left: none;
+    text-align:center;
+    width:15%;
+    vertical-align:top;
+}
+table#via_recordings td.review {
+    border-right: none;
+    text-align:center;
+    width:15%
+}
+table#via_confirmation .lastcol{text-align:center;}
+div.block_via div.heading{
+	margin-bottom:1em;
+}
+div.block_via div.column span.event.dimmed_text a{
+	color:#AAAAAA;	
+}
+.notice,
+.error{
+   color: #eb206f;
+}
+DIV.recordwarning{
+    text-align:center;
+}
+DIV.vialogo{
+    color:#ccc;
+    font-size:12px;
+    float:right;
+    padding-right:80px;
+}
+.hide{    
+    display:none;
+}
+
+/* FIN VIA */
