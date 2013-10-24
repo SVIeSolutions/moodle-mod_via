@@ -52,6 +52,7 @@ $strparticipants = get_string("participants", "via");
 $PAGE->set_url('/mod/via/manage.php', array('id' => $cm->id));
 $PAGE->set_title($course->shortname . ': ' . format_string($via->name));
 $PAGE->set_heading($course->fullname);
+
 $button = $OUTPUT->update_module_button($cm->id,'via');
 $PAGE->set_button($button);
 
@@ -106,10 +107,14 @@ $groupmode = groups_get_activity_groupmode($cm);
 // $via->enroltype = 1  = inscription manuelle
 
 // we only add participants automatically, all other type of users are added manually
-if($via->enroltype == 0 && $participanttype == 1){ 
+if($via->enroltype == 0 && $participanttype != 2){ 
 	$users = via_participants($course, $via, $currentgroup, $participanttype, $context);
-	if(empty($users)){		
-		echo $OUTPUT->heading(get_string("noparticipants", "via"));	
+	if(empty($users)){
+		if($participanttype == 1)	{	
+			echo $OUTPUT->heading(get_string("noparticipants", "via"));	
+		}else{
+			echo $OUTPUT->heading(get_string("noanimators", "via"));
+		}
 		echo $OUTPUT->footer();
 		exit;	
 	} else {
@@ -117,13 +122,18 @@ if($via->enroltype == 0 && $participanttype == 1){
 		if (!empty($CFG->enablegroupings) and $cm->groupmembersonly) {
 			$groupingonly .= ' ('.groups_get_grouping_name($cm->groupingid).')';
 		}
+		if($participanttype == 1)	{	
+			$title = get_string("enroledparticipants","via", $via);
+		}else{
+			$title = get_string("enroledanimators","via", $via);
+		}
 
-		echo "<div style='text-align:center'><h2>".get_string("enroledparticipants","via", $via).$groupingonly."</h2></div>";
+		echo "<div style='text-align:center'><h2>".$title.$groupingonly."</h2></div>";
 
 		echo '<table align="center" cellpadding="5" cellspacing="5">';
 		foreach ($users as $user) {
 			echo '<tr><td>';
-			echo $OUTPUT->user_picture($user, array('courseid'=>$id)); 
+			echo $OUTPUT->user_picture($user, array('courseid' => SITEID)); 
 			echo '</td><td>';
 			echo fullname($user);
 			echo '</td><td>';

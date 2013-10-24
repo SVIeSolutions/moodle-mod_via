@@ -43,15 +43,16 @@ $PAGE->set_heading($course->fullname);
 echo $OUTPUT->header();
 
 $table = new html_table();
+$table->width = "60%";
 $table->data = array();
 
 // Table header, depending on the course format.
 if ('weeks' == substr($course->format, 0, 5)) {
     $table->head = array($strweek, $strname, $strdate);
-    $table->align = array('left', 'left', 'center');
+	$table->align = array('center', 'left', 'left');
 } else if ('topics' == $course->format) {
     $table->head = array($strtopic, $strname, $strdate);
-    $table->align = array('center', 'left', 'center');
+	$table->align = array('center', 'left', 'left');
 } else {
     $table->head = array($strname, $strdate);
     $table->align = array('left', 'center');
@@ -65,7 +66,7 @@ foreach ($vias as $via) {
 
     $link = '<a '.($via->visible ? '' : ' class="dimmed"').
             'href="view.php?id='.$via->coursemodule.'">'.s($via->name).'</a>';
-    $datebegin = $via->activitytype!=2? userdate( $via->datebegin) : "-";
+	$datebegin = $via->activitytype!=2? userdate( $via->datebegin) : get_string('permanent', 'via')/*"-"*/;
 
     if ('weeks' == substr($course->format, 0, 5)) {
         $weekday = userdate($course->startdate + 604800 * ($via->section - 1), '%d %B');

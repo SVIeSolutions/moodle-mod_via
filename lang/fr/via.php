@@ -14,7 +14,7 @@ $string['modulename_help'] = 'Le module Via vous permet de cr&eacute;er des renc
 
 L\'outils permet de g&eacute;rer des sous-groupes de travails, d\'annoter, de partager son &eacute;cran, d\'importer/pr&eacute;senter des documents et d\'&eacute;changer par la voix/vid&eacute;o.
 
-L\'option &laquo; Inscription des participants &raquo; vous permet d\'inscrire manuellement les participants ou encore de les synchroniser automatiquement avec les droits de votre espace Moodle par la s&eacute;lection de l\'option « Inscription automatique ».
+L\'option &laquo; Inscription des participants &raquo; vous permet d\'inscrire manuellement les participants ou encore de les synchroniser automatiquement avec les droits de votre espace Moodle par la s&eacute;lection de l\'option &laquo; Inscription automatique &raquo;.
 
 La section &laquo; Param&egrave;tres de sessions &raquo; vous permet de param&eacute;trer l\'enregistrement des rencontres et la disponibilit&eacute; de ces derniers pour vos apprenants. 
 
@@ -24,9 +24,10 @@ $string['recentrecordings'] = 'Enregistrement r&eacute;cent';
 $string['configassist'] = 'Assistant de configuration';
 $string['technicalassist'] = 'Assistant technique';
 $string['noparticipants'] = 'Personne n\'est inscrit &agrave; cette activit&eacute;.';
+$string['noanimator'] = 'Personne n\'est inscrit &agrave; cette activit&eacute;.';
 $string['subscribeparticipants'] = 'Inscription des usagers';
 $string['gotoactivity'] = 'Cliquez ici pour acc&eacute;der &agrave; l\'activit&eacute;';
-$string['notstarted'] = 'Cette activit&eacute; n\'a pas encore d&eacute;but&eacute;.';
+$string['notstarted'] = 'Cette activit&eacute; n\'a pas encore d&eacute;but&eacute;e.';
 $string['activitydone'] = 'Cette activit&eacute; est termin&eacute;e.';
 $string['reviewactivity'] = 'Cliquez ici pour revoir l\'activit&eacute;.';
 $string['prepareactivity'] = 'Pr&eacute;parer votre activit&eacute;.';
@@ -37,6 +38,7 @@ $string['animators'] = 'Animateurs';
 $string['presentator'] = 'Pr&eacute;sentateur';
 $string['existingparticipants'] = 'Participants actuels';
 $string['enroledparticipants'] = 'Participants actuels &agrave; l\'activit&eacute; &laquo; {$a->name} &raquo;';
+$string['enroledanimators'] = 'Animateurs actuels &agrave; l\'activit&eacute; &laquo; {$a->name} &raquo;';
 $string['existinganimators'] = 'Animateurs actuels';
 $string['existingpresentator'] = 'Pr&eacute;sentateur actuel';
 $string['potentialparticipants'] = 'Participants potentiels';
@@ -161,7 +163,7 @@ $string['sendinvitationdesc'] = 'Si coch&eacute;e, il sera possible d\'envoyer d
 $string['testconnection'] = 'Tester la connexion &agrave; l\'API avec ces informations';
 $string['testadminid'] = 'Tester la cl&eacute; moodle';
 $string['adminid_success'] = 'La cl&eacute; moodle a &eacute;t&eacute; test&eacute;e avec succ&egrave;ss.';
-$string['adminid_toolow'] = 'Les droits de l\'utilisateur ne permettront pas la cr&eacute;ation d’activit&eacute;s, veuillez contacter l\'administrateur du site pour faire augmenter les droits';
+$string['adminid_toolow'] = 'Les droits de l\'utilisateur ne permettront pas la cr&eacute;ation d\'activit&eacute;s, veuillez contacter l\'administrateur du site pour faire augmenter les droits';
 $string['adminid_nosuccess'] = 'La cl&eacute; moodle n\'est pas valide.';
 $string['via:manage'] = 'G&eacute;rer Via';
 $string['via:manageparticipants'] = 'G&eacute;rer les participants Via';
@@ -169,6 +171,7 @@ $string['via:view'] = 'Visionner Via';
 $string['via:viewparticipants'] = 'Voir les participants Via';
 $string['via:viewactivities'] = 'Voir les activit&eacute;s Via';
 $string['via:viewrecordings'] = 'Voir les enregistrements Via';
+
 $string['reminderemailsubject'] = 'RAPPEL : {$a->title}';
 $string['reminderemail'] = '{$a->coursename} -> {$a->modulename} -> {$a->title} reminderemail
 ---------------------------------------------------------------------
@@ -277,6 +280,7 @@ $string['resetdeletemodules'] = 'Supprimer toutes les activit&eacute;s';
 $string['resetparticipants'] = 'Retirer tous les participants et animateurs (fonctionne seulement pour les activit&eacute;s avec inscription manuelle)';
 $string['resetdisablereviews'] = 'D&eacute;sactiver le revisionnement des activit&eacute;s';
 $string['by'] = 'par';
+$string['list_activities'] = 'Liste de toutes les activit&eacute;s Via dans ce cours';
 
 $string['connectsuccess'] = 'Connexion &agrave; l\'API r&eacute;ussie avec succ&egrave;s.';
 $string['conntest'] = 'Test de connexion';

@@ -63,11 +63,13 @@
 			$via_user = $DB->get_record('via_users', array('userid'=>$USER->id));
 			$participants_list = get_via_participants_list($via);
 			$participants = array();
-			foreach($participants_list as $participant){
-				if($participant != 0){
-					$participants[] = $participant['UserID'];
-				}
-			}	
+			if($participants_list){
+				foreach($participants_list as $participant){
+					if($participant != 0){
+						$participants[] = $participant['UserID'];
+					}
+				}	
+			}
 		if(in_array($via_user->viauserid, $participants)){
 			$synched = $DB->set_field("via_participants", "timesynched", time(), array("id"=>$via_user->userid));		
 			$connexion = true;

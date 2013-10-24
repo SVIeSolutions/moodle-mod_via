@@ -43,6 +43,20 @@ FORM.modify{
     padding:4px 0;
     margin-top:5px
 }
+.playback LABEL,
+.modify LABEL{
+    cursor:pointer !important;
+}
+.playback label:hover,
+.playback label:active,
+.playback input:hover + label,
+.playback input:active + label, 
+.modify label:hover,
+.modify label:active,
+.modify input:hover + label,
+.modify input:active + label{
+    text-decoration:underline;
+}
 
 INPUT.accessbutton{vertical-align:middle;}
 FORM.playback LABEL{margin-bottom:5px;}
@@ -117,6 +131,10 @@ div.block_via div.heading{
 div.block_via div.column span.event.dimmed_text a{
 	color:#AAAAAA;	
 }
+.block_via .event IMG{
+    vertical-align:bottom;
+    padding-right:3px;
+}
 .notice,
 .error{
    color: #eb206f;
@@ -128,7 +146,13 @@ DIV.vialogo{
     color:#ccc;
     font-size:12px;
     float:right;
+    padding-top:5px;
     padding-right:80px;
+}
+A.index {
+    position:relative;
+    top:12px;
+    padding-left:70px;
 }
 .hide{    
     display:none;

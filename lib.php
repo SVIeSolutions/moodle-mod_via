@@ -68,60 +68,34 @@ function via_add_instance($via) {
 	
 	// we add the activity creator as presentor
 	if($new_activity = $DB->insert_record('via', $via)){
-		if($via->course == '1'){
-			$enrolid = '0';	
-		}else{
-			$enrollment = $DB->get_record('enrol', array('courseid'=>$via->course, 'enrol'=>'manual'));
-			$enrolid = $enrollment->id;
-		}
 		
-		$via->id = $new_activity;
-		$presenter = new stdClass();
-		$presenter->activityid = $new_activity;
-		$presenter->enrolid = $enrolid;
-		$presenter->userid = $USER->id;
-		$presenter->participanttype = 2;
-		$presenter->confirmationstatus = 2;
-		$presenter->timemodified = time();
-		$added = $DB->insert_record('via_participants', $presenter);	
-		
-		$presentervia = new stdClass();
-		$presentervia->userid = $USER->id;
-		$presentervia->viaactivityid = $via->viaactivityid;
-		$presentervia->participanttype = 2;
-		$presentervia->confirmationstatus = 2;
-		// we add the user creating the activity as presenter, even if it is the site admin!
-		$presenteradded = $api->addUserActivity($presentervia);
-		if($presenteradded){
-			// we confirm the user was added
-			$synched = $DB->set_field('via_participants', 'timesynched', time(), array('activityid'=>$presenter->activityid, 'userid'=>$presenter->userid));
-			// AND we remove the moodle_admin from the activity
+		// We add the presentor
+		$presenteradded = via_add_participant($USER->id, $new_activity, 2);
+		if($presenteradded){			
+			// we remove the moodle_admin from the activity
 			$moodleid = false;
 			$api->removeUserActivity($via->viaactivityid, $CFG->via_adminid, $moodleid);
 		}
 		
 		$context = get_context_instance( CONTEXT_COURSE, $via->course );
 
-		// We add the participants
-		$queryparticipants = 'select a.id as rowid, a.*, u.* from mdl_role_assignments as a, mdl_user as u where contextid=' . $context->id . ' and roleid=5 and a.userid=u.id';
-		$participants = $DB->get_records_sql( $queryparticipants );
-		foreach( $participants as $participant ) { 
-			//$enrolid = get_enrolid($via->course, $participant->id);
-			
-			$participant->activityid = $new_activity;
-			$participant->enrolid = $enrolid;
-			$participant->userid = $participant->id;
-			$participant->participanttype = 1;
-			$participant->confirmationstatus = 1; 
-			$participant->timemodified = time();
-			if($via->enroltype == 0){ // if automatic enrol, add new participants to via
-				via_add_participants($participants, $new_activity, 1);	
+		if($via->enroltype == 0){ // if automatic enrol
+			//We add users
+			$query = 'select a.id as rowid, a.*, u.* from mdl_role_assignments as a, mdl_user as u where contextid=' . $context->id . ' and a.userid=u.id';
+			$users = $DB->get_records_sql( $query );
+			foreach($users as $user) {
+				if(has_capability('moodle/course:viewhiddenactivities', $context, $user->id)){
+					via_add_participant($user->id, $new_activity, 3);	
+				}else{			
+					via_add_participant($user->id, $new_activity, 1);
+				}
 			}
 		}
 	}
 	
+	$via->id = $new_activity;
+	
 	via_grade_item_update($via);
-
 	
 	if ($via->activitytype != 2) { //activitytype 2 = permanent activity, we do not add these to calendar
 		// adding activity in calendar
@@ -545,29 +519,37 @@ function via_add_participant($userid, $viaid, $type, $confirmationstatus=NULL) {
 	global $CFG, $DB;
 	
 	$update = true;
+	$sub = new stdClass();
+	$sub->id = null;
 	
-	if ($user_roles = $DB->get_records_sql("SELECT * FROM mdl_via_participants WHERE userid=$userid AND activityid=$viaid")) {
-		foreach($user_roles as $user_role){
-			if($type == $user_role->participanttype){
-				return true; // already enrolled in this role
-			}
-			if($user_role->participanttype == 2){ // presentator
-				$update = false;
-				continue;
-			}
-			if($user_role->participanttype > $type && $update && $type != 2){ // animator
-				$update = false;
-				continue;
-			}
+	if ($participant = $DB->get_record('via_participants', array('userid'=>$userid, 'activityid'=> $viaid))) {
+		
+		if($type == $participant->participanttype){
+			return true; 
 		}
+		if($participant->participanttype == 2){ // presentator
+			$update = false;
+			$added = false;
+			continue;
+		}
+		if($participant->participanttype != $type && $update && $type != 2){ // animator
+			$update = $update;
+			$sub->id = $user_role->id;
+			continue;
+		}
+
 	}
 	
-	$sub = new stdClass();
 	$sub->userid  = $userid;	
-	$viaactivity = $DB->get_record('via', array('id'=>$viaid));
-
 	$sub->activityid = $viaid;
-	$sub->enrolid = get_enrolid($viaactivity->course, $userid); 
+	
+	$viaactivity = $DB->get_record('via', array('id'=>$viaid));
+	$enrolid = get_enrolid($viaactivity->course, $userid); 
+	if($enrolid){
+		$sub->enrolid = $enrolid;
+	}else{
+		$sub->enrolid = 0; // we need this 0 later to keep the user not enrolled in the coruse not to be deleted when synching users.
+	}
 	$sub->viaactivityid = $viaactivity->viaactivityid;
 	$sub->participanttype = $type;
 	$sub->timemodified = time();
@@ -585,7 +567,11 @@ function via_add_participant($userid, $viaid, $type, $confirmationstatus=NULL) {
 		try {
 			$response = $api->addUserActivity($sub);
 			$sub->timesynched = time();
-			$added = $DB->insert_record("via_participants", $sub);
+			if($sub->id){
+				$added = $DB->update_record("via_participants", $sub);
+			}else{
+				$added = $DB->insert_record("via_participants", $sub);
+			}
 			
 		}catch (Exception $e){
 			$via_user = $DB->get_record('via_users', array('userid'=>$userid));
@@ -979,7 +965,7 @@ function via_access_activity($via){
 		$userid = $DB->get_record('via_users', array('userid'=>$USER->id));
 		if($via->enroltype == 0){
 			// if automatic enrol
-			// verifying if user was enrol directly on via, if not, we enrol him
+			// verifying if user was enrolled directly on via, if so, we enrol him
 			if(!$userid || !via_update_participants_list($via, $userid->viauserid) && !has_capability('moodle/site:approvecourse', get_context_instance(CONTEXT_SYSTEM))){ 
 				if(!$userid){
 					$viauserid = null;
@@ -995,7 +981,7 @@ function via_access_activity($via){
 				return 6;	
 			}
 		}else{
-			// verifying if user was enrol directly on via, if not, we enrol him
+			// verifying if user was enrol directly on via
 			// if not enrol, we tell him is doesn't have access to this activity and to contact his teacher if there's a problem
 			if(!$userid || !via_update_participants_list($via, $userid->viauserid)){
 				return 6;
@@ -1618,7 +1604,7 @@ function via_get_reminders(){
 	global $CFG, $DB;
 	$now = time();
 	
-	$sql = "SELECT p.userid, p.activityid AS id, v.name, v.datebegin, v.duration, v.viaactivityid, v.course, v.id, v.activitytype ".
+	$sql = "SELECT p.id, p.userid, p.activityid, v.name, v.datebegin, v.duration, v.viaactivityid, v.course, v.activitytype ".
 		"FROM mdl_via_participants p ".
 		"INNER JOIN mdl_via v ON p.activityid = v.id ".
 		"WHERE v.remindertime > 0 AND ($now  >= (v.datebegin - v.remindertime)) AND v.mailed = 0";		
@@ -1649,12 +1635,12 @@ function send_moodle_reminders($r, $muser, $from){
 	$a->datesend = userdate(time());
 	
 	$coursename = $DB->get_record('course', array('id'=>$r->course));	
-	if (! $cm = get_coursemodule_from_instance("via", $r->id, $r->course)) {
+	if (! $cm = get_coursemodule_from_instance("via", $r->activityid, $r->course)) {
 		$cm->id = 0;
 	}	
 
-	$a->config = $CFG->wwwroot.'/mod/via/view.assistant.php?redirect=7&viaid='.$r->id.'&courseid='.$r->course;
-	$a->assist = $CFG->wwwroot.'/mod/via/view.assistant.php?redirect=6&viaid='.$r->id.'&courseid='.$r->course;
+	$a->config = $CFG->wwwroot.'/mod/via/view.assistant.php?redirect=7&viaid='.$r->activityid.'&courseid='.$r->course;
+	$a->assist = $CFG->wwwroot.'/mod/via/view.assistant.php?redirect=6&viaid='.$r->activityid.'&courseid='.$r->course;
 	$a->activitylink = $CFG->wwwroot.'/mod/via/view.php?id='.$cm->id;
 	$a->coursename = $coursename->shortname;
 	$a->modulename = get_string('modulename', 'via');
@@ -1672,13 +1658,13 @@ function send_moodle_reminders($r, $muser, $from){
 		if (true !== email_to_user($muser, $from, $subject, $body, $bodyhtml)) {
 			echo "    Could not send email to <{$muser->email}> (unknown error!)\n";
 			$result = false;
+		}else{
+			echo "Sent an email reminder to {$muser->firstname} {$muser->lastname} <{$muser->email}>.\n";
 		}
 	}
 
-	echo "    Sent an email reminder to {$muser->firstname} {$muser->lastname} <{$muser->email}>.\n";
-
 	$record = new stdClass();
-	$record->id = $r->id;
+	$record->id = $r->activityid;
 	$record->mailed = 1;
 	if (!$DB->update_record('via', $record)) {
 		// If this fails, stop everything to avoid sending a bunch of dupe emails.
@@ -1712,7 +1698,7 @@ function via_send_invitations() {
 	foreach ($invitations as $i) {
 		
 		$muser = $DB->get_record('user', array('id'=>$i->userid));
-		$from = get_presenter($i->id);
+		$from = get_presenter($i->activityid);
 		
 		if (!$muser) {
 			echo "User with ID {$i->userid} doesn't exist?!\n";
@@ -1738,7 +1724,7 @@ function via_send_invitations() {
 			
 			echo "Sent an email invitations to" .$muser->firstname . " " . $muser->lastname . " " . $muser->email ."\n";
 			
-			$record->id = $i->id;
+			$record->id = $i->activityid;
 			$record->sendinvite = 0;
 			if (!$DB->update_record('via', $record)) {
 				// If this fails, stop everything to avoid sending a bunch of dupe emails.
@@ -1790,12 +1776,12 @@ function send_moodle_invitations($i, $user, $from){
 	$a->datesend = userdate(time());
 	
 	$coursename = $DB->get_record('course', array('id'=>$i->course));	
-	if (! $cm = get_coursemodule_from_instance("via", $i->id, $i->course)) {
+	if (! $cm = get_coursemodule_from_instance("via", $i->activityid, $i->course)) {
 		$cm->id = 0;
 	}	
 
-	$a->config = $CFG->wwwroot.'/mod/via/view.assistant.php?redirect=7&viaid='.$i->id.'&courseid='.$i->course;
-	$a->assist = $CFG->wwwroot.'/mod/via/view.assistant.php?redirect=6&viaid='.$i->id.'&courseid='.$i->course;
+	$a->config = $CFG->wwwroot.'/mod/via/view.assistant.php?redirect=7&viaid='.$i->activityid.'&courseid='.$i->course;
+	$a->assist = $CFG->wwwroot.'/mod/via/view.assistant.php?redirect=6&viaid='.$i->activityid.'&courseid='.$i->course;
 	$a->activitylink = $CFG->wwwroot.'/mod/via/view.php?id='.$cm->id;
 	$a->coursename = $coursename->shortname;
 	$a->modulename = get_string('modulename', 'via');
@@ -1831,7 +1817,7 @@ function send_moodle_invitations($i, $user, $from){
 	echo "    Sent an email invitations to " . $muser->firstname ." " . $muser->lastname . " " .$muser->email. "\n";
 	
 	$record = new stdClass();
-	$record->id = $i->id;
+	$record->id = $i->activityid;
 	$record->sendinvite = 0;
 	if (!$DB->update_record('via', $record)) {
 		// If this fails, stop everything to avoid sending a bunch of dupe emails.
@@ -1857,7 +1843,7 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
 
 	$coursename = $DB->get_record('course', array('id'=>$courseid));
 	
-	if (! $cm = get_coursemodule_from_instance("via", $via->id, $courseid)) {
+	if (! $cm = get_coursemodule_from_instance("via", $via->activityid, $courseid)) {
 		$cm->id = 0;
 	}
 	$a = new stdClass();
@@ -1919,9 +1905,9 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
 	
 	$posthtml .= "<div style='text-align:center'>";
 	
-	$posthtml .= "<a href='" . $CFG->wwwroot ."/mod/via/view.assistant.php?redirect=7&viaid=". $via->id ."&courseid=". $via->course ."' style='background:#5c707c; padding:8px 10px; color:#fff; text-decoration:none; margin-right:20px' > <img src='" . $CFG->wwwroot ."/mod/via/pix/config.png' height='27px' align='absmiddle' hspace='5' width='27px'  >&nbsp;".get_string("configassist", "via")."</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+	$posthtml .= "<a href='" . $CFG->wwwroot ."/mod/via/view.assistant.php?redirect=7&viaid=". $via->activityid ."&courseid=". $via->course ."' style='background:#5c707c; padding:8px 10px; color:#fff; text-decoration:none; margin-right:20px' > <img src='" . $CFG->wwwroot ."/mod/via/pix/config.png' height='27px' align='absmiddle' hspace='5' width='27px'  >&nbsp;".get_string("configassist", "via")."</a>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
 	
-	$posthtml .= "<a href='" . $CFG->wwwroot ."/mod/via/view.assistant.php?redirect=6&viaid=". $via->id ."&courseid=". $via->course ."' style='background:#5c707c; padding:8px 10px; color:#fff; text-decoration:none;'><img src='" . $CFG->wwwroot ."/mod/via/pix/assistance.png' align='absmiddle' hspace='5' height='27px' width='27px'>".get_string("technicalassist", "via")."</a>";
+	$posthtml .= "<a href='" . $CFG->wwwroot ."/mod/via/view.assistant.php?redirect=6&viaid=". $via->activityid ."&courseid=". $via->course ."' style='background:#5c707c; padding:8px 10px; color:#fff; text-decoration:none;'><img src='" . $CFG->wwwroot ."/mod/via/pix/assistance.png' align='absmiddle' hspace='5' height='27px' width='27px'>".get_string("technicalassist", "via")."</a>";
 	
 	$posthtml .= "</div>";
 	
@@ -1967,10 +1953,10 @@ function via_get_invitations(){
 	global $CFG, $DB;
 	$now = time();
 	
-	$sql = "SELECT p.userid, p.activityid AS id, v.* ".
-		"FROM mdl_via_participants p ".
-		"INNER JOIN mdl_via v ON p.activityid = v.id ".
-		"WHERE v.sendinvite = 1";		
+	$sql = "SELECT p.id, p.userid, p.activityid, v.name, v.course, v.datebegin, v.duration, v.viaactivityid, v.invitemsg, v.activitytype ".
+			"FROM mdl_via_participants p ".
+			"INNER JOIN mdl_via v ON p.activityid = v.id ".
+			"WHERE v.sendinvite = 1";		
 	
 	$invitations = $DB->get_records_sql($sql);		 
 	
@@ -2033,6 +2019,9 @@ function via_change_reminder_sender(){
 function synch_participants(){ 
 	global $DB, $CFG;
 	
+	$via = $DB->get_record('modules', array('name'=>'via'));
+	$lastcron = $via->lastcron;
+	
 	// add participants (with student roles only) that are in the ue table but not in via	
 	$sql = 'from mdl_user_enrolments ue 
 				left join mdl_enrol e on ue.enrolid = e.id
@@ -2040,7 +2029,7 @@ function synch_participants(){
 				left join mdl_via_participants vp on vp.activityid = v.id AND ue.userid = vp.userid
 				left join mdl_context c on c.instanceid = e.courseid 
 				left join mdl_role_assignments ra on ra.contextid = c.id AND ue.userid = ra.userid';
-	$where = 'where vp.activityid is null and c.contextlevel = 50 and v.enroltype = 0 and e.status = 0 and v.enroltype = 0 and ra.roleid = 5';
+	$where = 'where (vp.activityid is null OR ra.timemodified > '.$lastcron.') and c.contextlevel = 50 and v.enroltype = 0 and e.status = 0 and v.enroltype = 0';
 	
 	if($CFG->dbtype == 'mysqli' || $CFG->dbtype == 'mysql'){
 		$newenrollments = $DB->get_records_sql('select distinct @curRow := @curRow + 1 AS id, ue.userid, e.courseid, v.id as viaactity '.$sql.'
@@ -2057,9 +2046,8 @@ function synch_participants(){
 			notify("error:".$e->getMessage());
 		}
 		try{
-			if($type == 1){ // only add participants - some usrs might have had many roles including student and have been added in the sql above...
+			if($type != 2){ // only add participants and animators
 				via_add_participant($add->userid, $add->viaactity, $type);	
-				echo 'user with id '. $add->userid . ' was added to activity '.$add->viaactity ."\n";
 			}
 		}catch(Exception $e){
 			notify("error:".$e->getMessage());
@@ -2069,14 +2057,14 @@ function synch_participants(){
 	// now we remove via participants that have been unerolled from a cours
 	$oldenrollments = $DB->get_records_sql('select vp.id, vp.activityid, vp.userid, ue.id as enrolid from mdl_via_participants vp
 												left join  mdl_user_enrolments ue on ue.enrolid = vp.enrolid and ue.userid = vp.userid
-												where ue.enrolid is null and vp.userid != 2'); // 2== admin user which is never enrolled
+												where ue.enrolid is null and vp.userid != 2 and vp.enrolid != 0'); // 2== admin user which is never enrolled
 	
-	/* if we are using cohortes, removed groups are not removed from enrollements so we check if they have a role as well */									
+	// if we are using cohortes, removed groups are not removed from enrollements so we check if they have a role as well 								
 	$oldenrollments2 = $DB->get_records_sql('SELECT vp.id, vp.activityid, vp.userid FROM mdl_via_participants vp 
 											INNER JOIN mdl_via v ON v.id = vp.activityid
 											LEFT JOIN mdl_context c ON v.course = c.instanceid
 											LEFT JOIN mdl_role_assignments ra ON c.id = ra.contextid AND vp.userid = ra.userid
-											WHERE c.contextlevel = 50 AND ra.roleid IS NULL and vp.userid != 2 and vp.participanttype = 1');
+											WHERE c.contextlevel = 50 AND ra.roleid IS NULL and vp.userid != 2 and (vp.participanttype = 1 OR vp.participanttype = 3)');
 	
 	$total = array_merge($oldenrollments, $oldenrollments2);
 	foreach($total as $remove){	
@@ -2092,29 +2080,13 @@ function synch_participants(){
 function get_user_type($userid, $courseid){
 	global $DB, $CFG;
 	
-	$coursecontext = get_context_instance(CONTEXT_COURSE, $courseid);
-	$roles = get_user_roles($coursecontext, $userid);
-	
-	// we get the lowest role, as it has the highest rights
-	$r = NULL;
-	foreach ($roles as $role) { 
-		if($r == NULL || $r > $role->roleid){
-			$r = $role->roleid;
-		}
-    } 
-	
-	if($r){ 
-		if($r == '5'){ // 5 = student
-			$type = '1'; //participant
-		}elseif($r == '3' || $r == '4' || $r == '2'){
-			$type ='3';	//animator
-		}else{ // role = 1 = manager/gestionnaire
-			$type ='2';	//presentator	
-		}
-	}else{ // admin has no role
-		$type ='2';	//presentator
+	$context = get_context_instance(CONTEXT_COURSE, $courseid);
+	if(has_capability('moodle/course:viewhiddenactivities', $context, $userid)){
+		$type ='3';	// animator
+	}else{
+		$type = '1'; // participant
 	}
-	
+
 	return $type;
 }
 

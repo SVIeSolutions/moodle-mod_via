@@ -226,88 +226,166 @@ echo $OUTPUT->box_start('center', '', '', 0, 'generalbox', 'intro');
 				$cell->text .= get_string("notenrolled", "via");
 				$table->data[] = new html_table_row(array($cell));
 				break;
-			default :
+				default :
 				break;		
 		}
 
 	echo html_writer::table($table); // print activity info
 
 	echo $OUTPUT->box_end();
+	
+	if(has_capability('mod/via:viewactivities', $context)){	
 		
-	if(via_access_review($via)){
-			// if particpants can view playbacks
-			$playbacks = via_get_all_playbacks($via);
-								
-			if($playbacks){
-			echo "<h2 class='main'>".get_string("recordings", "via")."</h2>";
-				$tablerecord = new stdClass();
-				$tablerecord->cellpadding = 2;
-				$tablerecord->cellspacing = 0;
-				$tablerecord->align = array('left','left', 'left');
+		switch($access){
+			case 1:	
+			case 2:
+			case 3:
+			case 4:
+			case 5:
+				if(via_access_review($via)){
+					// if particpants can view playbacks
+					$playbacks = via_get_all_playbacks($via);
 					
-					
-				echo "<table cellpadding='2' cellspacing='0' class='generaltable boxaligncenter' id='via_recordings'>";				
-				$tablerecord->tablealign = "center";
-					
-				foreach($playbacks as $key=>$playback){ 
-				// lists all playbacks for acitivity
-					
-				if(isset($playback->playbackrefid)){
-					$style = "atelier";
-					$li = "<li style='list-style-image:url(".$CFG->wwwroot."/mod/via/pix/arrow.gif);'>";
-					$endli = "</li>";
-				}else{
-					$style = "";	
-					$li = "";
-					$endli = "";
-				}
-					
-				$private = $playback->ispublic? "" : "dimmed_text";
-					
-				if($playback->ispublic || has_capability('mod/via:manage', $context) ){	
-				// if playback is public and/or if user is animator or presentator
-					echo "<tr class='$style'>";
+					if($playbacks){
+						echo "<h2 class='main'>".get_string("recordings", "via")."</h2>";
+						$tablerecord = new stdClass();
+						$tablerecord->cellpadding = 2;
+						$tablerecord->cellspacing = 0;
+						$tablerecord->align = array('left','left', 'left');
 						
-					echo "<td class='title $style  $private'>$li<b>";
 						
-					echo $playback->title;
+						echo "<table cellpadding='2' cellspacing='0' class='generaltable boxaligncenter' id='via_recordings'>";				
+						$tablerecord->tablealign = "center";
 						
-					echo "$endli</b></td>";
-						
-					echo "<td class='duration  $private' style='text-align:left'>".userdate(strtotime($playback->creationdate))."<br/> ".get_string("timeduration", "via")." ".gmdate("H:i:s",  $playback->duration)."</td>";
-						
-					echo "<td class='review  $private'>";
-						
-					if($playback->ispublic || via_get_is_user_presentator($USER->id, $via->id)){
-
-						echo '<form class="playback" action="view.via.php?id='.$cm->id.'&review=1" target="_blank" method="post">
-						<input type="hidden" name="playbackid" value="'.$key.'">
-						<input type="image" class="accessbutton" id="playbackid" name="playback" src="'.$CFG->wwwroot . '/mod/via/pix/access.png">
-						<label for="playbackid" >'.get_string("view", "via").'</label>
-						</form>';  	
-					}else{
-						echo "&nbsp;";	
-					}
-						
-					echo "</td>";
+						foreach($playbacks as $key=>$playback){ 
+							// lists all playbacks for acitivity
 							
-					if(has_capability('mod/via:manage', $context)){
-						echo "<td class='modify'>";
-						echo '<form class="modify" action="edit_review.php?id='.$via->id.'" method="post">
-						<input type="hidden" name="playbackid" value="'.$key.'">
-						<input type="image" class="accessbutton" id="playbackid" name="playback" src="'.$CFG->wwwroot . '/mod/via/pix/edit.png">
-						<label for="playbackid" >'.get_string("edit", "via").'</label>
-						</form>';  
+							if(isset($playback->playbackrefid)){
+								$style = "atelier";
+								$li = "<li style='list-style-image:url(".$CFG->wwwroot."/mod/via/pix/arrow.gif);'>";
+								$endli = "</li>";
+							}else{
+								$style = "";	
+								$li = "";
+								$endli = "";
+							}
+							
+							$private = $playback->ispublic? "" : "dimmed_text";
+							
+							if($playback->ispublic || has_capability('mod/via:manage', $context) ){	
+								// if playback is public and/or if user is animator or presentator
+								echo "<tr class='$style'>";
+								
+								echo "<td class='title $style  $private'>$li<b>";
+								
+								echo $playback->title;
+								
+								echo "$endli</b></td>";
+								
+								echo "<td class='duration  $private' style='text-align:left'>".userdate(strtotime($playback->creationdate))."<br/> ".get_string("timeduration", "via")." ".gmdate("H:i:s",  $playback->duration)."</td>";
+								
+								echo "<td class='review  $private'>";
+								
+								if($playback->ispublic || via_get_is_user_presentator($USER->id, $via->id)){
+
+								echo '<form class="playback" action="view.via.php?id='.$cm->id.'&review=1" target="_blank" method="post">
+									<input type="hidden" name="playbackid" value="'.$key.'">
+									<input type="image" class="accessbutton" id="playbackid" name="playback" src="'.$CFG->wwwroot . '/mod/via/pix/access.png">
+									<label for="playbackid" >'.get_string("view", "via").'</label>
+									</form>';  	
+								}else{
+									echo "&nbsp;";	
+								}
+								
+								echo "</td>";
+								
+								if(has_capability('mod/via:manage', $context)){
+									echo "<td class='modify'>";
+									echo '<form class="modify" action="edit_review.php?id='.$via->id.'" method="post">
+									<input type="hidden" name="playbackid" value="'.$key.'">
+									<input type="image" class="accessbutton" id="modify" name="playback" src="'.$CFG->wwwroot . '/mod/via/pix/edit.png">
+									<label for="modify" >'.get_string("edit", "via").'</label>
+									</form></td>';  	
+								}
+								echo "</tr>";
+							}
+						}
 						
+						echo "</table>";
 					}
-											
-					echo "</tr>";
 				}
-				}
+			break;
+			
+			case 6:
+				if(has_capability('moodle/grade:edit', $context, $USER->id)){
+					if(via_access_review($via)){
+						// if particpants can view playbacks
+						$playbacks = via_get_all_playbacks($via);
 					
-				echo "</table>";
-			}
+						if($playbacks){
+							echo "<h2 class='main'>".get_string("recordings", "via")."</h2>";
+							$tablerecord = new stdClass();
+							$tablerecord->cellpadding = 2;
+							$tablerecord->cellspacing = 0;
+							$tablerecord->align = array('left','left', 'left');
+						
+						
+							echo "<table cellpadding='2' cellspacing='0' class='generaltable boxaligncenter' id='via_recordings'>";				
+							$tablerecord->tablealign = "center";
+						
+							foreach($playbacks as $key=>$playback){ 
+								// lists all playbacks for acitivity
+							
+								if(isset($playback->playbackrefid)){
+									$style = "atelier";
+									$li = "<li style='list-style-image:url(".$CFG->wwwroot."/mod/via/pix/arrow.gif);'>";
+									$endli = "</li>";
+								}else{
+									$style = "";	
+									$li = "";
+									$endli = "";
+								}
+							
+								$private = $playback->ispublic? "" : "dimmed_text";
+							
+								if($playback->ispublic || has_capability('mod/via:manage', $context) ){	
+									// if playback is public and/or if user is animator or presentator
+									echo "<tr class='$style'>";
+								
+									echo "<td class='title $style  $private'>$li<b>";
+								
+									echo $playback->title;
+								
+									echo "$endli</b></td>";
+								
+									echo "<td class='duration  $private' style='text-align:left'>".userdate(strtotime($playback->creationdate))."<br/> ".get_string("timeduration", "via")." ".gmdate("H:i:s",  $playback->duration)."</td>";
+																
+								
+								
+									if(has_capability('mod/via:manage', $context)){
+										echo "<td class='modify'>";
+										echo '<form class="modify" action="edit_review.php?id='.$via->id.'" method="post">
+										<input type="hidden" name="playbackid" value="'.$key.'">
+										<input type="image" class="accessbutton" id="modify" name="playback" src="'.$CFG->wwwroot . '/mod/via/pix/edit.png">
+										<label for="modify" >'.get_string("edit", "via").'</label>
+										</form></td>';  	
+									}
+									echo "</tr>";
+								}
+							}
+						
+							echo "</table>";
+						}
+					}
+				}
+			default:
+			break;
 		}
+	}
+		
+	
+	
+	echo '<a class="index" href="/mod/via/index.php?id='.$course->id.'">'.get_string('list_activities','via').'</a>';
 	echo '<div class="vialogo" ><img src="' . $CFG->wwwroot . '/mod/via/pix/logo_via.png" width="60" height="33" alt="VIA" /> '.get_string('by','via').'&nbsp;&nbsp;<img src="' . $CFG->wwwroot . '/mod/via/pix/logo_svi.png" width="52" height="33" alt="VIA" /></div>';
 }
 	
