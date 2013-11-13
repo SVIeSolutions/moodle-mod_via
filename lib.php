@@ -522,22 +522,18 @@ function via_add_participant($userid, $viaid, $type, $confirmationstatus=NULL) {
 	$sub = new stdClass();
 	$sub->id = null;
 	
-	if ($participant = $DB->get_record('via_participants', array('userid'=>$userid, 'activityid'=> $viaid))) {
-		
+	if ($participant = $DB->get_record('via_participants', array('userid'=>$userid, 'activityid'=> $viaid))) {	
 		if($type == $participant->participanttype){
 			return true; 
 		}
 		if($participant->participanttype == 2){ // presentator
 			$update = false;
 			$added = false;
-			continue;
 		}
 		if($participant->participanttype != $type && $update && $type != 2){ // animator
 			$update = $update;
-			$sub->id = $user_role->id;
-			continue;
+			$sub->id = $participant->id;
 		}
-
 	}
 	
 	$sub->userid  = $userid;	
@@ -959,12 +955,15 @@ function via_get_is_user_presentator($userid, $activityid){
 */
 function via_access_activity($via){
 	global $USER, $CFG, $DB;
+	
+	$participant = $DB->get_record('via_participants', array('userid'=>$USER->id, 'activityid'=>$via->id));
 
-	if(!$participant_types = $DB->get_records_sql("SELECT * FROM mdl_via_participants WHERE userid =$USER->id AND activityid=$via->id")){
+	if(!$participant){
 		// if user cant access this page, he should be able to access the activity.
-		$userid = $DB->get_record('via_users', array('userid'=>$USER->id));
+		
 		if($via->enroltype == 0){
 			// if automatic enrol
+			$userid = $DB->get_record('via_users', array('userid'=>$USER->id));
 			// verifying if user was enrolled directly on via, if so, we enrol him
 			if(!$userid || !via_update_participants_list($via, $userid->viauserid) && !has_capability('moodle/site:approvecourse', get_context_instance(CONTEXT_SYSTEM))){ 
 				if(!$userid){
@@ -978,6 +977,7 @@ function via_access_activity($via){
 					$DB->insert_record('via_log', array('userid'=>$USER->id, 'viauserid'=>$viauserid, 'activityid'=>$via->id, 'action'=>'user accesses activity details', 'result'=>'user added', 'time'=>time()));
 				}
 			}else{
+				// we tell him is doesn't have access to this activity and to contact his teacher if there's a problem
 				return 6;	
 			}
 		}else{
@@ -987,6 +987,14 @@ function via_access_activity($via){
 				return 6;
 			}
 		}
+	}else{
+		if($participant->participanttype != 2){ // no need to validate if presentor
+			$type = get_user_type($USER->id, $via->course);
+			if($type != $participant->participanttype){
+				$update = via_add_participant($participant->userid, $via->id, $type);
+				$participant = $DB->get_record('via_participants', array('userid'=>$USER->id, 'activityid'=>$via->id));
+			}
+		}
 	}	
 	
 	if((time() >= ($via->datebegin -  (30 * 60)) && time() <= ($via->datebegin + ($via->duration * 60)+60)) || $via->activitytype == 2){
@@ -994,14 +1002,8 @@ function via_access_activity($via){
 		return 1;
 	}elseif(time()<$via->datebegin){
 		// activity hasn't started yet.
-		$participant_types = $DB->get_records_sql("SELECT * FROM mdl_via_participants WHERE userid=$USER->id AND activityid=$via->id");
-		$type = 1;
-		foreach($participant_types as $participant_type){
-			if($participant_type->participanttype > $type){
-				$type = $participant_type->participanttype;
-			}
-		}
-		if($type > 1){
+		
+		if($participant->participanttype > 1){
 			// if participant, user can't access activity
 			return 2;			
 		}else{
@@ -1054,7 +1056,7 @@ function via_get_confirmation_table($id, $context, $via, $table, $participants_c
 					$confirmtitle = get_string("refused", "via");			
 				}
 				// changed type of table
-				$table->data[] = array($participant_confirm->firstname, $participant_confirm->lastname, /*$participant_confirm->idnumber,*/ "<a href='mailto:".$participant_confirm->email."'>".$participant_confirm->email."</a>", "<img src='" . $CFG->wwwroot . "/mod/via/pix/".$confirmimg."' width='16' height='16' alt='".$confirmtitle . "' title='".$confirmtitle . "' align='absmiddle'/>");		
+				$table->data[] = array($participant_confirm->firstname, $participant_confirm->lastname, "<a href='mailto:".$participant_confirm->email."'>".$participant_confirm->email."</a>", "<img src='" . $CFG->wwwroot . "/mod/via/pix/".$confirmimg."' width='16' height='16' alt='".$confirmtitle . "' title='".$confirmtitle . "' align='absmiddle'/>");		
 			}
 		}	
 	}

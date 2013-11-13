@@ -377,5 +377,6 @@ $string['error:STATUS_INVALID'] = 'La connexion &agrave; la salle de web conf&ea
 Veuillez communiquer avec l&acute;administrateur Via de votre institution afin de faire r&eacute;activer votre utilisateur Via.';
 $string['STATUS_INVALID'] = 'La connexion n&acute;est pas possible.';
 $string['via:addinstance'] = 'Ajouter une activit&eacute; Via';
+$string['activity_deleted'] = 'L\'activit&eacute; Via a &eacute;t&eacute; supprim&eacute;e directement dans l\'environnement Via par un utilisateur. Il est donc impossible d\'y acc&eacute;der. Nous vous recommandons de supprimer cette activit&eacute; dans Moodle et d\'en cr&eacute;er une nouvelle. ';
 
 ?>

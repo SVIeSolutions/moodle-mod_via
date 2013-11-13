@@ -68,7 +68,7 @@ function xmldb_via_upgrade($oldversion = 0) {
 	if($oldversion < 2013092000){
 		
 		$table = new xmldb_table('via');
-		$field = new xmldb_field('invitemsg', XMLDB_TYPE_TEXT, 'big', null, null, null, null,  'content');
+		$field = new xmldb_field('invitemsg', XMLDB_TYPE_TEXT, 'big', null, null, null, null, null);
 		if($dbman->field_exists($table, $field)){
 			$dbman->change_field_precision($table, $field);
 		}
