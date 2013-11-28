@@ -55,7 +55,7 @@
  * These are only helpful for invoicing; the category can only be seen when editing an activity.
  * The connection test was modified, we test the API connection, then we test the new moodle key, independently.
  * 
- * Last update 20/09/2013
+ * Last update 20/09/2013 Version 20130920
  * In this version we have made modifications to the cron synchronisation of users for all types of enrollments!
  * We have also added validations at many levels to add users that were added in moodle but not in via.
  * We have added a log to keep track of these errors and later additions.
@@ -65,6 +65,13 @@
  * - GPL licence
  * - changing the page encode from Western European (Windows) to UTF-8 with signature
  * 
+ * Last update 06/11/2013 Version 2013092001
+ * Correction to the playback list - recordings
+ * 
+ * Last update 21/11/2013
+ * Mofications made for Moodle 2.6
+ * Added proxy information
+ * Made corrections after errors were reported
  */  
 
 /**
@@ -80,9 +87,13 @@ defined('MOODLE_INTERNAL') || die();
 $module = new stdClass();
 $plugin = new stdClass();
 
-$module->version  = 2013092000;	 // YYYYMMDDHH (year, month, day, 24-hr time)
+$plugin->version = 2013092002;	
+$plugin->component = 'mod_via'; 
+
+$module->version  = 2013092002;	 // YYYYMMDDHH (year, month, day, 24-hr time)
 $module->release  = 2.20130920;
 $module->requires = 2011033003;  // Moodle version required to run it (2.0.3 )
 $module->cron     = 300;         // Number of seconds between cron calls.
-$plugin->component = 'mod_via'; 
+$module->component = 'mod_via'; 
+
 $module->maturity  = MATURITY_STABLE;

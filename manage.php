@@ -28,7 +28,7 @@ if (! $cm = get_coursemodule_from_instance("via", $via->id, $course->id)) {
 
 require_login($course->id, false, $cm);
 
-$context = get_context_instance(CONTEXT_MODULE, $cm->id);
+$context = context_module::instance($cm->id);
 $PAGE->set_context($context);
 
 // show some info for guests
@@ -135,7 +135,7 @@ if($via->enroltype == 0 && $participanttype != 2){
 			echo '<tr><td>';
 			echo $OUTPUT->user_picture($user, array('courseid' => SITEID)); 
 			echo '</td><td>';
-			echo fullname($user);
+			echo $user->firstname .' ' . $user->lastname;
 			echo '</td><td>';
 			echo $user->email;
 			echo '</td></tr>';

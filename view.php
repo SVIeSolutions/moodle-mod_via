@@ -27,7 +27,7 @@ if (!($course = $DB->get_record('course', array('id'=>$cm->course)))) {
 if (!($via = $DB->get_record('via', array('id'=> $cm->instance)))) {
     error("Via ID is incorrect");
 }
-if (!($context = get_context_instance(CONTEXT_MODULE, $cm->id))) {
+if (!($context = context_module::instance($cm->id))) {
     error("Module context is incorrect");
 }
 
@@ -121,11 +121,15 @@ if($deleted){
 		$access = via_access_activity($via);
 
 		$row2 = array();
-		$row2[] =	"<p class='title'>".get_string('preparation', 'via') . '</p>
-					<a class="button" target="configvia" href="' . $CFG->wwwroot .'/mod/via/view.assistant.php?redirect=7" onclick="this.target=\'configvia\'; return openpopup(null, {url:\'/mod/via/view.assistant.php?redirect=7\', name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});"><img src="' . $CFG->wwwroot . '/mod/via/pix/config.png" width="27" height="27" hspace="5" alt="' .get_string('recentrecordings', 'via') . '" />' .get_string("configassist", "via").'</a>';	
-		$row2[] =	"<p class='title'><br/></p>
-					<a class='button' target='configvia' href='" . $CFG->wwwroot .'/mod/via/view.assistant.php?redirect=6" onclick="this.target=\'configvia\'; return openpopup(null, {url:\'/mod/via/view.assistant.php?redirect=6\', name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});"><img src="' . $CFG->wwwroot . '/mod/via/pix/assistance.png" width="27" height="27" hspace="5" alt="' .get_string('recentrecordings', 'via') . '" />' .get_string("technicalassist", "via")."</a>";
-		$table->data[] = $row2;
+		$row2[] =	'<p class="title">'.get_string('preparation', 'via') . '</p>
+					<a class="button" target="configvia" href="' . $CFG->wwwroot .'/mod/via/view.assistant.php?redirect=7" onclick="this.target=\'configvia\'; 
+					return openpopup(null, {url:\'/mod/via/view.assistant.php?redirect=7\', name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});">
+					<img src="' . $CFG->wwwroot . '/mod/via/pix/config.png" width="27" height="27" hspace="5" alt="' .get_string('recentrecordings', 'via') . '" />' .get_string("configassist", "via").'</a>';	
+		$row2[] =	'<p class="title"><br/></p>
+					<a class="button" target="configvia" href="'.$CFG->wwwroot.'/mod/via/view.assistant.php?redirect=6" onclick="this.target=\'configvia\'; 
+					return openpopup(null, {url:\'/mod/via/view.assistant.php?redirect=6\', name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});">
+					<img src="' . $CFG->wwwroot . '/mod/via/pix/assistance.png" width="27" height="27" hspace="5" alt="' .get_string('recentrecordings', 'via') . '" />'.get_string("technicalassist", "via").'</a>';
+			$table->data[] = $row2;
 	}
 	
 	if (has_capability('mod/via:manage', $context)) {
@@ -145,7 +149,7 @@ if($deleted){
 		// if participant must confim attendance
 		$confirmation = true;
 		
-		if($participant_types = $DB->get_records_sql("SELECT * FROM mdl_via_participants WHERE userid=$USER->id AND activityid=$via->id")){				
+		if($participant_types = $DB->get_records('via_participants', array('userid'=>$USER->id, 'activityid=$via'=>id))){				
 			
 			via_update_moodle_confirmationstatus($via, $USER->id); // check if participant confirmation status changed on Via server
 			
@@ -297,11 +301,11 @@ if($deleted){
 									
 									if($playback->ispublic || via_get_is_user_presentator($USER->id, $via->id)){
 
-										echo '<form class="playback" action="view.via.php?id='.$cm->id.'&review=1" target="_blank" method="post">
-									<input type="hidden" name="playbackid" value="'.$key.'">
-									<input type="image" class="accessbutton" id="playbackid" name="playback" src="'.$CFG->wwwroot . '/mod/via/pix/access.png">
-									<label for="playbackid" >'.get_string("view", "via").'</label>
-									</form>';  	
+										echo '<form id="'.$key.'" class="playback" action="view.via.php?id='.$cm->id.'&review=1" target="_blank" method="post">
+										<input type="hidden" name="playbackid" value="'.$key.'">
+										<input id="'.$key.'" type="submit" value="'.get_string("view", "via").'" />
+										</form>';  	
+										
 									}else{
 										echo "&nbsp;";	
 									}
@@ -310,11 +314,10 @@ if($deleted){
 									
 									if(has_capability('mod/via:manage', $context)){
 										echo "<td class='modify'>";
-										echo '<form class="modify" action="edit_review.php?id='.$via->id.'" method="post">
-									<input type="hidden" name="playbackid" value="'.$key.'">
-									<input type="image" class="accessbutton" id="modify" name="playback" src="'.$CFG->wwwroot . '/mod/via/pix/edit.png">
-									<label for="modify" >'.get_string("edit", "via").'</label>
-									</form></td>';  	
+										echo '<form id="'.$key.'" class="modify" action="edit_review.php?id='.$via->id.'" method="post">
+										<input type="hidden" name="playbackid" value="'.$key.'">
+										<input id="'.$key.'" type="submit" value="'.get_string("edit", "via").'" />
+										</form></td>';  	
 									}
 									echo "</tr>";
 								}
@@ -369,15 +372,12 @@ if($deleted){
 										
 										echo "<td class='duration  $private' style='text-align:left'>".userdate(strtotime($playback->creationdate))."<br/> ".get_string("timeduration", "via")." ".gmdate("H:i:s",  $playback->duration)."</td>";
 										
-										
-										
 										if(has_capability('mod/via:manage', $context)){
 											echo "<td class='modify'>";
-											echo '<form class="modify" action="edit_review.php?id='.$via->id.'" method="post">
-										<input type="hidden" name="playbackid" value="'.$key.'">
-										<input type="image" class="accessbutton" id="modify" name="playback" src="'.$CFG->wwwroot . '/mod/via/pix/edit.png">
-										<label for="modify" >'.get_string("edit", "via").'</label>
-										</form></td>';  	
+											echo '<form id="'.$key.'" class="modify" action="edit_review.php?id='.$via->id.'" method="post">
+											<input type="hidden" name="playbackid" value="'.$key.'">
+											<input id="'.$key.'" type="submit" value="'.get_string("edit", "via").'" />
+											</form></td>';   	
 										}
 										echo "</tr>";
 									}

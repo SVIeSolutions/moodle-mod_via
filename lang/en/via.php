@@ -2,7 +2,7 @@
 
 $string['pluginadministration'] = 'Via administration';
 $string['pluginname'] = 'Via';
-$string['pluginversion'] = 'Version : 2.20130920'; // do not modify structure without changing nettest. 
+$string['pluginversion'] = 'Version : 2.2013092001'; // do not modify structure without changing nettest. 
 $string['modulename_help'] = 'The Via module allows you to create synchronous meetings in a virtual classroom to share live using voice and video for: remote classes in real time, meetings, work-team meetings, tutoring, seminars, etc. 
 
 This tool allows you to manage sub-work-groups, annotations, screen sharing, import or present documents and to share by voice and/or video.

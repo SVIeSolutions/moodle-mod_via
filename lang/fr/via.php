@@ -3,7 +3,7 @@
 $string['manageparticipants'] = 'G&eacute;rer la liste des participants';
 $string['pluginadministration'] = 'Administration de Via';
 $string['pluginname'] = 'Via';
-$string['pluginversion'] = 'Version : 2.20130920';  // do not modify structure without changing nettest. 
+$string['pluginversion'] = 'Version : 2.2013092001';  // do not modify structure without changing nettest. 
 $string['modulename_help'] = 'Le module Via vous permet de cr&eacute;er des rencontres en classe virtuelle synchrone afin d\'&eacute;changer en  direct &agrave; l\'aide de la voix et la vid&eacute;o pour : 
 -	Des classes &agrave; distance en temps r&eacute;el
 -	Des r&eacute;unions

@@ -34,7 +34,7 @@
 
 	require_login($course, false, $cm);
 	
-	$context = get_context_instance(CONTEXT_MODULE, $cm->id);
+	$context = context_module::instance($cm->id);
 	$PAGE->set_url('/mod/via/view.php', array('id'=>$id));
 	$PAGE->set_context($context);
 	
@@ -56,7 +56,7 @@
 	// in case the user still has not been added
 	// if user_participants field timesynched is not null we add him, otherwise we check if he is in the activity if he isn't we add him...	
 	$via_participant = $DB->get_record('via_participants', array('userid'=>$USER->id, 'activityid'=>$via->id));
-	if(!has_capability('moodle/site:approvecourse', get_context_instance(CONTEXT_SYSTEM))){ // only users with a lower role are added
+	if(!has_capability('moodle/site:approvecourse', context_system::instance())){ // only users with a lower role are added
 		if(isset($via_participant->timesynched)){
 			$connexion = true;
 		}else{

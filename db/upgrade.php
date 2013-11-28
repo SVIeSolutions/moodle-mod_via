@@ -65,7 +65,7 @@ function xmldb_via_upgrade($oldversion = 0) {
 		upgrade_mod_savepoint($result, 2009042702, 'via');
 	}
 	
-	if($oldversion < 2013092000){
+	if($oldversion < 2013092001){
 		
 		$table = new xmldb_table('via');
 		$field = new xmldb_field('invitemsg', XMLDB_TYPE_TEXT, 'big', null, null, null, null, null);
@@ -139,6 +139,6 @@ function xmldb_via_upgrade($oldversion = 0) {
 			$dbman->create_table($table);
 		}
 				
-		upgrade_mod_savepoint($result, 2013092000, 'via');
+		upgrade_mod_savepoint($result, 2013092001, 'via');
 	}
 }

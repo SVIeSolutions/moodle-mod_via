@@ -116,7 +116,7 @@ class mod_via_mod_form extends moodleform_mod {
 		//Session recordings	
 		$record_options = array( 0 => get_string('notactivated', 'via'), 1 => get_string('unified', 'via'), 2 => get_string('multiple', 'via'));			
 		
-		$mform->addElement('select', 'recordingmode', get_string('recordingmode', 'via'), $record_options, "disabled");
+		$mform->addElement('select', 'recordingmode', get_string('recordingmode', 'via'), $record_options);
 		$mform->setDefault('recordingmode', 0);				
 		$mform->disabledIf('recordingmode', 'pastevent', 'eq', 1);
 		//$mform->setHelpButton('recordingmode', array('session', get_string('recordingmode','via'), 'via'));

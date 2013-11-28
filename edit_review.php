@@ -29,7 +29,7 @@
     }
 
     require_login($course->id, false, $cm);
-    $context = get_context_instance(CONTEXT_MODULE, $cm->id);
+	$context =  context_module::instance($cm->id);
 
     if (!has_capability('mod/via:manage', $context)) {
         print_error('You do not have the permission to edit via playbacks');

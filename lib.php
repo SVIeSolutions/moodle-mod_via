@@ -10,6 +10,8 @@
 defined('MOODLE_INTERNAL') || die();
 
 require_once($CFG->dirroot.'/mod/via/api.class.php');
+/** Include calendar/lib.php */
+require_once($CFG->dirroot.'/calendar/lib.php');
 
 function via_supports($feature) {
 	switch($feature) {
@@ -77,7 +79,7 @@ function via_add_instance($via) {
 			$api->removeUserActivity($via->viaactivityid, $CFG->via_adminid, $moodleid);
 		}
 		
-		$context = get_context_instance( CONTEXT_COURSE, $via->course );
+		$context = context_course::instance($via->course); 
 
 		if($via->enroltype == 0){ // if automatic enrol
 			//We add users
@@ -111,7 +113,7 @@ function via_add_instance($via) {
 		$event->timestart   = $via->datebegin;
 		$event->timeduration = $via->duration*60;
 
-		add_event($event);	
+		calendar_event::create($event);
 	}
 	
 	return $new_activity;
@@ -188,7 +190,10 @@ function via_update_instance($via) {
 		$event->timestart   = $via->datebegin;
 		$event->timeduration = $via->duration*60;
 		
-		update_event($event);
+		//calendar_event->update($event);
+		$calendarevent = calendar_event::load($event->id);
+		$calendarevent->update($event, $checkcapability = false);
+		
 	} else {
 		$event = new stdClass();
 		$event->name        = $via->name;
@@ -202,7 +207,7 @@ function via_update_instance($via) {
 		$event->timestart   = $via->datebegin;
 		$event->timeduration = $via->duration*60;
 		
-		add_event($event);
+		calendar_event::create($event);
 	}
 	
 	return $DB->update_record('via', $via);
@@ -369,7 +374,6 @@ function update_info_database($values){
 		if($DB->update_record('via', $via)){
 			
 			$event = new stdClass();
-			require_once($CFG->dirroot.'/calendar/lib.php');
 			
 			if ($event->id = $DB->get_field('event', 'id', array('modulename'=>'via', 'instance'=>$via->id))) {	
 				$event->name        = $via->name;
@@ -437,8 +441,8 @@ function via_participants($course, $via, $groupid=0, $participanttype, $context 
 		$groupselect = '';
 	}
 	
-	$results = $DB->get_records_sql('SELECT distinct u.id, u.username, u.firstname, u.lastname, u.maildisplay, u.mailformat, u.maildigest, u.emailstop, u.imagealt, u.idnumber,
-                                   u.email, u.city, u.country, u.lastaccess, u.lastlogin, u.picture, u.timezone, u.theme, u.lang, u.trackforums, u.mnethostid
+	$results = $DB->get_records_sql('SELECT distinct u.id, '.user_picture::fields('u').', u.username, u.firstname, u.lastname, u.maildisplay, u.mailformat, u.maildigest, u.emailstop, 
+									u.imagealt, u.idnumber, u.email, u.city, u.country, u.lastaccess, u.lastlogin, u.picture, u.timezone, u.theme, u.lang, u.trackforums, u.mnethostid
 								   FROM mdl_user u,
                                    mdl_via_participants s '. $grouptables.'
 									WHERE s.activityid = '.$via->id.'
@@ -446,6 +450,7 @@ function via_participants($course, $via, $groupid=0, $participanttype, $context 
 									AND s.participanttype = '. $participanttype.' 
 									AND u.deleted = 0  '. $groupselect.' 
 									ORDER BY u.email ASC ');
+	
 
 	static $guestid = null;
 
@@ -880,7 +885,7 @@ function add_participants_to_activity($via, $idactivity){
 	global $DB, $COURSE;	
 	
 	$cm = get_coursemodule_from_instance("via", $idactivity, $via->course, $fields = '', $sort = '', $groupid = '');	
-	$context = get_context_instance(CONTEXT_MODULE, $cm->id); 
+	$context =  context_module::instance($cm->id); 
 	
 	// get all teachers and editing teachers
 	$allteachers = get_users_by_capability($context, 'mod/via:manage', $fields, $sort, '', '', $groupid, '', false, true);		
@@ -957,15 +962,15 @@ function via_access_activity($via){
 	global $USER, $CFG, $DB;
 	
 	$participant = $DB->get_record('via_participants', array('userid'=>$USER->id, 'activityid'=>$via->id));
+	$userid = $DB->get_record('via_users', array('userid'=>$USER->id));
 
 	if(!$participant){
 		// if user cant access this page, he should be able to access the activity.
 		
-		if($via->enroltype == 0){
-			// if automatic enrol
-			$userid = $DB->get_record('via_users', array('userid'=>$USER->id));
+		if($via->enroltype == 0){ // if automatic enrol
+			
 			// verifying if user was enrolled directly on via, if so, we enrol him
-			if(!$userid || !via_update_participants_list($via, $userid->viauserid) && !has_capability('moodle/site:approvecourse', get_context_instance(CONTEXT_SYSTEM))){ 
+			if(!$userid || !via_update_participants_list($via, $userid->viauserid) && !has_capability('moodle/site:approvecourse',  context_system::instance() )){ 
 				if(!$userid){
 					$viauserid = null;
 				}else{
@@ -2082,7 +2087,7 @@ function synch_participants(){
 function get_user_type($userid, $courseid){
 	global $DB, $CFG;
 	
-	$context = get_context_instance(CONTEXT_COURSE, $courseid);
+	$context = context_course::instance($courseid);
 	if(has_capability('moodle/course:viewhiddenactivities', $context, $userid)){
 		$type ='3';	// animator
 	}else{
@@ -2118,7 +2123,7 @@ function via_reset_course_form_definition(&$mform) {
 function via_reset_userdata($data) {
 	global $COURSE, $CFG;
 	
-	$context = get_context_instance(CONTEXT_COURSE, $COURSE->id);
+	$context =  context_course::instance($COURSE->id);
 	$vias = get_all_instances_in_course('via', $COURSE);
 
 	$status = array();
@@ -2258,7 +2263,7 @@ function via_disable_review_mode($vias){
 function via_set_participant_confirmationstatus($viaid, $present){
 	global $CFG, $USER, $DB;
 	
-	if($participant_types = $DB->get_records_sql("SELECT * FROM mdl_via_participants WHERE userid=$USER->id AND activityid=$viaid")){
+	if($participant_types = $DB->get_records('via_participants', array('userid'=>$USER->id, 'activityid'=>$viaid))){
 		foreach($participant_types as $participant_type){
 			$participant_type->confirmationstatus = $present;
 			$DB->update_record("via_participants", $participant_type);

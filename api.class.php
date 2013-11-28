@@ -187,7 +187,7 @@ class mod_via_api {
 				$i = '';
 				$lastusertype = '';	
 				foreach($searchedusers as $searcheduser){
-					if($searcheduser["UserID"]){
+					if(!empty($searcheduser["UserID"])){
 						$viauser = new stdClass();
 						$viauser->viauserid = $searcheduser["UserID"];
 						$viauserdata = $this->userGet($viauser);
@@ -1007,6 +1007,15 @@ class mod_via_api {
 			$params = array('http' => array( 'method' => 'POST',
 											 'header' => 'Content-Type: text/xml; charset=utf-8',
 											 'content' => $data ));
+			
+			if(isset($CFG->proxyhost[0])){
+				if($CFG->proxyport === '0'){
+					$params['http']['proxy'] = $CFG->proxyhost;
+				}else{
+					$params['http']['proxy'] = $CFG->proxyhost.':'.$CFG->proxyport;
+				}
+				$params['http']['request_fulluri'] = TRUE;
+			}
 											 
 			
 			$ctx = stream_context_create($params);	

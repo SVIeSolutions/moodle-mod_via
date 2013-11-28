@@ -16,7 +16,7 @@ if (!($course = $DB->get_record('course', array('id'=>$id)))) {
     print_error('course ID is incorrect');
 }
 
-$context = get_context_instance(CONTEXT_COURSE, $course->id);
+$context = context_course::instance($course->id);
 $vias = get_all_instances_in_course('via', $course);
 
 require_login($course->id);
