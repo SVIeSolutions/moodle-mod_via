@@ -19,6 +19,11 @@
 	if(isset($_REQUEST['playbackid'])){
 		$playbackid = $_REQUEST['playbackid'];
 	}
+	if(isset($_REQUEST['p'])){
+		$private = $_REQUEST['p'];
+	}else{
+		$private = NULL;
+	}
 
 	if (! $cm = get_coursemodule_from_id('via', $id)) {
 		error('Course Module ID was incorrect');
@@ -77,10 +82,12 @@
 				$type = get_user_type($via_user->userid, $course->id);
 				// we only add participants automatically!
 				if($type == 1){
-					$added = via_add_participant($via_user->userid, $via->id, $type); 
-					if($added){
-						$DB->insert_record('via_log', array('userid'=>$via_user->userid, 'viauserid'=>$via_user->viauserid, 'activityid'=>$via->id, 'action'=>'user connexion', 'result'=>'user added', 'time'=>time()));
-						$connexion = true;
+				$added = via_add_participant($via_user->userid, $via->id, $type, null, 1); 
+				if($added && $added != 'presenter'){
+					$DB->insert_record('via_log', array('userid'=>$via_user->userid, 'viauserid'=>$via_user->viauserid, 'activityid'=>$via->id, 'action'=>'user connexion', 'result'=>'user added', 'time'=>time()));
+					$connexion = true;
+				}elseif($added === 'presenter'){
+						echo "<div style='text-align:center; margin-top:0;' class='error'><h3>". get_string('userispresentor','via') ."</h3></div>";	
 					}
 				}
 			}
@@ -96,16 +103,18 @@
 			if(!$review){
 				$response = $api->UserGetSSOtoken($via);
 			}else{
-				$response = $api->UserGetSSOtoken($via, 3, $playbackid);
+				$response = $api->UserGetSSOtoken($via, 3, $playbackid, $private);
 			}	
 		}	
 				
 		if($response){		
+			/*
 			if(!$review){
 					add_to_log($course->id, "via", "view session", "view.php?id=$cm->id", $via->id, $cm->id);
 			}else{
 					add_to_log($course->id, "via", "view recording", "view.php?id=$cm->id", $via->id, $cm->id);
 			}
+			*/
 					
 			redirect($response);
 				

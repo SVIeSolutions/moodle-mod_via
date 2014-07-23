@@ -72,12 +72,33 @@
  * Mofications made for Moodle 2.6
  * Added proxy information
  * Made corrections after errors were reported
+ * 
+ * Last update 01/04/2014
+ * Validations added in case a user is deleted or deactivated in Via after being associated in moodle
+ * Validations added in order not to give more than one role to a user in one activity
+ * Validations added in order to always have one presenter and only one presenter. 
+ * * If a presenter is replaced and the enrollment is set to automatic then we add the user in the standard role. 
+ * A modification was made to the automatic enrolment method, animators remain modifiable.
+ * * If an animator is removed and the enrollment is set to automatic then we add the user as participant. 
+ * A new feature was added in order to add all students as animators
+ * Extra validations were added in case an activity is created with manual enrollment then changed to automatic, etc.
+ * A bug was fixed when students with the animator role were set back to participant at access of an activite.
+ * Modifications were made so that recordings are always visible for the users were editing rights, they can then display or hide any recording
+ * OR set them all to public.
+ * Hides recordings on tablettes and mobiles, as they can not be opened.
+ * Modifications were made to the way config information is stored, it is now in the 'config_plugin' table, instead of in 'config'
+ * 
+ * 
+ * Last update 01/07/2014
+ * Corrections we made for Moodle 2.7
  */  
+
+
 
 /**
  *
  * @package    mod-via
- * @copyright  2011 - 2013 SVIeSolutions http://sviesolutions.com
+ * @copyright  2011 - 2014 SVIeSolutions http://sviesolutions.com
  * @author     Alexandra Dinan-Mitchell
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * 
@@ -87,13 +108,12 @@ defined('MOODLE_INTERNAL') || die();
 $module = new stdClass();
 $plugin = new stdClass();
 
-$plugin->version = 2013092002;	
+$plugin->version = 2014070100;	
 $plugin->component = 'mod_via'; 
 
-$module->version  = 2013092002;	 // YYYYMMDDHH (year, month, day, 24-hr time)
-$module->release  = 2.20130920;
+$module->version  = 2014070100;	 // YYYYMMDDHH (year, month, day, 24-hr time)
+$module->release  = 2.20140701;
 $module->requires = 2011033003;  // Moodle version required to run it (2.0.3 )
 $module->cron     = 300;         // Number of seconds between cron calls.
 $module->component = 'mod_via'; 
-
 $module->maturity  = MATURITY_STABLE;

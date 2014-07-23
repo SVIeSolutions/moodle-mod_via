@@ -3,7 +3,7 @@
 $string['manageparticipants'] = 'G&eacute;rer la liste des participants';
 $string['pluginadministration'] = 'Administration de Via';
 $string['pluginname'] = 'Via';
-$string['pluginversion'] = 'Version : 2.2013092001';  // do not modify structure without changing nettest. 
+$string['pluginversion'] = 'Version : 2.2014040100';  // do not modify structure without changing nettest. 
 $string['modulename_help'] = 'Le module Via vous permet de cr&eacute;er des rencontres en classe virtuelle synchrone afin d\'&eacute;changer en  direct &agrave; l\'aide de la voix et la vid&eacute;o pour : 
 -	Des classes &agrave; distance en temps r&eacute;el
 -	Des r&eacute;unions
@@ -20,11 +20,11 @@ La section &laquo; Param&egrave;tres de sessions &raquo; vous permet de param&ea
 
 NB. L\'&eacute;dition et la modification des enregistrements doivent se faire dans l\'environnement Via.';
 $string['audiomodelabel'] = 'Mode audio pour la conf&eacute;rence';
+$string['noanimators'] = 'Il n\'y a pas encore d\'animateurs pour cette activit&eacute;.';
 $string['recentrecordings'] = 'Enregistrement r&eacute;cent';
 $string['configassist'] = 'Assistant de configuration';
-$string['technicalassist'] = 'Assistant technique';
+$string['technicalassist'] = 'Assistance technique';
 $string['noparticipants'] = 'Personne n\'est inscrit &agrave; cette activit&eacute;.';
-$string['noanimator'] = 'Personne n\'est inscrit &agrave; cette activit&eacute;.';
 $string['subscribeparticipants'] = 'Inscription des usagers';
 $string['gotoactivity'] = 'Cliquez ici pour acc&eacute;der &agrave; l\'activit&eacute;';
 $string['notstarted'] = 'Cette activit&eacute; n\'a pas encore d&eacute;but&eacute;e.';
@@ -45,6 +45,7 @@ $string['potentialparticipants'] = 'Participants potentiels';
 $string['potentialanimators'] = 'Animateurs potentiels';
 $string['potentialpresentator'] = 'Pr&eacute;sentateur potentiel';
 $string['permanent'] = 'Activit&eacute; permanente';
+$string['permanent_help'] = 'Cocher l\'option &laquo; Permanente &raquo; afin de rendre votre activit&eacute; toujours accessible, sans date pr&eacute;cise. Vous serez alors dans l\'obligation d\'utiliser la salle d\'attente afin d\'en limiter l\'acc&egrave;s aux utilisateurs inscrits ayant le statut &laquo; participant &raquo;. ';
 $string['startdate'] = 'D&eacute;bute le ';
 $string['enddate'] = 'Termine le ';
 $string['duration'] = 'Dur&eacute;e (minutes)';
@@ -60,6 +61,9 @@ $string['endrepetition'] = 'P&eacute;riodicit&eacute; se terminant le';
 $string['sequence'] = 'Num&eacute;roter les activit&eacute;s';
 $string['sessionparameters'] = 'Param&egrave;tres de la session';
 $string['roomtype'] = 'Type d\'activit&eacute;';
+$string['roomtype_help'] = 'Le type &laquo; Standard &raquo; est une activit&eacute; dans laquelle tous les participants sont list&eacute;s et peuvent interagir normalement, selon le r&ocirc;le attribu&eacute;. Si vous choisissez plut&ocirc;t une activit&eacute; de type &laquo; Webinaire &raquo;, seuls le pr&eacute;sentateur et les animateurs verront les noms des participants. De plus, ces derniers ne pourront interagir autrement que par le clavardage. Ce dernier type est id&eacute;al pour les activit&eacute;s comprenant de larges audiences (plus de 100 participants) ou pour des activit&eacute;s confidentielles.
+Lorsque l\'option &laquo; Permanente &raquo; est s&eacute;lectionn&eacute;e, l\'activit&eacute; n\'aura alors plus de date et d\'heure fixe. Tous les participants associ&eacute;s   &agrave; cette activit&eacute; pourront alors y acc&eacute;der   &agrave; n\'importe quel moment. Veuillez prendre note que seul le mode d\'enregistrement multiple est disponible pour ce type d\'activit&eacute;
+';
 $string['standard'] = 'Standard';
 $string['seminar'] = 'S&eacute;minaire';
 $string['mode'] = 'Mode audio';
@@ -67,10 +71,12 @@ $string['modewebphone'] = 'Voix par conf&eacute;rence t&eacute;l&eacute;phonique
 $string['modevoiceweb'] = 'Voix par Internet';
 $string['modephone'] = 'Conf&eacute;rence t&eacute;l&eacute;phonique seulement';
 $string['multimediaquality'] = 'Qualit&eacute; multim&eacute;dia';
+$string['multimediaquality_help'] = 'S&eacute;lectionnez le profil multim&eacute;dia   &agrave; utiliser dans l\'activit&eacute; pour les &eacute;changes multim&eacute;dias (cam&eacute;ra Web, microphone et documents multim&eacute;dias). Cette option peut avoir un impact important sur la fluidit&eacute; des &eacute;changes et sur la bande passante n&eacute;cessaire pour chaque participant. De fa&ccedil;on g&eacute;n&eacute;rale, pour une meilleure exp&eacute;rience ou si vous &ecirc;tes incertain, il est pr&eacute;f&eacute;rable d\'utiliser une qualit&eacute; moindre pour assurer la fluidit&eacute; des &eacute;changes. Il est possible de faire configurer d\'autres profils multim&eacute;dia en fonction de vos besoins sp&eacute;cifiques (par exemple de grandes vignettes vid&eacute;o d\'excellente qualit&eacute; pour une utilisation en mode local). Contactez un de nos experts Via pour en savoir davantage   &agrave; ce sujet.';
 $string['highquality'] = 'Qualit&eacute; haute';
 $string['mediumquality'] = 'Qualit&eacute; moyenne';
 $string['lowquality'] = 'Qualit&eacute; basse';
 $string['recordingmode'] = 'Mode d\'enregistrement';
+$string['recordingmode_help'] = 'Si vous d&eacute;sirez activer l\'enregistrement de vos activit&eacute;s, deux modes sont offerts : &laquo; Unifi&eacute; &raquo; et &laquo; Multiple &raquo;. La fonction d\'enregistrement unifi&eacute; produira un enregistrement unique peu importe le nombre d\'enregistrements effectu&eacute;s durant la rencontre tandis que les enregistrements multiples sont s&eacute;par&eacute;s et segment&eacute;s dans la liste.';
 $string['recordings'] = 'Enregistrement(s) disponible(s) :';
 $string['recording'] = 'Enregistrement';
 $string['preparation'] = 'Pr&eacute;parer votre activit&eacute; : ';
@@ -87,6 +93,7 @@ $string['unified'] = 'Unifi&eacute;';
 $string['multiple'] = 'Multiple';
 $string['nounifiedrecordpermanent'] = 'Le mode &laquo; Unifi&eacute; &raquo; n\'est pas possible pour une activit&eacute; permanente. Veuillez s&eacute;lectionner un choix diff&eacute;rent.';
 $string['needconfirmation'] = 'Confirmation de pr&eacute;sence';
+$string['needconfirmation_help'] = 'Confirmation de pr&eacute;sence';
 $string['confirmationstatus'] = 'Confirmation de la pr&eacute;sence';
 $string['confirmation'] = 'Confirmation des participants';
 $string['confirmed'] = 'Pr&eacute;sence confirm&eacute;e';
@@ -102,8 +109,10 @@ $string['personalinvitemsg'] = 'Message personnalis&eacute; (optionnel) : ';
 $string['submitinvite'] = 'Envoyer les invitations';
 $string['sendinvitenow'] = 'Envoyer les invitations';
 $string['invitessend'] = 'Les courriels d\'invitation seront envoy&eacute;s d\'ici 15 minutes.';
-$string['reviewacitvity'] = 'Autoriser le visionnement d\'enregistrement';
+$string['reviewacitvity'] = 'Rendre public tous les enregistrements par d&eacute;faut';
+$string['reviewacitvity_help'] = 'Dans le cas o&ugrave; vous d&eacute;sirez rendre tous les enregistrements disponibles au visionnement, s&eacute;lectionnez l\'option &laquo; Rendre public tous les enregistrements par d&eacute;faut &raquo;. Dans le cas contraire, aucun participant ne pourra visionner les enregistrements   &agrave; moins de les cocher individuellement dans la liste. Veuillez noter que cette option est modifiable en tout temps, m&ecirc;me lorsque l\'activit&eacute; est termin&eacute;e.';
 $string['sendrecall'] = 'Envoyer un courriel de rappel';
+$string['sendrecall_help'] = 'Permet de fixer un rappel automatique selon la p&eacute;riode demand&eacute;e. Vous pouvez choisir d\'envoyer un rappel automatiquement   &agrave; tous les participants 1 ou 2 heures avant, 1 ou 2 jours avant et m&ecirc;me 1 semaine avant la tenue de l\'activit&eacute;. Ils recevront alors le rappel directement par courriel.';
 $string['norecall'] = 'Aucun rappel';
 $string['recallonehour'] = 'Une heure avant';
 $string['recalltwohours'] = 'Deux heures avant';
@@ -114,6 +123,9 @@ $string['activitytitle'] = 'Titre de l\'activit&eacute;';
 $string['description'] = 'Description ';
 $string['enrolmentheader'] = 'Inscription des participants';
 $string['enrolmenttype'] = 'Gestion de l\'inscription des participants';
+$string['enrolmenttype_help'] = 'Inscription automatique : tous les utilisateurs inscrits au cours seront ajout&eacute;s   &agrave; l\'activit&eacute; Via. Si un &eacute;tudiant est ajout&eacute; au cours apr&egrave;s la cr&eacute;ation de l\'activit&eacute; Via, il sera ajout&eacute; lors de la prochaine synchronisation du Cron. Si par compte il acc&egrave;de   &agrave; l\'activit&eacute; avant que le cron l\'ait ajout&eacute;, il sera ajout&eacute;   &agrave; l\'affichage de la page des d&eacute;tails de l\'activit&eacute;. Les utilisateurs inscrits avec des droits d\'&eacute;dition dans le cours moodle seront automatiquement synchronis&eacute;s comme animateurs, mais cette liste demeure &eacute;ditable.
+Inscription manuelle : les participants doivent &ecirc;tre ajout&eacute;s   &agrave; partir de la liste des participants en choisissant le participant parmi la liste des &laquo; Participants potentiels &raquo; (droit) et ajout&eacute;s   &agrave; l\'aide de la fl&egrave;che au &quot;Participant actuel&quot; (gauche). NB.  Dans les deux modes d\'inscription, l\'utilisateur qui cr&eacute;era l\'activit&eacute; est ajout&eacute; comme pr&eacute;sentateur de fa&ccedil;on automatique, mais reste &eacute;ditable, tout comme la liste des animateurs. Il n\'est pas possible d\'avoir plus d\'un pr&eacute;sentateur.  
+';
 $string['automaticenrol'] = 'Inscription automatique';
 $string['manualenrol'] = 'Inscription manuelle';
 $string['categoriesheader'] = 'Cat&eacute;gories';
@@ -139,7 +151,8 @@ $string['apiid'] = 'Cl&eacute; API (ApiID)';
 $string['apiidsetting'] = 'Identifiant unique donn&eacute; &agrave; ceux qui communiquent avec l\'API. Cette donn&eacute;e est compar&eacute;e avec l\'IP du serveur appelant.';
 $string['apiurl'] = 'URL de l\'API de Via';
 $string['apiurlsetting'] = 'URL de base de l\'API pour Via';
-$string['moodle_adminid'] = 'Configuration de l\'API - &Eacute;tape 2';
+$string['moodle_config'] = 'Configuration de l\'API - &Eacute;tape 2';
+$string['moodle_adminid'] = 'Cl&eacute; Admin Moodle';
 $string['moodleidsetting'] = 'ID Administrateur unique pour ce moodle';
 $string['viaaudiotypes'] = 'S&eacute;lectionnez les modes audios que vous voulez conserver.';
 $string['options'] = 'Options pour l\'activit&eacute;';
@@ -187,7 +200,7 @@ Pr&eacute;paration &agrave; l\'activit&eacute;
 
 Cliquez le lien suivant pour l\'assistant de configuration : {$a->config}
 
-Cliquez le lien suivant pour l\'assistant technique : {$a->assist}
+Cliquez le lien suivant pour l\'assistance technique : {$a->assist}
 
 ---------------------------------------------------------------------
 Acc&egrave;s Web
@@ -196,8 +209,7 @@ Pour acc&eacute;der &agrave; l\'activit&eacute;, cliquez sur ce lien : {$a->acti
 
 ---------------------------------------------------------------------
 
-Attention : Chaque activit&eacute; peut &ecirc;tre enregistr&eacute;e. Merci de ne pas y acc&eacute;der si vous ne voulez pas &ecirc;tre enregistr&eacute;. Ce courriel contient vos informations personnelles de connexion. Ces information ne doivent pas &ecirc;tre partag&eacute;es.';
-
+Attention : Chaque activit&eacute; peut &ecirc;tre enregistr&eacute;e. Merci de ne pas y acc&eacute;der si vous ne voulez pas &ecirc;tre enregistr&eacute;. Ce courriel contient vos informations personnelles de connexion. Ces informations ne doivent pas &ecirc;tre partag&eacute;es.';
 $string['reminderemailhtml'] = '<p>Bonjour {$a->username}, reminderemailhtml</p>
 <p>Ceci est un rappel pour une activit&eacute; qui aura lieu sous peu :</p>
 <p><b>Titre :</b> {$a->title}<br/>
@@ -222,7 +234,7 @@ L\'actitiv&eacute; " {$a->title} " qui aura lieu le {$a->datebegin} de {$a->hour
 Pr&eacute;paration &agrave; l\'activit&eacute;
 
 Cliquez le lien suivant pour l\'assistant de configuration : {$a->config}
-Cliquez le lien suivant pour l\'assistant technique : {$a->assist}
+Cliquez le lien suivant pour l\'assistance technique : {$a->assist}
 
 ---------------------------------------------------------------------
 Acc&egrave;s Web
@@ -231,7 +243,9 @@ Pour acc&eacute;der &agrave; l\'activit&eacute;, cliquez sur ce lien : {$a->acti
 
 ---------------------------------------------------------------------
 
-Attention : Chaque activit&eacute; peut &ecirc;tretre enregistr&eacute;e. Merci de ne pas y acc&eacute;der si vous ne voulez pas &ecirc;tre enregistr&eacute;. Ce courriel contient vos informations personnelles de connexion. Ces information ne doivent pas &ecirc;tre partag&eacute;es.';
+
+Attention : Chaque activit&eacute; peut &ecirc;tretre enregistr&eacute;e. Merci de ne pas y acc&eacute;der si vous ne voulez pas &ecirc;tre enregistr&eacute;. Ce courriel contient vos informations personnelles de connexion. Ces informations ne doivent pas &ecirc;tre partag&eacute;es.';
+
 $string['inviteemailhtml'] = '<p>Bonjour {$a->username},</p>
 <p>L\'activit&eacute; &laquo; {$a->title} &raquo; aura lieu le <b>{$a->datebegin}</b> de <b>{$a->hourbegin}</b> &agrave; <b>{$a->hourend}</b>.</p><p>{$a->invitemsg}</p>';	
 
@@ -249,7 +263,7 @@ Bonjour {$a->username},
 Pr&eacute;paration &agrave; l\'activit&eacute;
 
 Cliquez le lien suivant pour l\'assistant de configuration : {$a->config}
-Cliquez le lien suivant pour l\'assistant technique : {$a->assist}
+Cliquez le lien suivant pour l\'assistance technique : {$a->assist}
 
 ---------------------------------------------------------------------
 Acc&egrave;s Web
@@ -258,10 +272,10 @@ Pour acc&eacute;der &agrave; l\'activit&eacute;, cliquez sur ce lien : {$a->acti
 
 ---------------------------------------------------------------------
 
-Attention : Chaque activit&eacute; peut &ecirc;tretre enregistr&eacute;e. Merci de ne pas y acc&eacute;der si vous ne voulez pas &ecirc;tre enregistr&eacute;. Ce courriel contient vos informations personnelles de connexion. Ces information ne doivent pas &ecirc;tre partag&eacute;es.';
-
+Attention : Chaque activit&eacute; peut &ecirc;tretre enregistr&eacute;e. Merci de ne pas y acc&eacute;der si vous ne voulez pas &ecirc;tre enregistr&eacute;. Ce courriel contient vos informations personnelles de connexion. Ces informations ne doivent pas &ecirc;tre partag&eacute;es.';
 
 $string['inviteemailhtmlpermanent'] = '<p>Bonjour {$a->username},</p>
+
 <p>{$a->invitemsg}</p>';	
 
 $string['invitewebaccesshtml'] = 'Acc&egrave;s Web';
@@ -269,9 +283,11 @@ $string['invitepreparationhtml'] = 'Pr&eacute;paration &agrave; l\'activit&eacut
 $string['inviteclicktoaccesshtml'] = 'Pour acc&eacute;der &agrave; l\'activit&eacute;, cliquez sur ce lien :';
 $string['invitewarninghtml'] = 'Attention : Chaque activit&eacute; peut &ecirc;tre enregistr&eacute;e. Merci de ne pas y acc&eacute;der si vous ne voulez pas &ecirc;tre enregistr&eacute;. Ce courriel contient vos informations personnelles de connexion. Ces information ne doivent pas &ecirc;tre partag&eacute;es.';
 $string['recordmodebehavior'] = 'Enregistrement';
+$string['recordmodebehavior_help'] = 'En plus du mode, vous pouvez &eacute;galement d&eacute;cider de d&eacute;marrer automatiquement l\'enregistrement   &agrave; l\'acc&egrave;s en utilisant l\'option &laquo; Automatique &raquo;. Choisissez l\'option &laquo; Manuel &raquo; si vous ne d&eacute;sirez pas que l\'enregistrement d&eacute;marre automatiquement   &agrave; l\'acc&egrave;s. Vous devrez alors d&eacute;marrer l\'enregistrement vous-m&ecirc;me en acc&eacute;dant   &agrave; l\'interface synchrone.';
 $string['automatic'] = 'Automatique';
 $string['manual'] = 'Manuel';
 $string['waitingroomaccessmode'] = 'Salle d\'attente';
+$string['waitingroomaccessmode_help'] = 'L\'option &laquo; En attente d\'autorisation &raquo; permet au pr&eacute;sentateur d\'autoriser individuellement l\'acc&egrave;s des participants tandis que l\'option &laquo; En l\'absence du pr&eacute;sentateur &raquo; vous assure qu\'aucun utilisateur ne pourra acc&eacute;der   &agrave; l\'activit&eacute; tant que le pr&eacute;sentateur n\'est pas connect&eacute;. Cette derni&egrave;re option est particuli&egrave;rement utile lors d\'activit&eacute;s permanentes';
 $string['donousewaitingroom'] = 'Ne pas utiliser (d&eacute;sactiv&eacute;)';
 $string['awaitingauthorization'] = 'En attente d\'autorisation (manuel)';
 $string['inpresentatorabsence'] = 'En l\'absence du pr&eacute;sentateur (automatique)';
@@ -281,6 +297,7 @@ $string['resetparticipants'] = 'Retirer tous les participants et animateurs (fon
 $string['resetdisablereviews'] = 'D&eacute;sactiver le revisionnement des activit&eacute;s';
 $string['by'] = 'par';
 $string['list_activities'] = 'Liste de toutes les activit&eacute;s Via dans ce cours';
+$string['no_categories'] ='Il n\'y a aucune cat&eacute;gories de disponible, celles-ci doivent &ecirc;tre cr&eacute;&eacute;s dans le portail Via par un administrateur.';
 
 $string['connectsuccess'] = 'Connexion &agrave; l\'API r&eacute;ussie avec succ&egrave;s.';
 $string['conntest'] = 'Test de connexion';
@@ -378,5 +395,13 @@ Veuillez communiquer avec l&acute;administrateur Via de votre institution afin d
 $string['STATUS_INVALID'] = 'La connexion n&acute;est pas possible.';
 $string['via:addinstance'] = 'Ajouter une activit&eacute; Via';
 $string['activity_deleted'] = 'L\'activit&eacute; Via a &eacute;t&eacute; supprim&eacute;e directement dans l\'environnement Via par un utilisateur. Il est donc impossible d\'y acc&eacute;der. Nous vous recommandons de supprimer cette activit&eacute; dans Moodle et d\'en cr&eacute;er une nouvelle. ';
+$string['noparticipantscheckbox'] = 'Ajouter les &eacute;tudiants comme animateurs.';
+$string['noparticipants_help'] = 'Cette option est disponible seulement en mode d\'inscription automatique et fait en sorte que les utilisateurs ayant le statut d\'&eacute;tudiant sont tous inscrits avec les droits d\'animateurs dans via.';
+$string['userispresentor'] = 'Cet utilisateur est le pr&eacute;sentateur. Veuillez d&eacute;signer un nouveau pr&eacute;sentateur afin de modifier le r&ocirc;le de cet utilisateur.';
+$string['choosepresentor'] = 'Un seul pr&eacute;sentateur peut &ecirc;tre associ&eacute; &agrave; l\'activit&eacute;. Pour choisir un nouveau pr&eacute;sentateur, simplement ajouter un utilisateur comme pr&eacute;sentateur. Il sera automatique substitu&eacute;.';
+$string['mask'] = 'Masquer';
+$string['show'] = 'Afficher';
+$string['availabledate'] = 'Disponible d&egrave;s le';
+$string['title_exists'] = 'Le titre existe d&eacute;j&agrave;, veuillez essayer &agrave; nouveau.';
 
 ?>

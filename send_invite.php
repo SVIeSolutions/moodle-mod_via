@@ -29,7 +29,7 @@
 
 	$context = context_module::instance($cm->id);
 
-    if (!has_capability('mod/via:manage', $context) || !$CFG->via_sendinvitation) {
+    if (!has_capability('mod/via:manage', $context) || !get_config('via','via_sendinvitation')) {
         print_error('You do not have the permission to send invites');
     }
 

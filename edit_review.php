@@ -13,9 +13,21 @@
 
     $id    = required_param('id',PARAM_INT);           // via
 	$edit  = optional_param('edit', false, PARAM_INT);           // edit via reviews
+	$error = '';
+	$title = false;
 	
-	$playbackid = $_REQUEST['playbackid'];
+	if(isset($_REQUEST['playbackid'])){
+		$playbackid = $_REQUEST['playbackid'];
+	}
 
+	if(isset($_REQUEST['ispublic'])){
+	if($_REQUEST['ispublic'] == get_string('show', 'via')){
+			$ispublic = 1;
+		}else{
+			$ispublic = 0;
+		}
+	}
+	
     if (!$via = $DB->get_record('via', array('id'=>$id))) {
         print_error("Via ID is incorrect");
     }
@@ -55,30 +67,45 @@
 	   
 		if(isset($frm->edit)){
 			if(isset($frm->title)){
-				$playback->title = $frm->title;
+				foreach($playbacks as $pb){
+					if($pb->title == $frm->title){
+						$title = true;
+						continue;
+					}
+				}
+				if(!$title){
+					$playback->title = $frm->title;
+				}
 			}
 		
-			if(isset($frm->ispublic)){
-				$playback->ispublic = 1;
-			}else{
-				$playback->ispublic = 0;
-			}
 			
-			$api = new mod_via_api();
-	
 			try {
+				if(!$title){
+					if(isset($ispublic) ){
+						if($ispublic == 1){
+							$playback->ispublic = 1;
+						}else{
+							$playback->ispublic = 0;
+						}
+					}
+				
+					$api = new mod_via_api();
 					$result = $api->editPlayback($via, $playbackid, $playback);
+					if($result){
+						redirect("view.php?id=$cm->id");
+					}	
+					
+				}else{
+					$error = '<p class="error">'.get_string('title_exists', 'via').'</p>';	
+					$result = false;
+				}
+				
 			}
 			catch (Exception $e){
 				$result = false;
 				echo $OUTPUT->notification("error:".$e->getMessage());
-			}
-			
-			if($result){
-				redirect("view.php?id=$cm->id");
-			}			
+			}		
 		}
-	   
 	}
 	
 	$PAGE->set_url('/mod/via/edit_review.php', array('id' => $cm->id));	
@@ -89,7 +116,9 @@
     echo $OUTPUT->box_start('center');
 	
 	echo "<h2>".get_string("editrecord", "via")."</h2>";
-
+	
+	echo $error;
+	
 	include('edit_review.form.php');
 
     echo $OUTPUT->box_end();

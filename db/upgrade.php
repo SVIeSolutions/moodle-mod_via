@@ -65,7 +65,7 @@ function xmldb_via_upgrade($oldversion = 0) {
 		upgrade_mod_savepoint($result, 2009042702, 'via');
 	}
 	
-	if($oldversion < 2013092001){
+	if($oldversion < 2013092002){
 		
 		$table = new xmldb_table('via');
 		$field = new xmldb_field('invitemsg', XMLDB_TYPE_TEXT, 'big', null, null, null, null, null);
@@ -81,23 +81,10 @@ function xmldb_via_upgrade($oldversion = 0) {
 			$dbman->add_field($table, $field);
 		}
 		
-		$table = new xmldb_table('config');
-		$field = new xmldb_field('overflowalert');
-		if ($dbman->field_exists($table, $field)) {
-			$dbman->drop_field($table, $field);
-		}
-		$field = new xmldb_field('preventoverflowalert');
-		if ($dbman->field_exists($table, $field)) {
-			$dbman->drop_field($table, $field);
-		}
-		$field = new xmldb_field('preventoverflownbr');
-		if ($dbman->field_exists($table, $field)) {
-			$dbman->drop_field($table, $field);
-		}
-		$field = new xmldb_field('emails_alert_address');
-		if ($dbman->field_exists($table, $field)) {
-			$dbman->drop_field($table, $field);
-		}
+		unset_config('overflowalert');
+		unset_config('preventoverflowalert');
+		unset_config('preventoverflownbr');
+		unset_config('emails_alert_address');
 			
 		$table = new xmldb_table('via_participants');
 		$field = new xmldb_field('enrolid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
@@ -139,6 +126,37 @@ function xmldb_via_upgrade($oldversion = 0) {
 			$dbman->create_table($table);
 		}
 				
-		upgrade_mod_savepoint($result, 2013092001, 'via');
+		upgrade_mod_savepoint($result, 2013092002, 'via');
+	}
+	
+	if ($oldversion < 2014040100) {
+		
+		$table = new xmldb_table('via');
+		$field = new xmldb_field('noparticipants', XMLDB_TYPE_INTEGER, '2', null, null, null, null);
+		if (!$dbman->field_exists($table, $field)) {
+			$dbman->add_field($table, $field);
+		}
+		
+		/* these values are now in mdl_config_plugins */
+		unset_config('via_apiurl');
+		unset_config('via_cleid');
+		unset_config('via_apiid');
+		unset_config('via_audio_types');
+		unset_config('via_moodleemailnotification');
+		unset_config('via_participantmustconfirm');
+		unset_config('via_sendinvitation');
+		unset_config('via_participantsynchronization');
+		unset_config('via_adminid');
+		unset_config('via_categories');
+		
+		///  savepoint reached
+		upgrade_mod_savepoint($result, 2014040100, 'via');
+	}
+	
+	if ($oldversion < 2014070100) {
+		
+		// no modifications were made to the databases for this version
+		return true;
+		
 	}
 }

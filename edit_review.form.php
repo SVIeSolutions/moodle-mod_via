@@ -12,14 +12,6 @@
 <td align="left"><input type="text" name="title" value="<?php echo $playback->title?>" id="title"/></label></td>
 
 </tr>
-<tr>
-<td align="right"><?php	
-	$private = $playback->ispublic? "checked" : "";
-?>
-<label for="ispublic"><?php echo get_string("visible");?></td>
-<td align="left"><input type="checkbox" name="ispublic" id="ispublic" <?php echo $private; ?>/></label>
-</td>
-</tr>
 
 <tr>
 <td colspan="2" align="center"><p>

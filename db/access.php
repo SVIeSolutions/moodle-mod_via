@@ -44,9 +44,20 @@ $capabilities = array(
 		'editingteacher' => CAP_ALLOW,
 		'manager' => CAP_ALLOW
 		),
-	'clonepermissionsfrom' => 'moodle/course:manageactivities'
 	),
-		
+
+	// Ability to manage the settings.
+	'mod/via:manage' => array(
+
+		'captype' => 'write',
+		'contextlevel' => CONTEXT_COURSE,
+		'archetypes' => array(
+			'editingteacher' => CAP_ALLOW,
+			'manager' => CAP_ALLOW
+			)
+		),
+
+			
     'mod/via:view' => array(
 
         'captype' => 'read',
@@ -60,19 +71,7 @@ $capabilities = array(
         )
     ),
 
-    // Ability to manage the settings.
-    'mod/via:manage' => array(
-
-        'captype' => 'write',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
     
-  
    // Ability to view recordings.
     'mod/via:viewactivities' => array(
 

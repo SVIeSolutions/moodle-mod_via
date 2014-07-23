@@ -26,6 +26,16 @@ if (! $cm = get_coursemodule_from_instance("via", $via->id, $course->id)) {
 	$cm->id = 0;
 }
 
+if($via->noparticipants == 1 && $participanttype == 1){
+	// there are no participants only animators and a presentor
+	$participanttype = 3;
+	// if the enrollement type is changed we need to add the students that were participants as animators
+	/*$participants = $DB->get_records('via_participants', array('activityid'=>$via->idate, 'participanttype'=>1));
+	foreach($participants as $participant){
+		via_add_participant($participant->id, $via->id, 2);
+	}*/
+}
+
 require_login($course->id, false, $cm);
 
 $context = context_module::instance($cm->id);
@@ -45,6 +55,8 @@ if (isguestuser()) {
 if (!has_capability('mod/via:manage', $context)) {
 	error('You do not have the permission to view via participants');
 }
+
+
 
 $strparticipants = get_string("participants", "via");
 
@@ -78,7 +90,7 @@ if($participanttype === 1){
 
 include('tabs.php');
 
-if($CFG->via_participantmustconfirm && $via->needconfirmation){
+if(get_config('via','via_participantmustconfirm') && $via->needconfirmation){
 
 	$table = new html_table();
 	$table->attributes = array('align'=>'center');
@@ -107,7 +119,7 @@ $groupmode = groups_get_activity_groupmode($cm);
 // $via->enroltype = 1  = inscription manuelle
 
 // we only add participants automatically, all other type of users are added manually
-if($via->enroltype == 0 && $participanttype != 2){ 
+if($via->enroltype == 0 && $participanttype == 1){ 
 	$users = via_participants($course, $via, $currentgroup, $participanttype, $context);
 	if(empty($users)){
 		if($participanttype == 1)	{	
@@ -142,7 +154,7 @@ if($via->enroltype == 0 && $participanttype != 2){
 		}
 		echo "</table>";
 		
-		if($CFG->via_participantmustconfirm && $via->needconfirmation){
+		if(get_config('via','via_participantmustconfirm') && $via->needconfirmation){
 			via_print_confirmation_table($via, $sql, $participants_confirms, $context, $table, false);
 		}			
 
@@ -156,21 +168,55 @@ if($via->enroltype == 0 && $participanttype != 2){
 	$strsearch        = get_string("search");
 	$strsearchresults  = get_string("searchresults");
 	$strshowall = get_string("showall", "moodle", strtolower(get_string("participants", "via")));
+	if($participanttype == 2){
+		echo "<div style='text-align:center; margin:0;'><p>".  get_string('choosepresentor','via') ."</p></div>";
+	}
 
 	$searchtext = optional_param('searchtext', '', PARAM_RAW);
 	if ($frm = data_submitted()) {
 		/// A form was submitted so process the input
 		if (!empty($frm->add) and !empty($frm->addselect)) {
 			foreach ($frm->addselect as $addsubscriber) {
+				if($participanttype == 2){ //presentator
+					// remove other presentors and add the new one selected
+					$presentators = $DB->get_records('via_participants', array('activityid'=>$via->id, 'participanttype'=>2));
+					foreach($presentators as $p){
+						via_remove_participant($p->userid, $via->id);
+						
+						if($via->enroltype == 0 ){ // automatic enrollment							
+							if(!isset($via->noparticipants)){
+								$noparticipants = 0;
+							}else{
+								$noparticipants = $via->noparticipants;
+							}
+							if( $noparticipants == 0){
+								$context = context_course::instance($via->course); 
+								if(has_capability('moodle/course:viewhiddenactivities', $context, $p->userid)){
+									via_add_participant($p->userid, $via->id, 3);	
+								}else{			
+									via_add_participant($p->userid, $via->id, 1);
+								}
+							}else{
+								// add all participants as animators
+								via_add_participant($p->userid, $via->id, 3);
+							}
+						}
+					}
+				}
 				$added = via_add_participant($addsubscriber, $id, $participanttype);
-				if (!$added ) {
+				if (!$added) {
 					$DB->insert_record('via_log', array('userid'=>$addsubscriber, 'viauserid'=>null, 'activityid'=>$id, 'action'=>'adding user manualy', 'result'=>'Could not add user', 'time'=>time()));
 					print_error("Could not add user with id $addsubscriber to this activity!");
+				}elseif($added === 'presenter'){
+					echo "<div style='text-align:center; margin-top:0;' class='error'><h3>". get_string('userispresentor','via') ."</h3></div>";
 				}
 			}
 		} else if (!empty($frm->remove) and !empty($frm->removeselect)) {
 			foreach ($frm->removeselect as $removesubscriber) {
-				if (! via_remove_participant($removesubscriber, $id, $participanttype)) {
+				if($via->enroltype == 0){
+					// if enrollment is automatique we add the user as participant - we do not unenrol him/her
+					via_add_participant($removesubscriber, $via->id, 1);
+				}elseif (! via_remove_participant($removesubscriber, $id)) {
 					$DB->insert_record('via_log', array('userid'=>$removesubscriber, 'viauserid'=>null, 'activityid'=>$id, 'action'=>'removing user manualy', 'result'=>'Could not remove user', 'time'=>time()));
 					print_error("Could not remove user with id $removesubscriber from this activity!");
 				}
@@ -202,13 +248,13 @@ if($via->enroltype == 0 && $participanttype != 2){
 		$users = array();
 	}
 	
-	foreach ($subscribers as $subscriber) {
+	/*foreach ($subscribers as $subscriber) {
 		unset($users[$subscriber->id]);		
-		//if(!has_capability('moodle/course:view', $context, $subscriber->id)){
-		//unset($subscribers[$subscriber->id]);
-		//}
+		if(!has_capability('moodle/course:view', $context, $subscriber->id)){
+		unset($subscribers[$subscriber->id]);
+		}
 
-	} 
+	} */
 
 	/// This is yucky, but do the search in PHP, becuase the list we are using comes from get_users_by_capability,
 	/// which does not allow searching in the database. Fortunately the list is only this list of users in this
@@ -217,11 +263,11 @@ if($via->enroltype == 0 && $participanttype != 2){
 	/// already crashed your server if you are going to. This will be fixed properly for Moodle 2.0: MDL-17550.
 	if ($searchtext) {
 		$searchusers = array();
-		$lcsearchtext = moodle_strtolower($searchtext);
+		$lcsearchtext = textlib::strtolower($searchtext);
 		foreach ($users as $userid => $user) {
-			if (strpos(moodle_strtolower($user->email), $lcsearchtext) !== false ||
-				strpos(moodle_strtolower($user->firstname . ' ' . $user->lastname), $lcsearchtext) !== false ||
-				strpos(moodle_strtolower($user->idnumber), $lcsearchtext) !== false) {
+			if (strpos(textlib::strtolower($user->email), $lcsearchtext) !== false ||
+				strpos(textlib::strtolower($user->firstname . ' ' . $user->lastname), $lcsearchtext) !== false ||
+				strpos(textlib::strtolower($user->idnumber), $lcsearchtext) !== false) {
 					$searchusers[$userid] = $user;
 				}
 				unset($users[$userid]);
@@ -230,11 +276,11 @@ if($via->enroltype == 0 && $participanttype != 2){
 
 		echo $OUTPUT->box_start('center');
 
-		include('manage.form.html');
+		include('manage.form.php');
 
 		echo $OUTPUT->box_end();
 		
-		if($CFG->via_participantmustconfirm && $via->needconfirmation){
+		if(get_config('via','via_participantmustconfirm') && $via->needconfirmation){
 			via_print_confirmation_table($via, $sql, $participants_confirms, $context, $table);	
 		}
 

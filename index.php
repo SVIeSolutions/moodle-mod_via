@@ -20,7 +20,7 @@ $context = context_course::instance($course->id);
 $vias = get_all_instances_in_course('via', $course);
 
 require_login($course->id);
-add_to_log($course->id, 'via', 'view all', 'index.php?id='.$course->id, '');
+//add_to_log($course->id, 'via', 'view all', 'index.php?id='.$course->id, '');
 
 $url = new moodle_url('/mod/via/index.php?id=$course->id');
 //in original url there was also , 'type'-> 'activity'...

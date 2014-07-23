@@ -9,13 +9,11 @@
 
 require_once('../../config.php');
 require_once($CFG->dirroot.'/mod/via/lib.php');
-$PAGE->requires->js('/mod/via/viabutton.js');	
 
 global $DB, $CFG, $USER;
 
 $action = optional_param('action', null, PARAM_CLEAN);
 $id = required_param('id', PARAM_INT);
-
 
 if (!($cm = get_coursemodule_from_id('via', $id))) {
 	error("Course module ID is incorrect");
@@ -31,10 +29,17 @@ if (!($context = context_module::instance($cm->id))) {
     error("Module context is incorrect");
 }
 
+require_login($course->id, false, $cm);
+
 require_capability('mod/via:view', $context);
 
-require_login($course->id, false, $cm);
-add_to_log($course->id, "via", "view session details", "view.php?id=$cm->id", $via->id, $cm->id);
+// Initialize $PAGE
+$PAGE->set_url('/mod/via/view.php', array('id' => $cm->id));
+$PAGE->requires->js('/mod/via/viabutton.js');	
+$PAGE->set_title($course->shortname . ': ' . format_string($via->name));
+$PAGE->set_heading($course->fullname);
+
+//add_to_log($course->id, "via", "view session details", "view.php?id=$cm->id", $via->id, $cm->id);x
 
 // show some info for guests
 if (isguestuser()) {
@@ -58,26 +63,22 @@ if ($frm = data_submitted()) {
 		}
 }
 	
-// We update the activities information with the information from via
-if($via->timemodified <= time()+10*60){
-	try{
-		$svi_infos = update_info_database($via);	
+// We validate if the activity was deleted in Via + if the user has editing rights we update Via with the information in moodle
+try{
 		
-			foreach($svi_infos as $key=>$svi){
-				$default_values[$key] = $svi;
-			}
-			$deleted = false;
-			add_to_log($course->id, 'via', 'update activity info', '', 'activityid : ' . $svi_infos->id, $cm->id, $USER->id);
-		
-	}catch(Exception $e) {
+	$api = new mod_via_api();
+	$svi_infos = $api->activityGet($via); 
+	if($svi_infos == "ACTIVITY_DOES_NOT_EXIST"){
 		$deleted = true;
-	}
+	}elseif ($via->timemodified > time()+2*60 && has_capability('mod/via:manage', $context)) {
+		$update = $api->activityEdit($via);
+	} 
+	
+}catch(Exception $e) {
+	$result = false;
+	notify(get_string("error:".$e->getMessage(), "via"));	
 }
 
-// Initialize $PAGE
-$PAGE->set_url('/mod/via/view.php', array('id' => $cm->id));
-$PAGE->set_title($course->shortname . ': ' . format_string($via->name));
-$PAGE->set_heading($course->fullname);
 $button = $OUTPUT->update_module_button($cm->id,'via');
 $PAGE->set_button($button);
 
@@ -88,7 +89,7 @@ echo $OUTPUT->heading(format_string($via->name));
 
 echo $OUTPUT->box_start('center', '', '', 0, 'generalbox', 'intro');
 
-if($deleted){
+if(isset($deleted)){
 		
 	echo '<p>'.get_string('activity_deleted', 'via').'</p>';
 	echo $OUTPUT->box_end();
@@ -135,7 +136,7 @@ if($deleted){
 	if (has_capability('mod/via:manage', $context)) {
 		
 		$row3 = array();
-		if($CFG->via_sendinvitation){ // if user can send invites
+		if(get_config('via','via_sendinvitation')){ // if user can send invites
 			$row3[] ="<a class='button' href='send_invite.php?id=$cm->instance'><img src='" . $CFG->wwwroot . "/mod/via/pix/mail.png' width='27' height='27' alt='".get_string("sendinvite", "via") . "' title='".get_string("sendinvite", "via") . "'  hspace='5'/>".get_string("sendinvitenow", "via")."</a>";
 		}
 		
@@ -144,12 +145,12 @@ if($deleted){
 		$table->data[] = $row3;
 	}
 	
-	if (!has_capability('mod/via:manage', $context) && $via->needconfirmation && $CFG->via_participantmustconfirm){
+	if (!has_capability('mod/via:manage', $context) && $via->needconfirmation && get_config('via','via_participantmustconfirm')){
 		
 		// if participant must confim attendance
 		$confirmation = true;
 		
-		if($participant_types = $DB->get_records('via_participants', array('userid'=>$USER->id, 'activityid=$via'=>id))){				
+		if($participant_types = $DB->get_records('via_participants', array('userid'=>$USER->id, 'activityid'=>$via->id))){				
 			
 			via_update_moodle_confirmationstatus($via, $USER->id); // check if participant confirmation status changed on Via server
 			
@@ -212,8 +213,8 @@ if($deleted){
 				break;
 			case 2:
 				// acitivity isn't started yet, but animators and presentators can access it to do some preparation
-				$cell->text .= get_string("notstarted", "via").'<br/>'; 
-				//<a class='accessbutton' href='view.via.php?id=$cm->id' target='_blank'><img src='" . $CFG->wwwroot . "/mod/via/pix/access.png' width='27' height='27' alt='".get_string("prepareactivity", "via") . "' title='".get_string("prepareactivity", "via") . "' hspace='5'/>".get_string("prepareactivity", "via")."</a>");
+				$cell->text .= '<p>' .get_string("notstarted", "via").'</p><br/>'; 
+				
 				if($via->recordingmode != 0){
 					$cell->text .= '<p>' .get_string('recordwarning', 'via') .'</p>';
 					$cell->text .= '<p><input type="checkbox" id="checkbox" />'.get_string('recordaccept', 'via').'<p id="error" class="error hide">'.get_string('mustaccept','via').'</p>';
@@ -226,7 +227,7 @@ if($deleted){
 				break;
 			case 3:
 				// for participants : activity isn't started yet
-				$cell->text .= get_string("notstarted", "via");
+				$cell->text .= '<p>' .get_string("notstarted", "via").'</p><br/>'; 
 				$table->data[] = new html_table_row(array($cell));
 				break;
 			case 5:
@@ -247,149 +248,108 @@ if($deleted){
 
 		echo $OUTPUT->box_end();
 		
-		if(has_capability('mod/via:viewactivities', $context)){	
+		function is_mobile_phone(){
 			
-			switch($access){
-				case 1:	
-				case 2:
-				case 3:
-				case 4:
-				case 5:
-					if(via_access_review($via)){
-						// if particpants can view playbacks
-						$playbacks = via_get_all_playbacks($via);
-						
-						if($playbacks){
-							echo "<h2 class='main'>".get_string("recordings", "via")."</h2>";
-							$tablerecord = new stdClass();
-							$tablerecord->cellpadding = 2;
-							$tablerecord->cellspacing = 0;
-							$tablerecord->align = array('left','left', 'left');
-							
-							
-							echo "<table cellpadding='2' cellspacing='0' class='generaltable boxaligncenter' id='via_recordings'>";				
-							$tablerecord->tablealign = "center";
-							
-							foreach($playbacks as $key=>$playback){ 
-								// lists all playbacks for acitivity
-								
-								if(isset($playback->playbackrefid)){
-									$style = "atelier";
-									$li = "<li style='list-style-image:url(".$CFG->wwwroot."/mod/via/pix/arrow.gif);'>";
-									$endli = "</li>";
-								}else{
-									$style = "";	
-									$li = "";
-									$endli = "";
-								}
-								
-								$private = $playback->ispublic? "" : "dimmed_text";
-								
-								if($playback->ispublic || has_capability('mod/via:manage', $context) ){	
-									// if playback is public and/or if user is animator or presentator
-									echo "<tr class='$style'>";
-									
-									echo "<td class='title $style  $private'>$li<b>";
-									
-									echo $playback->title;
-									
-									echo "$endli</b></td>";
-									
-									echo "<td class='duration  $private' style='text-align:left'>".userdate(strtotime($playback->creationdate))."<br/> ".get_string("timeduration", "via")." ".gmdate("H:i:s",  $playback->duration)."</td>";
-									
-									echo "<td class='review  $private'>";
-									
-									if($playback->ispublic || via_get_is_user_presentator($USER->id, $via->id)){
-
-										echo '<form id="'.$key.'" class="playback" action="view.via.php?id='.$cm->id.'&review=1" target="_blank" method="post">
-										<input type="hidden" name="playbackid" value="'.$key.'">
-										<input id="'.$key.'" type="submit" value="'.get_string("view", "via").'" />
-										</form>';  	
-										
-									}else{
-										echo "&nbsp;";	
-									}
-									
-									echo "</td>";
-									
-									if(has_capability('mod/via:manage', $context)){
-										echo "<td class='modify'>";
-										echo '<form id="'.$key.'" class="modify" action="edit_review.php?id='.$via->id.'" method="post">
-										<input type="hidden" name="playbackid" value="'.$key.'">
-										<input id="'.$key.'" type="submit" value="'.get_string("edit", "via").'" />
-										</form></td>';  	
-									}
-									echo "</tr>";
-								}
-							}
-							
-							echo "</table>";
-						}
-					}
-					break;
-				
-				case 6:
-					if(has_capability('moodle/grade:edit', $context, $USER->id)){
-						if(via_access_review($via)){
-							// if particpants can view playbacks
-							$playbacks = via_get_all_playbacks($via);
-							
-							if($playbacks){
-								echo "<h2 class='main'>".get_string("recordings", "via")."</h2>";
-								$tablerecord = new stdClass();
-								$tablerecord->cellpadding = 2;
-								$tablerecord->cellspacing = 0;
-								$tablerecord->align = array('left','left', 'left');
-								
-								
-								echo "<table cellpadding='2' cellspacing='0' class='generaltable boxaligncenter' id='via_recordings'>";				
-								$tablerecord->tablealign = "center";
-								
-								foreach($playbacks as $key=>$playback){ 
-									// lists all playbacks for acitivity
-									
-									if(isset($playback->playbackrefid)){
-										$style = "atelier";
-										$li = "<li style='list-style-image:url(".$CFG->wwwroot."/mod/via/pix/arrow.gif);'>";
-										$endli = "</li>";
-									}else{
-										$style = "";	
-										$li = "";
-										$endli = "";
-									}
-									
-									$private = $playback->ispublic? "" : "dimmed_text";
-									
-									if($playback->ispublic || has_capability('mod/via:manage', $context) ){	
-										// if playback is public and/or if user is animator or presentator
-										echo "<tr class='$style'>";
-										
-										echo "<td class='title $style  $private'>$li<b>";
-										
-										echo $playback->title;
-										
-										echo "$endli</b></td>";
-										
-										echo "<td class='duration  $private' style='text-align:left'>".userdate(strtotime($playback->creationdate))."<br/> ".get_string("timeduration", "via")." ".gmdate("H:i:s",  $playback->duration)."</td>";
-										
-										if(has_capability('mod/via:manage', $context)){
-											echo "<td class='modify'>";
-											echo '<form id="'.$key.'" class="modify" action="edit_review.php?id='.$via->id.'" method="post">
-											<input type="hidden" name="playbackid" value="'.$key.'">
-											<input id="'.$key.'" type="submit" value="'.get_string("edit", "via").'" />
-											</form></td>';   	
-										}
-										echo "</tr>";
-									}
-								}
-								
-								echo "</table>";
-							}
-						}
-					}
-				default:
-					break;
+			$ua = strtolower($_SERVER['HTTP_USER_AGENT']);
+			$mobiles = array("iphone", "ipod", "blackberry", "nokia", "phone",
+				"mobile safari", "iemobile", "ipad", "android");
+			foreach($mobiles as $mobile)
+			{
+				if(strpos($ua,$mobile)) return true;
 			}
+			return false;
+		}
+		
+		if(has_capability('mod/via:viewactivities', $context) && is_mobile_phone() == false){	
+			if(isset($_REQUEST['error'])){
+				echo  'this title aready exists';
+			}
+			
+			$playbacks = via_get_all_playbacks($via);
+						
+			if($playbacks){
+										
+				echo "<table cellpadding='2' cellspacing='0' class='generaltable boxaligncenter' id='via_recordings'>";				
+											
+				foreach($playbacks as $key=>$playback){ 
+					// lists all playbacks for acitivity		
+					if(isset($playback->playbackrefid)){
+						$style = "atelier";
+						$li = "<li style='list-style-image:url(".$CFG->wwwroot."/mod/via/pix/arrow.gif);'>";
+						$endli = "</li>";
+					}else{
+						$style = "";	
+						$li = "";
+						$endli = "";
+					}
+					
+							
+					$private = $playback->ispublic? "" : "dimmed_text";
+					
+								
+					if($playback->ispublic || has_capability('mod/via:manage', $context) /*|| has_capability('moodle/site:config', context_system::instance())*/){	
+						// if playback is public and/or if user is animator or presentator
+						if(!isset($header)){ // we only display it once
+							$header = "<h2 class='main'>".get_string("recordings", "via")."</h2>";
+							echo $header;
+						}
+						echo "<tr class='$style'>";
+									
+						echo "<td class='title $style  $private'>$li";
+									
+						echo $playback->title;
+									
+						echo "$endli</td>";
+									
+						echo "<td class='duration  $private' style='text-align:left'>".userdate(strtotime($playback->creationdate))."<br/> ".get_string("timeduration", "via")." ".gmdate("H:i:s",  $playback->duration)."</td>";
+						
+						if(has_capability('mod/via:manage', $context)){
+							
+							if($playback->ispublic == 1){
+								$checked = get_string("mask", "via");
+								$css = 'mask';
+							}else{
+								$checked = get_string("show", "via");
+								$css = 'show';
+							}
+							
+							echo "<td class='modify'>";
+							echo '<form class="editplayback '.$css.'" action="edit_review.php?id='.$via->id.'" method="post">
+							<input type="hidden" name="playbackid" id="playbackid" value="'.$key.'">
+							<input type="hidden" name="edit" id="edit" value="Enregistrer"  />
+							<input type="submit" name="ispublic" id="ispublic" value="'.$checked.'" /></form>';
+							echo "</td>"; 	
+														 							
+							echo "<td class='modify'>";
+							echo '<form id="'.$key.'" class="modify" action="edit_review.php?id='.$via->id.'" method="post">
+							<input type="hidden" name="playbackid" id="playbackid" value="'.$key.'">
+							<input id="'.$key.'" type="submit" value="'.get_string("edit", "via").'" />
+							</form>'; 
+							echo "</td>"; 	
+							
+						}
+						
+						echo "<td class='review  $private'>";
+						if($private){
+							$param = '&p=1';
+						}else{
+							$param = '';	
+						}
+
+						echo '<form id="'.$key.'" class="playback" action="view.via.php?id='.$cm->id.'&review=1'.$param.'" target="_blank" method="post">
+						<input type="hidden" name="playbackid" value="'.$key.'">
+						<input id="'.$key.'" type="submit" value="'.get_string("view", "via").'" />
+						</form>';  	
+													
+						echo "</td>";
+
+						echo "</tr>";
+					}
+				}
+							
+				echo "</table>";
+			}
+					
 		}
 		
 		

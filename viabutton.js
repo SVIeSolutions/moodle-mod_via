@@ -32,3 +32,22 @@ if (link) {
         document.getElementById("error").className = "error";
     }
 }
+
+//$(document).ready(function () {
+//    $('input.ispublic').change(function () {
+
+//        $this = $(this);
+
+//        $.post(
+//          "edit_review.php",
+//          {
+//              value: $this.val(),
+//              checked: $this.is(':checked')
+//          },
+//          function (data) {
+//              // do something with returned data
+//          },
+//          'json'
+//        );
+//    });
+//});

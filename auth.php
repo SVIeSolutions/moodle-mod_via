@@ -33,7 +33,7 @@ $muser = authenticate_user_login($login, $password);
 
 if($muser){
 	$api = new mod_via_api();
-	$response = $api->UserGetSSOtoken(null, null, null, $muser->id);
+	$response = $api->UserGetSSOtoken(null, null, null, null, $muser->id);
 	
 	$response = explode('=', $response);
 	$url = $response[0];

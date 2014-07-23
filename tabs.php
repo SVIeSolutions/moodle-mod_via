@@ -36,9 +36,11 @@
     $activetwo = NULL;
     $tabs = array();
     $row = array();
-
-    $row[] = new tabobject('participants', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=1', get_string("participants", "via"));
-    
+	
+	if($via->noparticipants != 1){
+		$row[] = new tabobject('participants', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=1', get_string("participants", "via"));
+	}
+	
     $row[] = new tabobject('animators', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=3', get_string("animators", "via"));
 	
 	$row[] = new tabobject('presentator', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=2', get_string("presentator", "via"));

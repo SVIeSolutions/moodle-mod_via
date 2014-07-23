@@ -54,21 +54,42 @@ if (empty($_POST)) {
 	$form .= '<tr><td>'.get_string('cat_name', 'via').'</td><td>'.get_string('cat_check', 'via').'</td><td>'.get_string('cat_default', 'via').'</td></tr>';
 	
 	$form .= '<form name="category" method="post" action="" id="form" >';
-	
-	foreach($via_catgeories["Category"] as $cat){
-		$checked = '';
-		$picked = '';
-		foreach($existingcats as $exists){
-			if($cat['CategoryID'] == $exists->id_via){
+	if (isset($via_catgeories["Category"]["CategoryID"])){
+			$checked = '';
+			$picked = '';
+			foreach($existingcats as $exists){
+			if($via_catgeories["Category"]["CategoryID"] == $exists->id_via){
 				$checked = ' checked';
-				if($defaultcat && $cat['CategoryID'] == $defaultcat->id_via){
-					$picked = ' Checked';
+				if($defaultcat && $$via_catgeories["Category"]["CategoryID"] == $defaultcat->id_via){
+						$picked = ' Checked';
+					}
 				}
+				
 			}
+		$form .= '<tr><td>'.$via_catgeories["Category"]["Name"].'</td><td><input type=\'checkbox\' name=\'category[]\' value=\''.$via_catgeories["Category"]["CategoryID"].'$'.$via_catgeories["Category"]["Name"].'\''.$checked.' onchange="change('.$i.');" /></td><td><input type="radio" name="isdefault" value="'.$via_catgeories["Category"]["CategoryID"].'" '.$picked.' id="'.$i.'" ></td></tr>';
 			
+					
+	}else{
+		if($via_catgeories != ""){
+			foreach($via_catgeories["Category"] as $cat){
+				$checked = '';
+				$picked = '';
+				foreach($existingcats as $exists){
+					if($cat["Category"]['CategoryID'] == $exists->id_via){
+						$checked = ' checked';
+						if($defaultcat && $cat["Category"]['CategoryID'] == $defaultcat->id_via){
+							$picked = ' Checked';
+						}
+					}
+					
+				}
+				$form .= '<tr><td>'.$cat['Name'].'</td><td><input type=\'checkbox\' name=\'category[]\' value=\''.$cat['CategoryID'].'$'.$cat['Name'].'\''.$checked.' onchange="change('.$i.');" /></td><td><input type="radio" name="isdefault" value="'.$cat['CategoryID'].'" '.$picked.' id="'.$i.'" ></td></tr>';
+				$i++;
+			}
+		}else{
+			$form .= '<tr><td>'.get_string('no_categories','via').'</td></tr>';
 		}
-		$form .= '<tr><td>'.$cat['Name'].'</td><td><input type=\'checkbox\' name=\'category[]\' value=\''.$cat['CategoryID'].'$'.$cat['Name'].'\''.$checked.' onchange="change('.$i.');" /></td><td><input type="radio" name="isdefault" value="'.$cat['CategoryID'].'" '.$picked.' id="'.$i.'" ></td></tr>';
-		$i++;
+			
 		
 	}
 	$form .= '<tr><td>'.get_string('no_default', 'via') .'</td><td></td><td><input type="radio" name="isdefault" value="0" '.$none.'></td></tr>';

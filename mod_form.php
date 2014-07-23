@@ -33,7 +33,6 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->addElement('htmleditor', 'description', get_string('description', 'via'));
         $mform->setType('description', PARAM_RAW);
         $mform->addRule('description', null, 'required', null, 'server');
-        //$mform->setHelpButton('description', array('writing', 'richtext'), false, 'editorhelpbutton');
 		
 		// Grade
 		$mform->addElement('modgrade', 'grade', get_string('grade'));
@@ -49,10 +48,10 @@ class mod_via_mod_form extends moodleform_mod {
 		// Permanent activity
 		$mform->addElement('checkbox', 'activitytype', get_string("permanent", "via"));
 		$mform->disabledIf('activitytype', 'pastevent', 'eq', 1);
-		//$mform->setHelpButton('activitytype', array('activitytype', get_string('permanent','via'), 'via'));
+		$mform->addHelpButton('activitytype', 'permanent', 'via');
 		
 		// Start Date
-		$mform->addElement('date_time_selector', 'datebegin', get_string('availabledate', 'assignment'), array('optional'=>false));
+		$mform->addElement('date_time_selector', 'datebegin', get_string('availabledate', 'via'), array('optional'=>false));
 		$mform->setDefault('datebegin', time());
 		$mform->disabledIf('datebegin', 'activitytype', 'checked');
 		$mform->disabledIf('datebegin', 'nowevent', 'eq', 1);			
@@ -79,7 +78,7 @@ class mod_via_mod_form extends moodleform_mod {
 		$mform->disabledIf('remindertime', 'activitytype', 'checked'); // cannot send reminder if permanent activity
 		$mform->disabledIf('remindertime', 'nowevent', 'eq', 1);
 		$mform->disabledIf('remindertime', 'pastevent', 'eq', 1);
-		//$mform->setHelpButton('remindertime', array('session', get_string('sendrecall','via'), 'via'));
+		$mform->addHelpButton('remindertime', 'sendrecall', 'via');
 		
 		//************************************************************************//
 		//										 SESSION PARAMETERS
@@ -94,7 +93,7 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->setDefault('roomtype', 1);
 		$mform->disabledIf('roomtype', 'nowevent', 'eq', 1);
 		$mform->disabledIf('roomtype', 'pastevent', 'eq', 1);
-		//$mform->setHelpButton('roomtype', array('session', get_string('roomtype','via'), 'via'));
+		$mform->addHelpButton('roomtype', 'roomtype', 'via');
 
 		$quality_options = via_get_listProfils();
 		
@@ -111,7 +110,7 @@ class mod_via_mod_form extends moodleform_mod {
 		
         $mform->setDefault('profilid', $quality_default);
 		$mform->disabledIf('profilid', 'pastevent', 'eq', 1);
-		//$mform->setHelpButton('profilid', array('session', get_string('multimediaquality','via'), 'via'));
+		$mform->addHelpButton('profilid', 'multimediaquality', 'via');
 		
 		//Session recordings	
 		$record_options = array( 0 => get_string('notactivated', 'via'), 1 => get_string('unified', 'via'), 2 => get_string('multiple', 'via'));			
@@ -119,35 +118,35 @@ class mod_via_mod_form extends moodleform_mod {
 		$mform->addElement('select', 'recordingmode', get_string('recordingmode', 'via'), $record_options);
 		$mform->setDefault('recordingmode', 0);				
 		$mform->disabledIf('recordingmode', 'pastevent', 'eq', 1);
-		//$mform->setHelpButton('recordingmode', array('session', get_string('recordingmode','via'), 'via'));
+		$mform->addHelpButton('recordingmode','recordingmode', 'via');
 		
 		$recordbehavior_options = array( 1 => get_string('automatic', 'via'), 2 => get_string('manual', 'via'));		
 		$mform->addElement('select', 'recordmodebehavior', get_string('recordmodebehavior', 'via'), $recordbehavior_options);
         $mform->setDefault('recordmodebehavior', 1);	
 		$mform->disabledIf('recordmodebehavior', 'recordingmode', 'eq', 0);
 		$mform->disabledIf('recordmodebehavior', 'pastevent', 'eq', 1);
-		//$mform->setHelpButton('recordmodebehavior', array('session', get_string('recordmodebehavior','via'), 'via'));
+		$mform->addHelpButton('recordmodebehavior', 'recordmodebehavior','via');
 		
 		//Review playbacks
         $mform->addElement('selectyesno', 'isreplayallowed', get_string('reviewacitvity', 'via'));
         $mform->setDefault('isreplayallowed', 0);
 		$mform->disabledIf('isreplayallowed', 'recordingmode', 'eq', 0);
-		//$mform->setHelpButton('isreplayallowed', array('session', get_string('reviewacitvity','via'), 'via'));
+		$mform->addHelpButton('isreplayallowed', 'reviewacitvity','via');
 		
 		$waiting_room_options = array( 0 => get_string('donousewaitingroom', 'via'), 1 => get_string('inpresentatorabsence', 'via'), 2 => get_string('awaitingauthorization', 'via'));			
         $mform->addElement('select', 'waitingroomaccessmode', get_string('waitingroomaccessmode', 'via'), $waiting_room_options);
         $mform->setDefault('waitingroomaccessmode', 0);				
 		$mform->setAdvanced('waitingroomaccessmode', true);
 		$mform->disabledIf('waitingroomaccessmode', 'pastevent', 'eq', 1);
-		//$mform->setHelpButton('waitingroomaccessmode', array('session', get_string('waitingroomaccessmode','via'), 'via'));
+		$mform->addHelpButton('waitingroomaccessmode', 'waitingroomaccessmode','via');
 		
-		if($CFG->via_participantmustconfirm){
+		if(get_config('via','via_participantmustconfirm')){
 			$mform->addElement('selectyesno', 'needconfirmation', get_string('needconfirmation', 'via'));
 			$mform->setType('needconfirmation', PARAM_BOOL);
 			$mform->setDefault('needconfirmation', 0);
 			$mform->setAdvanced('needconfirmation', true);
 			$mform->disabledIf('needconfirmation', 'pastevent', 'eq', 1);
-			//$mform->setHelpButton('needconfirmation', array('session', get_string('needconfirmation','via'), 'via'));
+			$mform->addHelpButton('needconfirmation', 'needconfirmation','via');
 		}else{
 			$mform->addElement('hidden', 'needconfirmation', 0);
 			$mform->setType('needconfirmation', PARAM_BOOL);
@@ -156,7 +155,7 @@ class mod_via_mod_form extends moodleform_mod {
 		//************************************************************************//
 		//							          		Categories
 		//************************************************************************//
-		if($CFG->via_categories){
+		if(get_config('via','via_categories')){
 			$mform->addElement('header', 'categoriesheader', get_string('categoriesheader', 'via'));
 			$via_catgeories = $DB->get_records('via_categories');
 			$defaultcat = $DB->get_record('via_categories', array('isdefault'=>1));
@@ -193,7 +192,12 @@ class mod_via_mod_form extends moodleform_mod {
 
         $mform->addElement('select', 'enroltype', get_string('enrolmenttype', 'via'), $enrolment_options);
         $mform->setDefault('enroltype', 0);
-		//$mform->setHelpButton('enroltype', array('enroltype', get_string('enrolmenttype','via'), 'via'));
+		$mform->addHelpButton('enroltype', 'enrolmenttype','via');
+		
+		$mform->addElement('checkbox', 'noparticipants',  get_string('noparticipantscheckbox','via'));
+		$mform->setDefault('noparticipants', 0);
+		$mform->disabledIf('noparticipants', 'enroltype', 'eq', 1);		
+		$mform->addHelpButton('noparticipants', 'noparticipants', 'via');
 		
 		//************************************************************************//
 		//							          		HIDDEN INFO
@@ -202,7 +206,6 @@ class mod_via_mod_form extends moodleform_mod {
 		$mform->addElement('hidden', 'creator', $USER->id);
 		$mform->setType('creator', PARAM_INT);
 		
-		//$mform->addElement('hidden', 'backupvia', 0);
 		$mform->addElement('hidden', 'pastevent', 0);
 		$mform->setType('pastevent', PARAM_BOOL);
 		
@@ -272,6 +275,8 @@ class mod_via_mod_form extends moodleform_mod {
 	}
 	
 	function validation($data, $files) {
+		global $DB;
+		
         $errors = parent::validation($data, $files);
         if ((($data['datebegin'] + ($data['duration']*60) < time() && !$data['viaactivityid'] && $data['activitytype'] == 0) || ($data['viaactivityid'] != 0 && ($data['datebegin'] != 0 && ($data['datebegin'] + ($data['duration']*60) < time())) && $data['activitytype'] == 0)) && $data['pastevent']==0) {
 			$errors['datebegin'] = get_string('passdate', 'via');
@@ -280,7 +285,11 @@ class mod_via_mod_form extends moodleform_mod {
 		if(isset($data['activitytype']) && $data['activitytype'] == 1 && isset($data['recordingmode']) && $data['recordingmode']==1){
 			$errors['recordingmode'] = get_string('nounifiedrecordpermanent', 'via');
 		}
-        return $errors;
+		
+		if(($data['enroltype'] == 1) || (!isset($data['noparticipants']))) {
+			$DB->set_field('via', 'noparticipants', '0', array('id'=>$this->_instance));
+		}
+       return $errors;
     }
 
 }
