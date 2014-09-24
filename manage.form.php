@@ -8,12 +8,7 @@
       </td>
       <td></td>
       <td valign="top">
-          <?php echo count($users) . " " . $strpotentialparticipants;
-          if(!empty($groupingonly)){
-          	echo $groupingonly;
-          }
-        
-        ?>
+          <?php echo count($users) . " " . $strpotentialparticipants;  ?>
       </td>
     </tr>
     <tr>
@@ -25,7 +20,12 @@
           <?php 
               foreach ($subscribers as $subscriber) {
                   $fullname = fullname($subscriber, true);
-                echo "<option value=\"$subscriber->id\">".$fullname.", ".$subscriber->email."</option>\n";
+          	if ($participanttype != 2 && $groupingid != 0 && $subscriber->groupingid == $groupingid){
+          			echo "<option value=\"$subscriber->id\" disabled>".$fullname.", ".$subscriber->email. "</option>\n";
+          		}else{
+          			echo "<option value=\"$subscriber->id\" >".$fullname.", ".$subscriber->email. "</option>\n";
+				}
+          		
               }
           ?>
           

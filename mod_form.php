@@ -46,9 +46,11 @@ class mod_via_mod_form extends moodleform_mod {
 		$mform->addElement('header', 'activityduration', get_string('headerduration', 'via'));
 		
 		// Permanent activity
-		$mform->addElement('checkbox', 'activitytype', get_string("permanent", "via"));
-		$mform->disabledIf('activitytype', 'pastevent', 'eq', 1);
-		$mform->addHelpButton('activitytype', 'permanent', 'via');
+		if(get_config('via', 'via_permanentactivities') == 1){
+			$mform->addElement('checkbox', 'activitytype', get_string("permanent", "via"));
+			$mform->disabledIf('activitytype', 'pastevent', 'eq', 1);
+			$mform->addHelpButton('activitytype', 'permanent', 'via');
+		}
 		
 		// Start Date
 		$mform->addElement('date_time_selector', 'datebegin', get_string('availabledate', 'via'), array('optional'=>false));

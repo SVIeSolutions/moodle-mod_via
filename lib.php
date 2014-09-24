@@ -81,10 +81,18 @@ function via_add_instance($via) {
 		}
 		
 		$context = context_course::instance($via->course); 
+		$query = null;
 
-		if($via->enroltype == 0){ // if automatic enrol
+		if($via->enroltype == 0 && $via->groupingid == 0){ // if automatic enrol
 			//We add users
 			$query = 'select a.id as rowid, a.*, u.* from mdl_role_assignments as a, mdl_user as u where contextid=' . $context->id . ' and a.userid=u.id';
+		}elseif ($via->groupingid != 0){
+			$query ='SELECT u.* FROM mdl_groupings_groups gg 
+					LEFT JOIN mdl_groups_members gm ON gm.groupid = gg.groupid
+					LEFT JOIN mdl_user u ON u.id = gm.userid 
+					WHERE gg.groupingid = '.$via->groupingid.'';
+		}
+		if($query){
 			$users = $DB->get_records_sql( $query );
 			if(!isset($via->noparticipants)){
 				$noparticipants = 0;
@@ -190,30 +198,69 @@ function via_update_instance($via) {
 		return false;
 	}
 	
+	$cm = get_coursemodule_from_instance("via", $via->id, $via->course);
+	
 	// update enrollements 
-	if($via->enroltype == 0){ // if automatic enrol
 		//We add users
-		$context = context_course::instance($via->course); 
-		$query = 'select a.id as rowid, a.*, u.* from mdl_role_assignments as a, mdl_user as u where contextid=' . $context->id . ' and a.userid=u.id';
-		$users = $DB->get_records_sql( $query );
-		if(!isset($via->noparticipants)){
-			$noparticipants = 0;
-		}else{
-			$noparticipants = $via->noparticipants;
-		}
-		foreach($users as $user) {
-			if( $noparticipants == 0){
-				if(has_capability('moodle/course:viewhiddenactivities', $context, $user->id)){
-					via_add_participant($user->id, $via->id, 3);	
-				}else{			
-					via_add_participant($user->id, $via->id, 1);
-				}
-			}else{
-				// add all participants as animators
-				via_add_participant($user->id, $via->id, 3);
+		$context = context_course::instance($via->course);
+		$query = null;	
+		$query_oldusers = null;
+	
+		
+		if($viaactivity->enroltype != $via->enroltype && $via->enroltype == 0 && $via->groupingid == 0){// if automatic enrol 
+			$query = 'select a.id as rowid, a.*, u.* from mdl_role_assignments as a, mdl_user as u where contextid=' . $context->id . ' and a.userid=u.id';
+		
+		}elseif ($via->groupingid != 0){
+			if($viaactivity->groupingid != $via->groupingid){
+
+				$query ='SELECT u.* FROM mdl_groupings_groups gg 
+						LEFT JOIN mdl_groups_members gm ON gm.groupid = gg.groupid
+						LEFT JOIN mdl_user u ON u.id = gm.userid
+						WHERE gg.groupingid = '.$via->groupingid.'';
+				
+				$query_oldusers ='SELECT u.* FROM mdl_groupings_groups gg 
+						LEFT JOIN mdl_groups_members gm ON gm.groupid = gg.groupid
+						LEFT JOIN mdl_user u ON u.id = gm.userid
+						WHERE gg.groupingid = '.$viaactivity->groupingid.'';
 			}
 		}
-	}
+		
+		if($query){
+			$users = $DB->get_records_sql( $query );
+			if($query_oldusers){
+				$oldusers = $DB->get_records_sql($query_oldusers);
+			}else{
+				$oldusers = null;
+			}
+			
+			if(!isset($via->noparticipants)){
+				$noparticipants = 0;
+			}else{
+				$noparticipants = $via->noparticipants;
+			}
+			foreach($users as $user) {
+				if( $noparticipants == 0){
+					if(has_capability('moodle/course:viewhiddenactivities', $context, $user->id)){
+						via_add_participant($user->id, $via->id, 3);	
+					}else{			
+						via_add_participant($user->id, $via->id, 1);
+					}
+				}else{
+					// add all participants as animators
+					via_add_participant($user->id, $via->id, 3);
+				}
+			unset($oldusers[$user->id]);	/* we don't want to add then remove */
+			}
+			if($oldusers){
+				/*we need to remove all the old group users from participants list */
+				foreach($oldusers as $olduser){
+					via_remove_participant($olduser->id, $via->id);
+				}
+			}
+		}
+		
+	
+	//}
 	
 	via_grade_item_update($via); 
 	
@@ -259,26 +306,23 @@ function via_update_instance($via) {
 function via_delete_instance($id) {
 	global $DB;
 	$result = true;
-
-	$via = $DB->get_record('via', array('id'=>$id));
 	
-	if(!$via->backupvia){ 
-		// if activity was never backuped on Moodle, delete only moodle instance AND via instance
-		$api = new mod_via_api();
+	$api = new mod_via_api();
 		
-		try {
-			$response = $api->activityEdit($via, 2);
+	try {
+		$via = $DB->get_record('via', array('id'=>$id));
+		if(!get_config('via', 'via_activitydeletion')){
+			$activitystate = '2';
+			$response = $api->activityEdit($via, $activitystate);
 		}
-		catch (Exception $e){
-			$result = false;
-			print_error(get_string("error:".$e->getMessage(), "via"));
-			return false;		
-		}
-	}else{
-		// if activity was backuped on Moodle, do not delete actvity on VIA
-		// We only unenrol participants
-		$result = via_remove_participants(array($via));
+		
 	}
+	catch (Exception $e){
+		$result = false;
+		print_error(get_string("error:".$e->getMessage(), "via"));
+		return false;		
+	}
+
 	
 	if($result){	
 		if (!$DB->delete_records('via', array('id'=>$id))) {
@@ -455,8 +499,8 @@ function update_info_database($values){
  * @param string $sort sort order. As for get_users_by_capability.
  * @return array list of users.
  */
-function via_get_potential_participants($viacontext, $groupid, $fields, $sort) {
-	return get_users_by_capability($viacontext, 'mod/via:view', $fields, $sort, '', '', $groupid, '', false, true);
+function via_get_potential_participants($viacontext, $fields, $sort) {
+	return get_users_by_capability($viacontext, 'mod/via:view', $fields, $sort, '', '', '', '', false, true);
 }
 
 /**
@@ -469,25 +513,17 @@ function via_get_potential_participants($viacontext, $groupid, $fields, $sort) {
  * @return array list of users.
  */
 
-function via_participants($course, $via, $groupid=0, $participanttype, $context = NULL) {
+function via_participants($course, $via, $participanttype, $context = NULL) {
 	global $CFG, $DB;
-
-	if ($groupid) {
-		$grouptables = ", mdl_groups_members gm ";
-		$groupselect = "AND gm.groupid = $groupid AND u.id = gm.userid";
-	} else  {
-		$grouptables = '';
-		$groupselect = '';
-	}
 	
 	$results = $DB->get_records_sql('SELECT distinct u.id, '.user_picture::fields('u').', u.username, u.firstname, u.lastname, u.maildisplay, u.mailformat, u.maildigest, u.emailstop, 
-									u.imagealt, u.idnumber, u.email, u.city, u.country, u.lastaccess, u.lastlogin, u.picture, u.timezone, u.theme, u.lang, u.trackforums, u.mnethostid
+									u.imagealt, u.idnumber, u.email, u.city, u.country, u.lastaccess, u.lastlogin, u.picture, u.timezone, u.theme, u.lang, u.trackforums, u.mnethostid 
 								   FROM mdl_user u,
-                                   mdl_via_participants s '. $grouptables.'
+                                   mdl_via_participants s 
 									WHERE s.activityid = '.$via->id.'
 									AND s.userid = u.id 
 									AND s.participanttype = '. $participanttype.' 
-									AND u.deleted = 0  '. $groupselect.' 
+									AND u.deleted = 0  
 									ORDER BY u.email ASC ');
 	
 
@@ -514,7 +550,7 @@ function via_participants($course, $via, $groupid=0, $participanttype, $context 
  * @param integer $userid the user id we are updating his status
  * @return integer the user confirmation status or FALSE if user is no longer enrol in this activity.
  */
-function via_update_moodle_confirmationstatus($via, $userid){
+/*function via_update_moodle_confirmationstatus($via, $userid){
 	global $CFG, $DB;
 	
 	$result = true;
@@ -547,7 +583,7 @@ function via_update_moodle_confirmationstatus($via, $userid){
 			}
 		}
 	}
-}
+}*/
 
 
 /**
@@ -626,9 +662,7 @@ function via_add_participant($userid, $viaid, $type, $confirmationstatus=NULL, $
 						}
 						
 						$added = via_add_participant($muser->id, $participant->activityid, $type, null, null, 1);
-						if(!$added){
-							$DB->insert_record('via_log', array('userid'=>$muser->id, 'viauserid'=>$muser->viauserid, 'activityid'=>$participant->activityid, 'action'=>'deleted user could not be added to activity', 'result'=>'user NOT added', 'time'=>time()));
-						}
+						
 					}
 				}
 			}
@@ -666,8 +700,7 @@ function via_add_participant($userid, $viaid, $type, $confirmationstatus=NULL, $
 			}
 			
 		}catch (Exception $e){
-			$via_user = $DB->get_record('via_users', array('userid'=>$userid));
-			$DB->insert_record('via_log', array('userid'=>$userid, 'viauserid'=>$via_user->viauserid, 'activityid'=>$viaid, 'action'=>'call to API with via_add_participant', 'result'=>$e->getMessage(), 'time'=>time()));
+			
 			$added = false;
 		}
 	}
@@ -911,61 +944,20 @@ function via_remove_participant($userid, $viaid, $type=NULL) {
 	
 	$via = $DB->get_record('via', array('id'=>$viaid));
 	
-	//if($type && $user_roles = $DB->get_records_sql("SELECT * FROM mdl_via_participants WHERE userid=$userid AND activityid=$viaid")) {		
-	//	if(count($user_roles)>1){
-	//		$update = true;
-	//		foreach($user_roles as $user_role){
-	//			if($user_role->participanttype == $type){
-	//				continue;
-	//			}
-	//			if($user_role->participanttype == 2){ // presentator
-	//				$update = false;
-	//				$new_role = 2;
-	//				continue;
-	//			}
-	//			if($user_role->participanttype > $type && $update){ // animator
-	//				$update = false;
-	//				$new_role = $user_role->participanttype;
-	//				continue;
-	//			}
-	//			$new_role = $user_role->participanttype; // participant
-	//		}
-	//	}
-	//}
-
 	// now we update it on via
 	$api = new mod_via_api();
 
 	try {
-		//if(!isset($new_role)){
-			$response = $api->removeUserActivity($via->viaactivityid, $userid);
-			return $DB->delete_records('via_participants', array('userid'=>$userid, 'activityid'=>$viaid));		
-		/*}else{
-			$sub = new stdClass();
-			$sub->userid  = $userid;	
-			$viaactivity = $via;
-			$sub->activityid = $viaid;
-			$sub->viaactivityid = $viaactivity->viaactivityid;
-			$sub->participanttype = $new_role;
-			//$sub->confirmationstatus = 2;
-			$sub->confirmationstatus = 1;
-			
-			$response = $api->addUserActivity($sub);
-			
-			
-		}*/
+		
+		$response = $api->removeUserActivity($via->viaactivityid, $userid);
+		return $DB->delete_records('via_participants', array('userid'=>$userid, 'activityid'=>$viaid));		
+		
 	}
 	catch (Exception $e){
 		notify(get_string("error:".$e->getMessage(), "via"));
 		$result = false;
 	}
 	
-	//if($type){
-		// if user has more than one role for activity, we do not want do remove any entry.
-		//return $DB->delete_records('via_participants', array('userid'=>$userid, 'activityid'=> $viaid, 'participanttype'=>$type));		
-	//}else{
-		
-	//}
 }
 
 /**
@@ -1073,9 +1065,8 @@ function via_access_activity($via){
 				}
 				$type = get_user_type($USER->id, $via->course, $via->noparticipants);
 				$added = via_add_participant($USER->id, $via->id, $type, NULL, 1);
-				if($added && $added != 'prensenter'){
-					$DB->insert_record('via_log', array('userid'=>$USER->id, 'viauserid'=>$viauserid, 'activityid'=>$via->id, 'action'=>'user accesses activity details', 'result'=>'user added', 'time'=>time()));
-				}elseif($added === 'presenter'){
+				
+				if($added === 'presenter'){
 					echo "<div style='text-align:center; margin-top:0;' class='error'><h3>". get_string('userispresentor','via') ."</h3></div>";
 				}
 			}else{
@@ -1110,118 +1101,106 @@ function via_access_activity($via){
 	}
 }
 
-/**
-*  Constructs rows for a table with all participants and confirmation status
- *
-* @param integer $id via id
-* @param object $context course context
-* @param object $via the via
-* @param object $table object table to construct
-* @param object $participants_confirms list of particpants from moodle
-* @param bool $quickupdate if true, we do not update confirmation status
-* @return object the table with data rows
-*/
-function via_get_confirmation_table($id, $context, $via, $table, $participants_confirms, $quickupdate=FALSE){
-	global $CFG;
+function get_participants_list_table($via, $context){
+	global $DB, $CFG;
 	
-	foreach($participants_confirms as $participant_confirm){		
-		
-		if(has_capability('moodle/course:viewparticipants', $context)){
-			//commented by svi when making sure participants weren't deleted from list, uncommented durning search for error		
-			if(!$quickupdate){
-				//we need to get updates from via server
-				$participant_confirm_update = via_update_moodle_confirmationstatus($via, $participant_confirm->id);
-			}else{
-				// we do not need to update status, already done
-				$participant_confirm_update = $participant_confirm->confirmationstatus;
-			}
-			/////
-			
-			if($participant_confirm_update !== false){	
-				
-				if($participant_confirm_update == 1){
-					$confirmimg = "waiting_confirm.gif";
-					$confirmtitle = get_string("waitingconfirm", "via");
-				}elseif($participant_confirm_update== 2){
-					$confirmimg = "confirm.gif";
-					$confirmtitle = get_string("confirmed", "via");
-				}else{
-					$confirmimg = "refuse.gif";
-					$confirmtitle = get_string("refused", "via");			
-				}
-				// changed type of table
-				$table->data[] = array($participant_confirm->firstname, $participant_confirm->lastname, "<a href='mailto:".$participant_confirm->email."'>".$participant_confirm->email."</a>", "<img src='" . $CFG->wwwroot . "/mod/via/pix/".$confirmimg."' width='16' height='16' alt='".$confirmtitle . "' title='".$confirmtitle . "' align='absmiddle'/>");		
-			}
-		}	
-	}
-	return $table;
-}
-
-/**
-*  prints a table with all participants and confirmation status
- *
-* @param integer $via via 
-* @param object $sql the sql requests to get all students
-* @param object $participants_confirms first result of sql request
-* @param object $context course context
-* @param object $table object table to construct
-* @param bool $printbox if true, wrap table un a simple box
-*/
-function via_print_confirmation_table($via, $sql, $participants_confirms, $context, $table){
-	global $CFG, $DB, $OUTPUT;
+	$participants_list = get_via_participants_list($via);
+	
 	if(get_config('via','via_participantmustconfirm') && $via->needconfirmation){
-
-		echo $OUTPUT->box_start('center');
-
-		echo "<div style='text-align:center'>";
-		
-		echo "<h2>".get_string("confirmation", "via")."</h2>";	
-		
-		$participants_confirms_updated = $DB->get_records_sql($sql);	
-		
-		if($participants_confirms != $participants_confirms_updated){
-			// a participant was added or remove from activity, we have to update de confirmations' table
-			$table->data = array();
-			$table = via_get_confirmation_table($via->id, $context, $via, $table, $participants_confirms_updated, true);
-			
-		}
-		
-		echo html_writer::table($table, 'center');
-		
-		echo "<div style='padding-top:0.2em;'><img src='" . $CFG->wwwroot . "/mod/via/pix/confirm_small.gif' width='16' height='16' alt='".get_string("confirmed", "via") . "' title='".get_string("confirmed", "via") . "' align='absmiddle' hspace='3'/><span style='font-size:0.9em; padding-right:1em;'>".get_string("confirmed", "via")."</span><img src='" . $CFG->wwwroot . "/mod/via/pix/refuse_small.gif' width='16' height='16' alt='".get_string("refused", "via") . "' title='".get_string("refused", "via") . "' align='absmiddle' hspace='3'/><span style='font-size:0.9em; padding-right:1em;'>".get_string("refused", "via")."</span><img src='" . $CFG->wwwroot . "/mod/via/pix/waiting_confirm_small.gif' width='16' height='16' alt='".get_string("waitingconfirm", "via") . "' title='".get_string("waitingconfirm", "via") . "' align='absmiddle' hspace='3'/><span style='font-size:0.9em; padding-right:1em;'>".get_string("waitingconfirm", "via")."</span></div>";
-		
-		echo "</div>";
-
-		echo $OUTPUT->box_end();
+		$conf = '<th>'. get_string("confirmationstatus", "via").'</th>';
+	}else{
+		$conf = '';
 	}
 
+	$userlist = "<h2 class='main'>".get_string("viausers", "via")."</h2>";
+	$userlist .= "<table cellpadding='2' cellspacing='0' class='generaltable boxaligncenter' style='width: 90%;'>";
+	$userlist .= '<tr><th style="text-align:left" >'. get_string("role", "via").'</th><th style="text-align:left" >'. get_string("lastname").', '. get_string("firstname").'</th><th style="text-align:left" >'. get_string("email").'</th>'.$conf.'<th style="text-align:center">'. get_string("config", "via").'</th></tr>';
+	
+	$conf_status = '';
+	
+	if($participants_list){
+		foreach($participants_list as $key => $value){
+			if(strpos($key,'attr') !== false ){
+				
+				if($value['ParticipantType'] == "1"){
+					$role = '<img src="' . $CFG->wwwroot . '/mod/via/pix/participant.png" width="25" height="25" alt="participant" style="vertical-align: bottom;" /> ' . get_string("participant", "via");
+				}elseif($value['ParticipantType'] == "2"){
+					$role = '<img src="' . $CFG->wwwroot . '/mod/via/pix/presentor.png" width="25" height="25" alt="presentor" style="vertical-align: bottom;" /> ' . get_string("presentator", "via");
+				}else{
+					$role = '<img src="' . $CFG->wwwroot . '/mod/via/pix/animator.png" width="25" height="25" alt="animator" style="vertical-align: bottom;" /> ' . get_string("animator", "via");
+				}
+				
+				if($value['SetupState'] == "0"){
+					$state = '<span style="color:#72ba12;" >'.get_string("finish", "via"). '</span>';
+				}elseif($value['SetupState'] == "1"){
+					$state = '<span style="color:#dab316;" >'. get_string("incomplete", "via"). '</span>';
+				}else{
+					$state = '<span style="color:#da1616;" >'.get_string("neverbegin", "via"). '</span>';
+				}
+				
+				if($conf != ''){
+					$conf_status = get_confirmationstatus($value["ConfirmationStatus"]);
+				}
+				
+				$vuser = $DB->get_record_sql('SELECT * FROM mdl_via_users vu 
+											  LEFT JOIN mdl_user u ON u.id = vu.userid 
+											  WHERE vu.viauserid = \''.$value['UserID'] .'\' AND u.deleted = 0');
+				if(has_capability('mod/via:manage', $context)){ /* students can not see the user profiles */ 	
+					if($vuser){
+						$userinfo = '<a href="'. $CFG->wwwroot .'/user/profile.php?id='.$vuser->userid.'">'. $value['LastName'].', '. $value['FirstName'].'</a>';
+					}
+				}else{
+					$userinfo = $value['LastName'].', '. $value['FirstName'];
+				}
+				
+				if($vuser){ /* only add if the user is in via_users table */
+					$userlist .= '<tr><td>'. $role .'</td><td>'.$userinfo.'</td><td>'. $value['Email'].'</td>'.$conf_status.'<td style="text-align:center">'. $state .'</td></tr>';
+				}
+			}
+		}
+	}else{
+		$presenter = $DB->get_record_sql('SELECT u.*, vp.* FROM mdl_via_participants vp
+											LEFT JOIN mdl_user u ON vp.userid = u.id
+											WHERE activityid='.$via->id. ' AND vp.participanttype=2 ');
+		if($presenter){
+			$role = '<img src="' . $CFG->wwwroot . '/mod/via/pix/presentor.png" width="25" height="25" alt="presentor" style="vertical-align: bottom;" /> ' . get_string("presentator", "via");
+			if($conf != ''){
+				$conf_status = get_confirmationstatus($presenter->confirmationstatus);
+			}
+			if(has_capability('mod/via:manage', $context)){ /* students can not see the user profiles */ 	
+				$userinfo = '<a href="'. $CFG->wwwroot .'/user/profile.php?id='.$presenter->id.'">'. $presenter->lastname.', '. $presenter->firstname.'</a>';
+			}else{
+				$userinfo = $presenter->lastname.', '. $presenter->firstname;
+			}
+
+			$userlist .= '<tr><td>'. $role .'</td><td>'.$userinfo.'</td><td>'. $presenter->email.'</td>'.$conf_status.'<td style="text-align:center">--</td></tr>';
+		}else{
+			$userlist .= '<tr><td class="error">'.get_string('nousers', 'via').'</td></tr>';
+		}
+	}
+
+	$userlist .= '</table>';
+
+	return $userlist;
 }
 
+function get_confirmationstatus($confirmation_status){
+	global $CFG;
 
-/**
-*  Verify if we can access activity reviews
-*
-* @param $via object the via object
-* @return bool can access reviews/can't access reviews
-*/
-//function via_access_review($via){
-//	
-//	//if($via->isreplayallowed){
-//		if($via->activitytype == 2){
-//			// we can always see reviews with a permanent activty
-//			return true;
-//		}
-//		if(time() >= ($via->datebegin -  (30 * 60))){
-//			// activity is started, we can view review, if there is one
-//			return true;					
-//		}
-//		if(time() <= ($via->datebegin + ($via->duration * 60)+60)){
-//			// activity is done, we can view review 1 minute after the end of the activity
-//			return true;	
-//		}		
-//	//}
-//	//return false;
-//}
+	if($confirmation_status == 1){
+		$confirmimg = "waiting_confirm.gif";
+		$confirmtitle = get_string("waitingconfirm", "via");
+	}elseif($confirmation_status == 2){
+		$confirmimg = "confirm.gif";
+		$confirmtitle = get_string("confirmed", "via");
+	}else{
+		$confirmimg = "refuse.gif";
+		$confirmtitle = get_string("refused", "via");			
+	}
+
+	return "<td style='text-align:center'><img src='" . $CFG->wwwroot . "/mod/via/pix/".$confirmimg."' width='16' height='16' alt='".$confirmtitle . "' title='".$confirmtitle . "' align='absmiddle'/></td>";
+
+}
 
 /**
 *  Get the available profiles for the company on via
@@ -1561,10 +1540,15 @@ function via_cron() {
 	$result = add_enrolids() && $result;
 	
 	echo "synching users \n";
+	$result = synch_via_users() && $result;
+	
+	echo "synching participants \n";
 	$result = synch_participants() && $result;
 	
-	echo "check categories \n";
-	$result = check_categories() && $result;
+	if(get_config('via','via_categories')){
+		echo "check categories \n";
+		$result = check_categories() && $result;
+	}
 	
 	return $result;
 }
@@ -1578,7 +1562,7 @@ function via_cron() {
  */
 function add_enrolids(){
 	global $DB;
-	$result = true;
+$result = true;
 	$participants = $DB->get_records('via_participants', array('enrolid'=>NULL, 'timesynched'=>NULL));
 	if($participants){
 		foreach($participants as $participant){
@@ -1586,11 +1570,19 @@ function add_enrolids(){
 												left join mdl_via v ON vp.activityid = v.id
 												left join mdl_enrol e ON v.course = e.courseid
 												left join mdl_user_enrolments ue ON ue.enrolid = e.id AND ue.userid = vp.userid
-												where vp.userid = '.$participant->userid.' and vp.activityid = '.$participant->activityid.' AND ue.id is not null');	
-			if($enrolid){
-				$DB->set_field('via_participants', 'enrolid', $enrolid->id, array('id'=>$participant->id));	
-				$DB->set_field('via_participants', 'timemodified', time(), array('id'=>$participant->id));	
-			}			
+												where vp.userid = '.$participant->userid.' and vp.activityid = '.$participant->activityid.' AND ue.id is not null');
+			try{	
+				if($enrolid){
+					$DB->set_field('via_participants', 'enrolid', $enrolid->id, array('id'=>$participant->id));	
+					$DB->set_field('via_participants', 'timemodified', time(), array('id'=>$participant->id));	
+				}	
+
+			}catch (Exception $e){
+			
+				echo get_string("error:".$e->getMessage(), "via")."\n";
+				$result = false;
+				continue;
+			}		
 		}
 	}
 	return $result;
@@ -2115,8 +2107,45 @@ function via_change_reminder_sender(){
 	
 }
 
+function synch_via_users(){ 
+	global $DB, $CFG;
+	
+	$result = true;
+	
+	$deleted_users = $DB->get_records_sql('SELECT u.id FROM mdl_user u
+											LEFT JOIN mdl_via_users vu ON vu.userid = u.id
+											WHERE u.deleted = 1 AND vu.id IS NOT NULL' );
+										
+	foreach($deleted_users as $vuser){
+		
+		$activities = $DB->get_records_sql('SELECT v.id, v.viaactivityid FROM mdl_via_participants vp 
+											LEFT JOIN mdl_via v ON v.id = vp.activityid  
+											WHERE vp.userid = '. $vuser->id);
+		$api = new mod_via_api();
+		
+		try {
+			foreach($activities as $via){
+				$api->removeUserActivity($via->viaactivityid, $vuser->id);
+			}
+			$DB->delete_records('via_participants', array('userid'=>$vuser->id));
+			$DB->delete_records('via_users', array('userid'=>$vuser->id));
+		}
+		catch (Exception $e){
+			notify(get_string("error:".$e->getMessage(), "via"));
+			$result = false;
+			continue;
+		}
+	}
+	
+	// else, no change, the sender is the same
+	return $result;
+	
+}
+
 function synch_participants(){ 
 	global $DB, $CFG;
+	
+	$result = true;
 	
 	$via = $DB->get_record('modules', array('name'=>'via'));
 	$lastcron = $via->lastcron;
@@ -2128,30 +2157,53 @@ function synch_participants(){
 				left join mdl_via_participants vp on vp.activityid = v.id AND ue.userid = vp.userid
 				left join mdl_context c on c.instanceid = e.courseid 
 				left join mdl_role_assignments ra on ra.contextid = c.id AND ue.userid = ra.userid';
-	$where = 'where (vp.activityid is null OR ra.timemodified > '.$lastcron.' ) and c.contextlevel = 50 and v.enroltype = 0 and e.status = 0 and v.enroltype = 0';
+	$where = 'where (vp.activityid is null OR ra.timemodified > '.$lastcron.' ) and c.contextlevel = 50 and v.enroltype = 0 and e.status = 0 and v.enroltype = 0 and v.groupingid = 0';
 	
-	if($CFG->dbtype == 'mysqli' || $CFG->dbtype == 'mysql'){
-		$newenrollments = $DB->get_records_sql('select distinct @curRow := @curRow + 1 AS id, ue.userid, e.courseid, v.id as viaactity '.$sql.'
-													JOIN    (SELECT @curRow := 0) r	'.$where.'');						
-	}else{
-		$newenrollments = $DB->get_records_sql('SELECT ROW_NUMBER() OVER (ORDER BY t.viaactity) AS id, 
-												* FROM  (select distinct ue.userid, e.courseid, v.id as viaactity  '.$sql.' '.$where.') AS t');
-	}
+	$newenrollments = $DB->get_recordset_sql('select distinct ue.userid, e.courseid, v.id as viaactivity '.$sql.' '.$where);
 
+	/* add users from automatic enrol type */
 	foreach($newenrollments as $add){
 		try{
-			$activity = $DB->get_record('via', array('id'=>$add->viaactity));
+			$activity = $DB->get_record('via', array('id'=>$add->viaactivity));
 			$type = get_user_type($add->userid, $add->courseid, $activity->noparticipants);
 		}catch(Exception $e){
 			notify("error:".$e->getMessage());
 		}
 		try{
 			if($type != 2){ // only add participants and animators
-				via_add_participant($add->userid, $add->viaactity, $type);	
+				via_add_participant($add->userid, $add->viaactivity, $type);	
 			}
 			
 		}catch(Exception $e){
 			notify("error:".$e->getMessage());
+			$result = false;
+		}
+	}
+	
+	/* add users from group synch */
+	$newgroupmembers_sql = ' FROM mdl_via v
+							LEFT JOIN mdl_groupings_groups gg ON v.groupingid = gg.groupingid 
+							LEFT JOIN mdl_groups_members gm ON gm.groupid = gg.groupid
+							LEFT JOIN mdl_via_participants vp ON vp.activityid = v.id AND vp.userid = gm.userid ';
+	$newgroupmembers_where = ' WHERE v.groupingid != 0 AND vp.id is null ';
+										
+	$newgroupmembers = $DB->get_recordset_sql('select distinct v.id as activityid, v.course, v.noparticipants, gm.userid  '.$newgroupmembers_sql.' '.$newgroupmembers_where);
+										
+	foreach($newgroupmembers as $add){
+		try{
+			$type = get_user_type($add->userid, $add->course, $add->noparticipants);
+		}catch(Exception $e){
+			notify("error:".$e->getMessage());
+			$result = false;
+		}
+		try{
+			if($type != 2){ // only add participants and animators
+				via_add_participant($add->userid, $add->activityid, $type);	
+			}
+			
+		}catch(Exception $e){
+			notify("error:".$e->getMessage());
+			$result = false;
 		}
 	}
 	
@@ -2161,21 +2213,32 @@ function synch_participants(){
 												where ue.enrolid is null and vp.userid != 2 and vp.enrolid != 0'); // 2== admin user which is never enrolled
 	
 	// if we are using cohortes, removed groups are not removed from enrollements so we check if they have a role as well 								
-	$oldenrollments2 = $DB->get_records_sql('SELECT vp.id, vp.activityid, vp.userid FROM mdl_via_participants vp 
+	$oldenrollments2 = $DB->get_records_sql('SELECT vp.id, vp.activityid, vp.userid 
+											FROM mdl_via_participants vp 
 											INNER JOIN mdl_via v ON v.id = vp.activityid
 											LEFT JOIN mdl_context c ON v.course = c.instanceid
 											LEFT JOIN mdl_role_assignments ra ON c.id = ra.contextid AND vp.userid = ra.userid
 											WHERE c.contextlevel = 50 AND ra.roleid IS NULL and vp.userid != 2 and (vp.participanttype = 1 OR vp.participanttype = 3)');
+										
+	$oldgroupmembers = $DB->get_records_sql('SELECT distinct vp.id, vp.activityid, vp.userid 
+											FROM mdl_via_participants vp
+											LEFT JOIN mdl_via v ON v.id = vp.activityid
+											LEFT JOIN mdl_groupings_groups gg ON gg.groupingid = v.groupingid
+											LEFT JOIN mdl_groups g ON gg.groupid = g.id AND v.course = g.courseid
+											LEFT JOIN mdl_groups_members gm ON vp.userid = gm.userid 
+											WHERE  ( gm.id is null OR g.id is null ) AND vp.participanttype != 2 AND v.groupingid != 0');
 	
-	$total = array_merge($oldenrollments, $oldenrollments2);
+	$total = array_merge($oldenrollments, $oldenrollments2, $oldgroupmembers);
 	foreach($total as $remove){	
 		try{
 			via_remove_participant($remove->userid, $remove->activityid);
 		}catch(Exception $e){
 			notify("error:".$e->getMessage());
+			$result = false;
 		}
 	}
-	return true;
+	
+	return $result;
 }
 
 function get_user_type($userid, $courseid, $noparticipants = null){
@@ -2317,6 +2380,33 @@ function via_remove_participants($vias){
 		}	
 	}
 	return $result;
+}
+
+function validate_api_version($required, $buildVersion){
+	
+	$version = explode(".", $buildVersion); 
+
+	if($required[0] <= $version[0]){
+		if($required[1] <= $version[1]){
+			if($required[2] <= $version[2]){
+				if($required[3] <= $version[3]){
+					return false;
+				}else{
+					return true;
+				}
+				
+			}else{
+				return true;
+			}
+				
+		}else{
+			return true;
+		}
+			
+	}else{
+		return false;
+	}
+	
 }
 
 /**

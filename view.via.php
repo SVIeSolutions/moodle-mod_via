@@ -7,7 +7,6 @@
  * @copyright 2011 - 2013 SVIeSolutions 
  */
 
-
     require_once("../../config.php");
 	require_once($CFG->dirroot.'/mod/via/lib.php');
 	
@@ -82,11 +81,8 @@
 				$type = get_user_type($via_user->userid, $course->id);
 				// we only add participants automatically!
 				if($type == 1){
-				$added = via_add_participant($via_user->userid, $via->id, $type, null, 1); 
-				if($added && $added != 'presenter'){
-					$DB->insert_record('via_log', array('userid'=>$via_user->userid, 'viauserid'=>$via_user->viauserid, 'activityid'=>$via->id, 'action'=>'user connexion', 'result'=>'user added', 'time'=>time()));
-					$connexion = true;
-				}elseif($added === 'presenter'){
+					$added = via_add_participant($via_user->userid, $via->id, $type, null, 1); 
+					if($added === 'presenter'){
 						echo "<div style='text-align:center; margin-top:0;' class='error'><h3>". get_string('userispresentor','via') ."</h3></div>";	
 					}
 				}
@@ -108,13 +104,6 @@
 		}	
 				
 		if($response){		
-			/*
-			if(!$review){
-					add_to_log($course->id, "via", "view session", "view.php?id=$cm->id", $via->id, $cm->id);
-			}else{
-					add_to_log($course->id, "via", "view recording", "view.php?id=$cm->id", $via->id, $cm->id);
-			}
-			*/
 					
 			redirect($response);
 				
@@ -137,12 +126,9 @@
 			echo $OUTPUT->heading(get_string($e->getMessage(), 'via'));
 			echo $OUTPUT->box_start('notice');
 			echo get_string('error:'.$e->getMessage(), 'via');
-			$DB->insert_record('via_log', array('userid'=>$USER->id, 'viauserid'=>$via_user->viauserid, 'activityid'=>$via->id, 'action'=>'user connexion', 'result'=>$e->getMessage(), 'time'=>time()));
-			echo $OUTPUT->box_end();	
 			echo $OUTPUT->footer($course);	
 		}else{		
 			print_error('error:'.$e->getMessage(), 'via');
-			$DB->insert_record('via_log', array('userid'=>$USER->id, 'viauserid'=>$via_user->viauserid, 'activityid'=>$via->id, 'action'=>'user connexion', 'result'=>$e->getMessage(), 'time'=>time()));
 			$result = false;
 		}
 	}

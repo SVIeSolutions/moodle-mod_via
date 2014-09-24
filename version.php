@@ -91,6 +91,22 @@
  * 
  * Last update 01/07/2014
  * Corrections we made for Moodle 2.7
+ * 
+ * 
+ * Last update 01/08/2014
+ * NEEDS VIA 6.2!
+ * Recordings can be deleted individually
+ * Activities can be duplicated, documents and associated users follow - with or without whiteboards and surveys.
+ * Activities can be backupes and restored, documents follow and associated users if desired - with or without whiteboards and surveys.
+ * New settings were added to select if the whitebords and surveys will be added during the duplication or backup & restore process. The parameter applies to all activities.
+ * Duplicated activities will be created one month in the future to the present, leaving enough time to go modify the actual date and time. Unless it is a permanent activity, in which case there is no start time or duration.
+ * If a grouping is selected for an activity, only the users associated with the grouping will be synchronised. If manual enrollemnt is chosen, other users may be added to the activity but will not be synchronised.
+ * A new list of users was added to the details page for a quick over view. We also added their 'set up wizard' state. And added the confirmation status to this table, we removed the confirmation table from underneath the participants table.
+ * A new parmeter was added to the settings page, to limit deletion to moodle. If checked activities will be deleted in Moodle but not in Via.
+ * The log tables were droped!
+ * The file UApi was renamed to uapi and moved inside mod/via to satisfy the moodle community.
+ * More information will be synchronised with Via if the option is checked, example the phone number and the moodle name will be added as the organisation name.
+ * Users deleted in Moodle will be deleted in the via_users table and removed from the activities in which they were meant to take part.
  */  
 
 
@@ -108,11 +124,11 @@ defined('MOODLE_INTERNAL') || die();
 $module = new stdClass();
 $plugin = new stdClass();
 
-$plugin->version = 2014070100;	
+$plugin->version = 2014080162;	
 $plugin->component = 'mod_via'; 
 
-$module->version  = 2014070100;	 // YYYYMMDDHH (year, month, day, 24-hr time)
-$module->release  = 2.20140701;
+$module->version  = 2014080162;	 // YYYYMMDDHH (year, month, day, 24-hr time) (needs API version 6.2 or greater)
+$module->release  = 2.20140801;
 $module->requires = 2011033003;  // Moodle version required to run it (2.0.3 )
 $module->cron     = 300;         // Number of seconds between cron calls.
 $module->component = 'mod_via'; 

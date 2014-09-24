@@ -27,16 +27,13 @@ if (! $cm = get_coursemodule_from_instance("via", $via->id, $course->id)) {
 }
 
 if($via->noparticipants == 1 && $participanttype == 1){
+	
 	// there are no participants only animators and a presentor
 	$participanttype = 3;
-	// if the enrollement type is changed we need to add the students that were participants as animators
-	/*$participants = $DB->get_records('via_participants', array('activityid'=>$via->idate, 'participanttype'=>1));
-	foreach($participants as $participant){
-		via_add_participant($participant->id, $via->id, 2);
-	}*/
+	
 }
 
-require_login($course->id, false, $cm);
+require_login($course, false, $cm); // check in other version of Moodle if this will work!
 
 $context = context_module::instance($cm->id);
 $PAGE->set_context($context);
@@ -55,7 +52,6 @@ if (isguestuser()) {
 if (!has_capability('mod/via:manage', $context)) {
 	error('You do not have the permission to view via participants');
 }
-
 
 
 $strparticipants = get_string("participants", "via");
@@ -90,37 +86,20 @@ if($participanttype === 1){
 
 include('tabs.php');
 
-if(get_config('via','via_participantmustconfirm') && $via->needconfirmation){
-
-	$table = new html_table();
-	$table->attributes = array('align'=>'center');
-	$table->id = 'via_confirmation';
-	$table->head = array(
-		get_string('firstname'), 
-		get_string('lastname'), 
-		get_string('email'), 
-		get_string('confirmationstatus', 'via'),
-		);
-	
-	$sql="SELECT u.id, u.firstname, u.lastname, u.idnumber, u.email, p.confirmationstatus FROM mdl_user u INNER JOIN mdl_via_participants p ON u.id = p.userid WHERE p.activityid=$id AND p.participanttype=1";
-	if($participants_confirms = $DB->get_records_sql($sql)){		
-		$table = via_get_confirmation_table($id, $context, $via, $table, $participants_confirms);
-	}
-	
-}
-
-
 /// Check to see if groups are being used in this activity
-groups_print_activity_menu($cm, $CFG->wwwroot."/mod/via/manage.php?id=$via->id&t=".$participanttype);
-$currentgroup = groups_get_activity_group($cm);
-$groupmode = groups_get_activity_groupmode($cm);	
+$groupingid = $cm->groupingid;
+if($groupingid != 0){
+	$grouping_name = groups_get_grouping_name($groupingid) .'<br/>';	
+}else{
+	$grouping_name = '';
+}
 
 // $via->enroltype = 0  = inscription automatique
 // $via->enroltype = 1  = inscription manuelle
 
 // we only add participants automatically, all other type of users are added manually
 if($via->enroltype == 0 && $participanttype == 1){ 
-	$users = via_participants($course, $via, $currentgroup, $participanttype, $context);
+	$users = via_participants($course, $via, $participanttype, $context);
 	if(empty($users)){
 		if($participanttype == 1)	{	
 			echo $OUTPUT->heading(get_string("noparticipants", "via"));	
@@ -130,17 +109,14 @@ if($via->enroltype == 0 && $participanttype == 1){
 		echo $OUTPUT->footer();
 		exit;	
 	} else {
-		$groupingonly = '';
-		if (!empty($CFG->enablegroupings) and $cm->groupmembersonly) {
-			$groupingonly .= ' ('.groups_get_grouping_name($cm->groupingid).')';
-		}
+
 		if($participanttype == 1)	{	
 			$title = get_string("enroledparticipants","via", $via);
 		}else{
 			$title = get_string("enroledanimators","via", $via);
 		}
 
-		echo "<div style='text-align:center'><h2>".$title.$groupingonly."</h2></div>";
+		echo "<div style='text-align:center'><h2>".$grouping_name.$title."</h2></div>";
 
 		echo '<table align="center" cellpadding="5" cellspacing="5">';
 		foreach ($users as $user) {
@@ -161,8 +137,8 @@ if($via->enroltype == 0 && $participanttype == 1){
 		echo $OUTPUT->footer();
 		exit;
 	}
-
-} else{
+		
+}else{
 	
 	$strparticipants = get_string("participants", "via");
 	$strsearch        = get_string("search");
@@ -170,6 +146,9 @@ if($via->enroltype == 0 && $participanttype == 1){
 	$strshowall = get_string("showall", "moodle", strtolower(get_string("participants", "via")));
 	if($participanttype == 2){
 		echo "<div style='text-align:center; margin:0;'><p>".  get_string('choosepresentor','via') ."</p></div>";
+	}
+	if($groupingid != 0 && $participanttype != 2){
+		echo  "<div style='text-align:center; margin:0;'><p>".  get_string('groupusers','via', $grouping_name) ."</p></div>";;
 	}
 
 	$searchtext = optional_param('searchtext', '', PARAM_RAW);
@@ -205,7 +184,6 @@ if($via->enroltype == 0 && $participanttype == 1){
 				}
 				$added = via_add_participant($addsubscriber, $id, $participanttype);
 				if (!$added) {
-					$DB->insert_record('via_log', array('userid'=>$addsubscriber, 'viauserid'=>null, 'activityid'=>$id, 'action'=>'adding user manualy', 'result'=>'Could not add user', 'time'=>time()));
 					print_error("Could not add user with id $addsubscriber to this activity!");
 				}elseif($added === 'presenter'){
 					echo "<div style='text-align:center; margin-top:0;' class='error'><h3>". get_string('userispresentor','via') ."</h3></div>";
@@ -217,7 +195,7 @@ if($via->enroltype == 0 && $participanttype == 1){
 					// if enrollment is automatique we add the user as participant - we do not unenrol him/her
 					via_add_participant($removesubscriber, $via->id, 1);
 				}elseif (! via_remove_participant($removesubscriber, $id)) {
-					$DB->insert_record('via_log', array('userid'=>$removesubscriber, 'viauserid'=>null, 'activityid'=>$id, 'action'=>'removing user manualy', 'result'=>'Could not remove user', 'time'=>time()));
+					
 					print_error("Could not remove user with id $removesubscriber from this activity!");
 				}
 			}
@@ -227,34 +205,46 @@ if($via->enroltype == 0 && $participanttype == 1){
 	}
 
 	/// Get all existing subscribers for this activity.
-	if (!$subscribers = via_participants($course, $via, $currentgroup, $participanttype, $context)) {	   
+	if (!$subscribers = via_participants($course, $via, $participanttype, $context)) {	   
 		$subscribers = array();
 	}
 
 	/// Get all the potential subscribers excluding users already subscribed
-	$users = via_get_potential_participants($context, $currentgroup, 'u.id,u.email,u.firstname,u.lastname,u.idnumber', 'u.firstname ASC, u.lastname ASC');
+	$users = via_get_potential_participants($context, 'u.id,u.email,u.firstname,u.lastname,u.idnumber', 'u.firstname ASC, u.lastname ASC');
 
-	// if groupmembersonly used, remove users who are not in any group
-	if($participanttype === 1){
-		if ($users and !empty($CFG->enablegroupings) and $cm->groupmembersonly) {
-			if ($groupingusers = groups_get_grouping_members($cm->groupingid, 'u.id,u.email,u.firstname,u.lastname,u.idnumber', 'u.id')) {
-				$users = array_intersect_key($users, $groupingusers);
-				$groupingonly = ' ('.groups_get_grouping_name($cm->groupingid).')';
-			}
-		}
-	}
-	
 	if (!$users) {
 		$users = array();
 	}
 	
-	/*foreach ($subscribers as $subscriber) {
-		unset($users[$subscriber->id]);		
-		if(!has_capability('moodle/course:view', $context, $subscriber->id)){
-		unset($subscribers[$subscriber->id]);
+	foreach ($subscribers as $subscriber) {
+		/* remove users already enrolled from the potential user list */
+		unset($users[$subscriber->id]);	
+		
+		if($groupingid != 0){
+			$usergroupingid = $DB->get_records_sql('SELECT distinct gg.groupingid 
+													FROM mdl_groups_members gm 
+													LEFT JOIN mdl_groups g ON gm.groupid = g.id
+													LEFT JOIN mdl_groupings_groups gg ON gg.groupid = g.id
+													WHERE gm.userid = '.$subscriber->id.' AND g.courseid = '.$via->course.'');
+			/* some users might be in more than one group */ 
+			if($usergroupingid){
+				foreach ($usergroupingid as $gid){
+					if($gid->groupingid == $groupingid){
+						$subscriber->groupingid = $gid->groupingid;
+						break;
+					}else{
+						$subscriber->groupingid = $gid->groupingid;
+					}
+				}
+			}else{
+				$subscriber->groupingid = 0;
+			}
+			
 		}
 
-	} */
+	}
+	
+	
 
 	/// This is yucky, but do the search in PHP, becuase the list we are using comes from get_users_by_capability,
 	/// which does not allow searching in the database. Fortunately the list is only this list of users in this
@@ -279,10 +269,6 @@ if($via->enroltype == 0 && $participanttype == 1){
 		include('manage.form.php');
 
 		echo $OUTPUT->box_end();
-		
-		if(get_config('via','via_participantmustconfirm') && $via->needconfirmation){
-			via_print_confirmation_table($via, $sql, $participants_confirms, $context, $table);	
-		}
 
 		echo $OUTPUT->footer();
 	}

@@ -111,20 +111,6 @@ function xmldb_via_upgrade($oldversion = 0) {
 		if (!$dbman->table_exists($table)) {
 			$dbman->create_table($table);
 		}
-		
-		$table = new xmldb_table('via_log');
-		$table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
-		$table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, '0');
-		$table->add_field('viauserid', XMLDB_TYPE_CHAR, '50', null, null, null, '0');
-		$table->add_field('activityid', XMLDB_TYPE_INTEGER, '10', null, null, null, '0');
-		$table->add_field('action', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, '0');
-		$table->add_field('result', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, '0');
-		$table->add_field('time', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, '0', '0');
-
-		$table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
-		if (!$dbman->table_exists($table)) {
-			$dbman->create_table($table);
-		}
 				
 		upgrade_mod_savepoint($result, 2013092002, 'via');
 	}
@@ -153,10 +139,34 @@ function xmldb_via_upgrade($oldversion = 0) {
 		upgrade_mod_savepoint($result, 2014040100, 'via');
 	}
 	
-	if ($oldversion < 2014070100) {
+	if ($oldversion < 2014080162) { /* change back to 2014080100 before publishing */
 		
-		// no modifications were made to the databases for this version
-		return true;
+		$table = new xmldb_table('via');
+		$field = new xmldb_field('backupvia');
+		if ($dbman->field_exists($table, $field)) {
+			$dbman->drop_field($table, $field);
+		}
+		$field = new xmldb_field('groupingid', XMLDB_TYPE_INTEGER, '10', null, null, null, null);
+		if (!$dbman->field_exists($table, $field)) {
+			$dbman->add_field($table, $field);
+		}
+		
+		$query = "SELECT v.*, cm.groupingid  FROM {modules} m 
+				LEFT JOIN {course_modules} cm ON m.id = cm.module
+				LEFT JOIN {via} v ON v.id = cm.instance
+				WHERE m.name = 'via'";
+		$vias = $DB->get_records_sql($query);
+		foreach ($vias as $via){
+			$DB->update_record("via", $via);
+		}
+		
+		$table = new xmldb_table('via_log');
+		if ($dbman->table_exists($table)) {
+			$dbman->drop_table($table);
+		}
+		
+		///  savepoint reached
+		upgrade_mod_savepoint($result, 2014080162, 'via');
 		
 	}
 }

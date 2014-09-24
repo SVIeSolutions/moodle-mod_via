@@ -29,63 +29,60 @@ FORM.playback,
 A.accessbutton{    
     background-color:#6ab605;
 }
-FORM.editplayback,
-FORM.modify,
+
 A.button{    
     background-color:#5c707c;
 }
-
 FORM.editplayback,
-FORM.playback,
+FORM.deleteplayback,
 FORM.modify{    
+    color:#5c707c !important;
+    font-weight:bold;
+    white-space:nowrap;
+}
+
+FORM.playback{    
     color:#fff !important;
     font-weight:bold;
     white-space:nowrap;
-    padding:4px 0;
 }
-FORM input[type=submit] {
-    box-shadow:none;
-    text-shadow:none;
-    border-radius:0;
+TABLE#via_recordings input[type=submit] {   
+    box-shadow:none !important;
+    text-shadow:none !important;
+    border-radius:0 !important;
     margin:0;
+    padding: 10px 0px 10px 30px;
+    font-weight:bold !important;
+    white-space:nowrap;
+    border:none !important;
+    cursor:pointer;
 }
 FORM.playback input[type=submit] {
     background: #6ab605 url(/mod/via/pix/access.png) left center no-repeat; 
-    padding: 10px 0px 10px 30px;
     color:#fff !important;
-    font-weight:bold;
-    white-space:nowrap;
-    border:none;
-    cursor:pointer;
+   
 }
 FORM.modify input[type=submit] {
-    background: #5c707c url(/mod/via/pix/edit.png) left center no-repeat; 
-    padding: 10px 0px 10px 30px;
-    color:#fff !important;
-    font-weight:bold;
-    white-space:nowrap;
-    border:none;
-    cursor:pointer;
-
+    background: url(/mod/via/pix/edit_g.png) left center no-repeat; 
+    color:#5c707c !important;
+  
 }
-FORM.editplayback.mask input[type=submit] {
-    background: #5c707c url(/mod/via/pix/show.png) left center no-repeat; 
-    padding: 10px 0px 10px 30px;
-    color:#fff !important;
-    font-weight:bold;
-    white-space:nowrap;
-    border:none;
-    cursor:pointer;
+FORM.deleteplayback input[type=submit] {
+    background: url(/mod/via/pix/delete_g.png) left center no-repeat; 
+    color:#5c707c !important;
+   
+}
+FORM.editplayback.maskvia input[type=submit] {
+    background: url(/mod/via/pix/show_g.png) left center no-repeat; 
+    color:#5c707c !important;
+   
 }
 FORM.editplayback.show input[type=submit] {
-    background: #5c707c url(/mod/via/pix/hide.png) left center no-repeat; 
-    padding: 10px 0px 10px 30px;
-    color:#fff !important;
-    font-weight:bold;
-    white-space:nowrap;
-    border:none;
-    cursor:pointer;
+    background: url(/mod/via/pix/hide_g.png) left center no-repeat; 
+    color:#5c707c !important;
+   
 }
+FORM.deleteplayback input[type=submit]:hover,
 FORM.editplayback input[type=submit]:hover,
 FORM.modify input[type=submit]:hover,
 FORM.playback input[type=submit]:hover {
@@ -134,7 +131,6 @@ table#via_recordings tr.atelier{
 }
 
 table#via_recordings td{
-	padding: 1em 0.5em;
 	text-align:left;
 }
 
@@ -146,7 +142,7 @@ table#via_recordings td.title.dimmed_text, table#via_recordings td.title.dimmed_
 table#via_recordings td.title{
 	font-size:1em;	
     font-weight:bold;
-	width:35%
+	width:30%
 }
 
 table#via_recordings td.atelier{
@@ -187,20 +183,26 @@ DIV.vialogo{
     color:#ccc;
     font-size:12px;
     float:right;
-    padding-top:5px;
-    padding-right:80px;
+    padding-top:20px;
+    padding-right:50px;
 }
 A.index {
     position:relative;
-    top:12px;
-    padding-left:70px;
+    top:20px;
+    padding-left:0;
+    text-decoration : underline;
 }
 INPUT.hide,
 .error.hide, 
-.accessbutton.hide{    
+.accessbutton.hide,
+INPUT#choosecategories.hide{    
     display:none;
 }
 
-.activity.via A.editing_duplicate {display:none !important; }
+/*.activity.via A.editing_delete {display:none !important; } */
+
+#page-admin-setting-modsettingvia #adminsettings H3.main {
+    border:none !important;
+}
 
 /* FIN VIA */

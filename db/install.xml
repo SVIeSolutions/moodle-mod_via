@@ -32,9 +32,9 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
       <FIELD NAME="sendinvite" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="mailed" NEXT="invitemsg"/>
       <FIELD NAME="invitemsg" TYPE="text" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="sendinvite" NEXT="moodleismailer"/>
       <FIELD NAME="moodleismailer" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="1" SEQUENCE="false" PREVIOUS="invitemsg" NEXT="usersynchronization"/>
-      <FIELD NAME="usersynchronization" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="moodleismailer" NEXT="backupvia"/>
-      <FIELD NAME="backupvia" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="usersynchronization" NEXT="timecreated"/>
-      <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="backupvia" NEXT="timemodified"/>
+      <FIELD NAME="usersynchronization" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="moodleismailer" NEXT="groupingid"/>
+      <FIELD NAME="groupingid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="usersynchronization" NEXT="timecreated"/>
+      <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="groupingid" NEXT="timemodified"/>
       <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timecreated" NEXT="noparticipants"/>
       <FIELD NAME="noparticipants" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timemodified"/>
     </FIELDS>
@@ -74,7 +74,7 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
     </INDEXES>
   </TABLE>
 	 
-  <TABLE NAME="via_participants" COMMENT="Contains via info about participants" PREVIOUS="via_users" NEXT="via_log">
+  <TABLE NAME="via_participants" COMMENT="Contains via info about participants" PREVIOUS="via_users">
     <FIELDS>
       <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="activityid"/>
       <FIELD NAME="activityid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="enrolid"/>
@@ -90,20 +90,6 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
     </KEYS>
   </TABLE>
 	 
-  <TABLE NAME="via_log" COMMENT="Contains via logs for the addition of participants" PREVIOUS="via_participants">
-    <FIELDS>
-      <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="userid"/>
-      <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="viauserid"/>
-      <FIELD NAME="viauserid" TYPE="char" LENGTH="50" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="userid" NEXT="activityid"/>
-      <FIELD NAME="activityid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="viauserid" NEXT="action"/>
-      <FIELD NAME="action" TYPE="char" LENGTH="100" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="activityid" NEXT="result"/>
-      <FIELD NAME="result" TYPE="char" LENGTH="100" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="action" NEXT="time"/>
-      <FIELD NAME="time" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="result" />
-    </FIELDS>
-    <KEYS>
-      <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_log"/>
-    </KEYS>
-  </TABLE>
 </TABLES>
 
 </XMLDB>

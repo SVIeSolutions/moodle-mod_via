@@ -33,9 +33,14 @@ require_login($course->id, false, $cm);
 
 require_capability('mod/via:view', $context);
 
+if(has_capability('mod/via:delete', $context)) {
+	
+} 
+
 // Initialize $PAGE
 $PAGE->set_url('/mod/via/view.php', array('id' => $cm->id));
-$PAGE->requires->js('/mod/via/viabutton.js');	
+$PAGE->requires->js('/mod/via/javascript/viabutton.js');
+
 $PAGE->set_title($course->shortname . ': ' . format_string($via->name));
 $PAGE->set_heading($course->fullname);
 
@@ -117,27 +122,34 @@ if(isset($deleted)){
 	$cell->colspan = 2;
 	$table->data[] = new html_table_row(array($cell));
 	
-	if(has_capability('mod/via:viewactivities', $context)){
+	if(has_capability('mod/via:view', $context)){
 		// get the type of access user can view
 		$access = via_access_activity($via);
+		
+		if(get_config('via', 'via_technicalassist_url') == null){
+			$assistant = '<a class="button" target="configvia" href="'.$CFG->wwwroot.'/mod/via/view.assistant.php?redirect=6" onclick="this.target=\'configvia\'; 
+					      return openpopup(null, {url:\'/mod/via/view.assistant.php?redirect=6\', name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});">';
+		}else{
+			$assistant = '<a class="button" target="configvia" href="' . get_config('via', 'via_technicalassist_url'). '" onclick="this.target=\'configvia\'; 
+					      return openpopup(null, {url:\'' . get_config('via', 'via_technicalassist_url').'\', name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});">';
+		}
 
 		$row2 = array();
 		$row2[] =	'<p class="title">'.get_string('preparation', 'via') . '</p>
 					<a class="button" target="configvia" href="' . $CFG->wwwroot .'/mod/via/view.assistant.php?redirect=7" onclick="this.target=\'configvia\'; 
-					return openpopup(null, {url:\'/mod/via/view.assistant.php?redirect=7\', name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});">
+					 return openpopup(null, {url:\'/mod/via/view.assistant.php?redirect=7\', name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});">
 					<img src="' . $CFG->wwwroot . '/mod/via/pix/config.png" width="27" height="27" hspace="5" alt="' .get_string('recentrecordings', 'via') . '" />' .get_string("configassist", "via").'</a>';	
-		$row2[] =	'<p class="title"><br/></p>
-					<a class="button" target="configvia" href="'.$CFG->wwwroot.'/mod/via/view.assistant.php?redirect=6" onclick="this.target=\'configvia\'; 
-					return openpopup(null, {url:\'/mod/via/view.assistant.php?redirect=6\', name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});">
-					<img src="' . $CFG->wwwroot . '/mod/via/pix/assistance.png" width="27" height="27" hspace="5" alt="' .get_string('recentrecordings', 'via') . '" />'.get_string("technicalassist", "via").'</a>';
-			$table->data[] = $row2;
+		
+		$row2[] =	'<p class="title"><br/></p>'. $assistant .'<img src="' . $CFG->wwwroot . '/mod/via/pix/assistance.png" width="27" height="27" hspace="5" alt="' .get_string('recentrecordings', 'via') . '" />'.get_string("technicalassist", "via").'</a>';
+			
+		$table->data[] = $row2;
 	}
 	
 	if (has_capability('mod/via:manage', $context)) {
 		
 		$row3 = array();
 		if(get_config('via','via_sendinvitation')){ // if user can send invites
-			$row3[] ="<a class='button' href='send_invite.php?id=$cm->instance'><img src='" . $CFG->wwwroot . "/mod/via/pix/mail.png' width='27' height='27' alt='".get_string("sendinvite", "via") . "' title='".get_string("sendinvite", "via") . "'  hspace='5'/>".get_string("sendinvitenow", "via")."</a>";
+			$row3[] ="<a class='button' href='send_invite.php?id=$cm->instance'><img src='" . $CFG->wwwroot . "/mod/via/pix/mail.png' width='27' height='27' alt='".get_string("sendinvite", "via") . "' title='".get_string("sendinvite", "via") . "'  hspace='5'/>".get_string("sendinvite", "via")."</a>";
 		}
 		
 		// for animator, presentator, show link to manage participants
@@ -145,6 +157,7 @@ if(isset($deleted)){
 		$table->data[] = $row3;
 	}
 	
+	/* buttons so that students may confirm teir precence */
 	if (!has_capability('mod/via:manage', $context) && $via->needconfirmation && get_config('via','via_participantmustconfirm')){
 		
 		// if participant must confim attendance
@@ -191,7 +204,7 @@ if(isset($deleted)){
 
 	}
 	
-	if(has_capability('mod/via:viewactivities', $context)){	
+	if(has_capability('mod/via:view', $context)){	
 		
 		$cell = new html_table_cell();
 		$cell->colspan = 2;
@@ -260,7 +273,8 @@ if(isset($deleted)){
 			return false;
 		}
 		
-		if(has_capability('mod/via:viewactivities', $context) && is_mobile_phone() == false){	
+		/* print recordings list  */	
+		if(has_capability('mod/via:view', $context) && is_mobile_phone() == false){	
 			if(isset($_REQUEST['error'])){
 				echo  'this title aready exists';
 			}
@@ -307,7 +321,7 @@ if(isset($deleted)){
 							
 							if($playback->ispublic == 1){
 								$checked = get_string("mask", "via");
-								$css = 'mask';
+								$css = 'maskvia';
 							}else{
 								$checked = get_string("show", "via");
 								$css = 'show';
@@ -327,10 +341,16 @@ if(isset($deleted)){
 							</form>'; 
 							echo "</td>"; 	
 							
+							echo "<td class='modify'>";
+							echo '<form class="deleteplayback" action="edit_review.php?id='.$via->id.'" method="post">
+							<input type="hidden" name="playbackid" id="playbackid" value="'.$key.'">
+							<input type="submit" name="delete" id="delete" value="'.get_string("delete").'" /></form>';
+							echo "</td>";
+							
 						}
 						
 						echo "<td class='review  $private'>";
-						if($private){
+						if($private == "dimmed_text"){
 							$param = '&p=1';
 						}else{
 							$param = '';	
@@ -352,8 +372,10 @@ if(isset($deleted)){
 					
 		}
 		
-		
-		
+		/* print user list */	
+		echo get_participants_list_table($via, $context);
+
+		echo '<hr>';
 		echo '<a class="index" href="'.$CFG->wwwroot .'/mod/via/index.php?id='.$course->id.'">'.get_string('list_activities','via').'</a>';
 		echo '<div class="vialogo" ><img src="' . $CFG->wwwroot . '/mod/via/pix/logo_via.png" width="60" height="33" alt="VIA" /> '.get_string('by','via').'&nbsp;&nbsp;<img src="' . $CFG->wwwroot . '/mod/via/pix/logo_svi.png" width="52" height="33" alt="VIA" /></div>';
 	}

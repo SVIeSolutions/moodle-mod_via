@@ -43,7 +43,7 @@ $capabilities = array(
 	'archetypes' => array(
 		'editingteacher' => CAP_ALLOW,
 		'manager' => CAP_ALLOW
-		),
+		)
 	),
 
 	// Ability to manage the settings.
@@ -56,28 +56,26 @@ $capabilities = array(
 			'manager' => CAP_ALLOW
 			)
 		),
+	
+	// Ability to manage the settings.
+	'mod/via:delete' => array(
 
-			
+		'captype' => 'write',
+		'contextlevel' => CONTEXT_COURSE,
+		'archetypes' => array(
+			'editingteacher' => CAP_ALLOW,
+			'manager' => CAP_ALLOW
+			)
+		),
+
+    
+   // Ability to view activities.
     'mod/via:view' => array(
 
         'captype' => 'read',
         'contextlevel' => CONTEXT_MODULE,
         'archetypes' => array(
-            'guest' => CAP_ALLOW,
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW,
-        )
-    ),
-
-    
-   // Ability to view recordings.
-    'mod/via:viewactivities' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
+			'guest' => CAP_ALLOW,
             'student' => CAP_ALLOW,
             'teacher' => CAP_ALLOW,
             'editingteacher' => CAP_ALLOW,
@@ -97,31 +95,6 @@ $capabilities = array(
             'manager' => CAP_ALLOW
          )
     ),
-    
-    // Ability to add / remove participants.
-    'mod/via:manageparticipants' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    ),
-    
-    
-    // Ability to view participants.
-    'mod/via:viewparticipants' => array(
-
-        'captype' => 'read',
-        'contextlevel' => CONTEXT_MODULE,
-        'archetypes' => array(
-            'student' => CAP_ALLOW,
-            'teacher' => CAP_ALLOW,
-            'editingteacher' => CAP_ALLOW,
-            'manager' => CAP_ALLOW
-        )
-    )
 
 );
 

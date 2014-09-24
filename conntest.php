@@ -35,6 +35,10 @@
 	$PAGE->set_url('/mod/via/conntest.php');
 	$PAGE->set_heading("$site->fullname");
 	$PAGE->set_pagelayout('popup');
+	
+	// New with version 20140861 */
+	// We validate the version */
+	$required = '6.2';
 
 	/// Print the page header
 	echo $OUTPUT->header();
@@ -54,13 +58,19 @@
 			}
 			
 			if($result){
-				if ($response['BuildVersion'] && ((int)str_replace('.','',$response['BuildVersion']) < (int)str_replace('.','', 'API_VERSION'))) {
-					$result = false;
-					// using an older version of the api, need to upgrade
-					notify(get_string("oldapiversion", "via", API_VERSION));		
-				} else {
-					notify(get_string('connectsuccess', 'via'));
+					
+				echo '<div class="alert alert-block alert-info">'. get_string('connectsuccess', 'via'). '</div>';
+				if(isset($response['BuildVersions'])){
+					$build_version = $response['BuildVersions'];	
+				}else{
+					$build_version = 0;
 				}
+				if(validate_api_version($required,$build_version)){
+					echo '<div class="alert alert-block alert-info">'.get_string('versionscompatible', 'via').'</div>';
+				}else{
+					echo '<div class="alert alert-block alert-error">'.get_string('versions_not_compatible', 'via').$required.'</div>';
+				}
+
 			}
 			
     echo '<center><input type="button" onclick="self.close();" value="' . get_string('closewindow') . '" /></center>';

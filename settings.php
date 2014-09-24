@@ -15,16 +15,16 @@ if ($ADMIN->fulltree) {
 
 	require_once($CFG->dirroot.'/mod/via/lib.php');
 	
-	$PAGE->requires->js('/mod/via/conntest.js');	
+	$PAGE->requires->js('/mod/via/javascript/conntest.js');	
 	
 	$config = get_config('via');
 	
 	/****
 	API infos
 	****/
-	$settings->add(new admin_setting_heading('pluginversion', get_string('pluginversion', 'via'),''));
+	$settings->add(new admin_setting_heading('pluginversion', get_string('pluginversion', 'via') . get_config('mod_via', 'version'),'')); /* gets value directly from config_plugins table  */
 	
-	$settings->add(new admin_setting_heading('via_apiconfig',  '<strong>'.get_string('apiconfig', 'via').'</strong>',''));
+	$settings->add(new admin_setting_heading('via_apiconfig', '<strong>'.get_string('apiconfig', 'via').'</strong>',''));
 
 	$settings->add(new admin_setting_configtext('via/via_apiurl', get_string('apiurl', 'via'), get_string('apiurlsetting', 'via'), "", PARAM_TEXT));
 
@@ -33,18 +33,18 @@ if ($ADMIN->fulltree) {
 	$settings->add(new admin_setting_configtext('via/via_apiid', get_string('apiid', 'via'), get_string('apiidsetting', 'via'), "", PARAM_TEXT));
 	
 	if (isset($config->via_apiurl)){	
-		$settings->add(new admin_setting_heading('via_testconn',  '<input type="button" onclick="return testConnection(\'' .$config->via_apiurl.'\',\''.$config->via_cleid.'\',\''.$config->via_apiid.'\');" value="'.get_string('testconnection', 'via').'" />',''));
+		$settings->add(new admin_setting_heading('via_testconn',  '<input type="button" onclick="testConnection(document.getElementById(\'adminsettings\'));" value="'.get_string('testconnection', 'via').'"/>',''));
 	}
+	
 	/****
 	API info - clé moodle
 	****/
-	
 	$settings->add(new admin_setting_heading('moodle_admin', '<hr><strong>'.get_string('moodle_config', 'via').'</strong>',''));
 	
 	$settings->add(new admin_setting_configtext('via/via_adminid', get_string('moodle_adminid', 'via'), get_string('moodleidsetting', 'via'), "", PARAM_TEXT));
 
 	if (isset($config->via_apiurl)){	
-		$settings->add(new admin_setting_heading('testadminid',  '<input type="button" onclick="return testAdminId(\'' .$config->via_apiurl.'\',\''.$config->via_cleid.'\',\''.$config->via_apiid.'\',\''.$config->via_adminid.'\');" value="'.get_string('testadminid', 'via').'" />',''));
+		$settings->add(new admin_setting_heading('testadminid',  '<input type="button" onclick="testAdminId(document.getElementById(\'adminsettings\'));" value="'.get_string('testadminid', 'via').'" />',''));
 	}
 	
 	/****
@@ -66,6 +66,7 @@ if ($ADMIN->fulltree) {
 	Audio mode settings
 	****/
 	$settings->add(new admin_setting_heading('via_options',  '<hr><strong>'.get_string('options', 'via').'</strong>',''));
+	
 
 	$settings->add(new admin_setting_configmultiselect('via/via_audio_types',  get_string('audiomodelabel', 'via'),
 		/*get_string("viaaudiotypes", "via")*/ '', array(1), array(1 => get_string('modevoiceweb', 'via')
@@ -92,6 +93,36 @@ if ($ADMIN->fulltree) {
 	Participant information synchronization
 	****/
 	$settings->add(new admin_setting_configcheckbox('via/via_participantsynchronization', get_string('participantsynchronization', 'via'), get_string('participantsynchronizationdesc', 'via'), 0));
+	
+	/****
+	Permit permanent activities
+	****/
+	$settings->add(new admin_setting_configcheckbox('via/via_permanentactivities', get_string('permanentactivities', 'via'), get_string('permanentactivitiesdesc', 'via'), 1));
+	
+	/****
+	Activity deletion
+	****/
+	$settings->add(new admin_setting_configcheckbox('via/via_activitydeletion', get_string('activitydeletion', 'via'), get_string('activitydeletiondesc', 'via'), 0));
+	
+	/****
+	Add a personnalised assistance page
+	****/
+	$settings->add(new admin_setting_configtext('via/via_technicalassist_url', get_string('technicalassist_url', 'via'), get_string('technicalassist_urldesc', 'via'), "", PARAM_TEXT));
+	
+	/****
+	Backup and duplication settings
+	****/
+	$settings->add(new admin_setting_heading('via_backup_options',  '<hr><strong>'.get_string('backup_options', 'via').'</strong>',''));
+	
+	/****
+	Activity duplication settings
+	****/
+	$settings->add(new admin_setting_configcheckbox('via/via_duplicatecontent', get_string('duplication', 'via'), get_string('duplicationdesc', 'via'), 1));
+	
+	/****
+	Activity backup
+	****/
+	$settings->add(new admin_setting_configcheckbox('via/via_backupcontent', get_string('backup', 'via'), get_string('backupdesc', 'via'), 1));
 	
 	
 }

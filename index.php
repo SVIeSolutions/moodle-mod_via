@@ -25,6 +25,7 @@ require_login($course->id);
 $url = new moodle_url('/mod/via/index.php?id=$course->id');
 //in original url there was also , 'type'-> 'activity'...
 $PAGE->set_url($url);
+$PAGE->set_pagelayout('course');
 
 // Strings needed to render the page...
 $strvia = get_string('modulename', 'via');

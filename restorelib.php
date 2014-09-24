@@ -51,7 +51,6 @@
 			$via->mailed = backup_todb($info['MOD']['#']['MAILED']['0']['#']);
 			$via->sendinvite = backup_todb($info['MOD']['#']['SENDINVITE']['0']['#']);
 			$via->invitemsg = backup_todb($info['MOD']['#']['INVITEMSG']['0']['#']);			
-			$via->backupvia = backup_todb($info['MOD']['#']['BACKUPVIA']['0']['#']);
 			$via->moodleismailer = backup_todb($info['MOD']['#']['MOODLEISMAILER']['0']['#']);
 			$via->timecreated = backup_todb($info['MOD']['#']['TIMECREATED']['0']['#']);
 			$via->timemodified = backup_todb($info['MOD']['#']['TIMEMODIFIED']['0']['#']);

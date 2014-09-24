@@ -10,7 +10,7 @@
 require_once('../../config.php');
 require_once('lib.php');
 
-$PAGE->requires->js('/mod/via/list.js');	
+$PAGE->requires->js('/mod/via/javascript/list.js');	
 
 global $CFG, $DB;
 

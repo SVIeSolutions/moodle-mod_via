@@ -7,7 +7,6 @@
  * @copyright 2011 - 2013 SVIeSolutions
  */
 
-
 /** Data access class for the via module. */
 class mod_via_api {
 	
@@ -32,7 +31,7 @@ class mod_via_api {
 					$url = 'UserCreate';
 				}
 				if(!isset($muser->viausername)){
-					$muser->viausername = $muser->email;
+					$muser->viausername = strtolower($muser->email);
 				}
 				
 				$data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
@@ -57,7 +56,7 @@ class mod_via_api {
 					$data .= "<Password>".via_create_user_password()."</Password>";
 				}
 				$data .= "<UniqueID>".$muser->username."</UniqueID>";
-				$data .= "<Email>".$muser->email."</Email>";
+				$data .= "<Email>".strtolower($muser->email)."</Email>";
 				
 				if($infoplus){
 					foreach($infoplus as $name=>$info){
@@ -288,6 +287,51 @@ class mod_via_api {
 	
 	}
 	
+	/**
+	* Dulpicates an existing acitivity on Via 
+	*
+	* @param object $via the via object
+	* @return Array containing response from Via
+	*/
+	function activityDuplicate($via){
+		global $CFG;
+		
+		$url = 'ActivityDuplicate';
+		
+		$data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+		$data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+		$data .= '<soap:Body>';
+		$data .= "<cApiActivityDuplicate>";
+		$data .= "<ApiID>".get_config('via','via_apiid')."</ApiID>";		 
+		$data .= "<CieID>".get_config('via','via_cleid')."</CieID>";
+		$data .= "<UserID>".get_config('via','via_adminid')."</UserID>";
+		$data .= "<ActivityID>".$via->viaactivityid."</ActivityID> ";
+		$data .= "<Title>".$via->name."</Title>";
+		if($via->activitytype != 2){
+			$data .= "<DateBegin>".$this->change_date_format($via->datebegin)."</DateBegin>";
+			$data .= "<Duration>".$via->duration."</Duration>";
+		}
+		$data .= "<IncludeUsers>".$via->include_userInfo."</IncludeUsers>"; //0 = Non ; 1 = Oui
+		$data .= "<IncludeDocuments>1</IncludeDocuments>"; //1 = Yes : documents are always added
+		$data .= "<IncludeSurveyAndWBoards>".$via->include_surveyandwboards."</IncludeSurveyAndWBoards>"; //0 = Non ; 1 = Oui
+		$data .= "</cApiActivityDuplicate>";
+		$data .= "</soap:Body>";
+		$data .= "</soap:Envelope>";
+		
+		$response = $this->send_saop_enveloppe($via, $data, $url);
+		
+		if(!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivityDuplicate"]){
+			throw new Exception("Problem reading getting VIA activity id");
+		}
+		
+		if ($resultdata['Result']['ResultState'] == "ERROR") {
+			throw new Exception($resultdata['Result']['ResultDetail']);
+		}
+		
+		return $resultdata["ActivityIDDuplicate"];
+		
+	}
+	
 		/**
 		 * Edits an acitivity on Via
 		 *
@@ -295,7 +339,7 @@ class mod_via_api {
 		 * @param bool $delete if true, activity needs to be deleted on Via
 		 * @return Array containing response from Via
 		 */
-		function activityEdit($via, $delete=1){
+	function activityEdit($via, $activitystate=1){
 			global $CFG;
 			
 			$url = 'ActivityEdit';
@@ -314,7 +358,7 @@ class mod_via_api {
 				$data .= "<CategoryID>".$via->category."</CategoryID>";
 			}
 			$data .= "<IsReplayAllowed>".$via->isreplayallowed."</IsReplayAllowed>";
-			$data .= "<ActivityState>".$delete."</ActivityState>";
+			$data .= "<ActivityState>".$activitystate."</ActivityState>";
 			$data .= "<RoomType>".$via->roomtype."</RoomType>";
 			$data .= "<AudioType>".$via->audiotype."</AudioType>";
 			$data .= "<ActivityType>".$via->activitytype."</ActivityType>";
@@ -507,20 +551,16 @@ class mod_via_api {
 				$muser = $USER->id;
 			}else{
 				$muser = $mobile;
-			}
-			
-			$replayallowed = 1;
-			$viaid = false;
+			}			
 			if($via){
-				if($via->isreplayallowed == 0){
-					$replayallowed = 0;
-				}
 				$viaid = $via->id;
+			}else{
+				$viaid = null;
 			}
 			if($private){
 				$private = $private;
 			}else{
-				$private = 0;	
+				$private = null;	
 			}
 		
 			$url = 'UserGetSSOToken';		
@@ -531,7 +571,7 @@ class mod_via_api {
 			$data .= "<cApiGetUserToken>";
 			$data .= "<ApiID>".get_config('via','via_apiid')."</ApiID>";		 
 			$data .= "<CieID>".get_config('via','via_cleid')."</CieID>";
-			if($playback && ($replayallowed == 0 || $private == 1)){
+			if($playback && $private == 1){
 				$data .= "<ID>".get_config('via','via_adminid')."</ID>";	
 			}else{
 				$data .= "<ID>".$this->get_user_via_id($muser, true, $viaid)."</ID>";
@@ -796,6 +836,45 @@ class mod_via_api {
 		
 		return $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiListPlayback"]["PlaybackList"];
 	}
+	
+	/**
+	* delete a given playback for a given activity
+	*
+	* @param object $via the via object
+	* @param string $playbackid the id of the playback 
+	* @param object $playback the playback object 
+	* @return Array containing response from Via
+	*/
+	function deletePlayback($viaactivityid, $playbackid){
+		global $CFG;
+		
+		$url = 'DeletePlayback';
+		
+		$data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+		$data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+
+		$data .= '<soap:Body>';
+		$data .= "<cApiPlaybackDelete>";
+		$data .= "<ApiID>".get_config('via','via_apiid')."</ApiID>";		 
+		$data .= "<CieID>".get_config('via','via_cleid')."</CieID>";
+		$data .= "<UserID>".get_config('via','via_adminid')."</UserID>";
+		$data .= "<ActivityID>".$viaactivityid."</ActivityID>";
+		$data .= "<PlaybackID>".$playbackid."</PlaybackID>";
+		$data .= "</cApiPlaybackDelete>";
+		$data .= "</soap:Body>";
+		$data .= "</soap:Envelope>";			
+		$response = $this->send_saop_enveloppe(NULL, $data, $url);
+
+		if(!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiPlaybackDelete"]){
+			throw new Exception("Problem reading getting VIA activity id");
+		}
+		
+		if ($resultdata['Result']['ResultState'] == "ERROR") {
+			throw new Exception($resultdata['Result']['ResultDetail']);
+		}
+		
+		return $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiPlaybackDelete"];
+	}
 		
 	/**
 	 * Sends invitation to a user for an activity
@@ -925,13 +1004,15 @@ class mod_via_api {
 	 * @return string via user id
 	 */		
 	function validate_via_user($muser, $viauserid = null, $update = null){
-		global $DB;
+		global $DB, $CFG, $SITE;
 		
 		$info["UserType"] = 2; 		// usertype is always 2		
+		$info["CompanyName"] = $SITE->shortname;
+		$info["PhoneHome"] = $muser->phone1;
 		
-		$viauser = $this->userSearch($muser->email, "Email");
+		$viauser = $this->userSearch(strtolower($muser->email), "Email");
 		if(!$viauser){
-			$viauser = $this->userSearch($muser->email, "Login");
+			$viauser = $this->userSearch(strtolower($muser->email), "Login");
 			if(!$viauser){
 				// false = create new user
 				$i = 1;
@@ -987,9 +1068,8 @@ class mod_via_api {
 			$participant->viauserid = $viauserdata['UserID'];
 			$participant->username = $viauserdata['Login'];
 			$participant->usertype = 2; // We only create participants
-						
+			
 			if(!$added = $DB->insert_record("via_users", $participant)){
-				$DB->insert_record('via_log', array('userid'=>$muser->id, 'viauserid'=>$viauserdata['UserID'], 'activityid'=>NULL, 'action'=>'get_user_via_id', 'result'=>'could not add new user to via_users', 'time'=>time()));
 				throw new Exception("could not add new user");
 			}
 		}	
@@ -1010,6 +1090,7 @@ class mod_via_api {
 		$info = NULL;
 		
 		$user = $DB->get_record('user', array('id'=>$u));
+		$muser = $user;
 		$viauser = $DB->get_record('via_users', array('userid'=>$u));
 		if(!$viauser){
 			// the user doesn't exists yet. We need to create it.
@@ -1035,8 +1116,12 @@ class mod_via_api {
 				if($viauser["Status"] == 0){ // Active
 					if(get_config('via','via_participantsynchronization')){
 						// synchronizing info but we not not change the user type
+						global $SITE;
+						
 						$user->viausername = $viauser["Login"];
 						$user->usertype = $viauser["UserType"];
+						$user->CompanyName = $SITE->shortname;
+						$user->PhoneHome = $user->phone1;
 						$response = $this->userCreate($user, true);	
 						// we should update the info in the via_user table?	
 					}
@@ -1062,9 +1147,7 @@ class mod_via_api {
 						}
 						
 						$added = via_add_participant($user->id, $participant->activityid, $type, null, null, 1);
-						if(!$added){
-							$DB->insert_record('via_log', array('userid'=>$user->id, 'viauserid'=>$user->viauserid, 'activityid'=>$participant->activityid, 'action'=>'deleted user could not be added to activity', 'result'=>'user NOT added', 'time'=>time()));
-						}
+					
 					}
 					
 				}
