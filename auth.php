@@ -1,13 +1,29 @@
 <?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- *  Visualization of a all via instances.
  *
- * @package   mod-via
- * @copyright 2011 - 2013 SVIeSolutions
+ * @package    mod
+ * @subpackage via
+ * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * 
  */
 
-global $CFG; 
+global $CFG;
 
 require_once('../../config.php');
 require_once($CFG->dirroot. '/lib/moodlelib.php');
@@ -31,29 +47,24 @@ $password = (string)$xml->Password;
 
 $muser = authenticate_user_login($login, $password);
 
-if($muser){
-	$api = new mod_via_api();
-	$response = $api->UserGetSSOtoken(null, null, null, null, $muser->id);
-	
-	$response = explode('=', $response);
-	$url = $response[0];
-	$token = $response[1];
-	
-	echo '<?xml version="1.0" encoding="UTF-8"?>
-			<Authentication>
-			<Result>
-				<Status>SUCCESS</Status>
-				<Message/>
-			</Result>
-			<SSOToken>'.$token.'</SSOToken >
-			<URLVia>http://via.sviesolutions.com/ </ URLVia>
-			</Authentication>';
+if ($muser) {
+    $api = new mod_via_api();
+    $response = $api->userget_ssotoken(null, null, null, null, null, $muser->id);
 
-}else{
-	echo 'is not a moodle user';
+    $response = explode('=', $response);
+    $url = $response[0];
+    $token = $response[1];
+
+    echo '<?xml version="1.0" encoding="UTF-8"?>
+            <Authentication>
+            <Result>
+                <Status>SUCCESS</Status>
+                <Message/>
+            </Result>
+            <SSOToken>'.$token.'</SSOToken >
+            <URLVia>http://via.sviesolutions.com/ </ URLVia>
+            </Authentication>';
+
+} else {
+    echo 'is not a moodle user';
 }
-
-
-
-
-

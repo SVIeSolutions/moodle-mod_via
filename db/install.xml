@@ -7,9 +7,10 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
     <FIELDS>
       <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="course"/>
       <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
-      <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="course" NEXT="description"/>
-      <FIELD NAME="description" TYPE="text" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="name" NEXT="creator"/>		
-      <FIELD NAME="creator" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="description" NEXT="viaactivityid"/>
+      <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="course" NEXT="intro"/>
+      <FIELD NAME="intro" TYPE="text" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="name" NEXT="introformat"/>
+      <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="intro" NEXT="creator"/>
+      <FIELD NAME="creator" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="introformat" NEXT="viaactivityid"/>
       <FIELD NAME="viaactivityid" TYPE="char" LENGTH="200" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="creator" NEXT="datebegin"/>		
       <FIELD NAME="datebegin" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="viaactivityid" NEXT="duration"/>
       <FIELD NAME="duration" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="datebegin" NEXT="audiotype"/>
@@ -59,8 +60,8 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
     <FIELDS>
       <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="userid"/>
       <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="viauserid"/>
-      <FIELD NAME="viauserid" TYPE="char" LENGTH="200" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="userid" NEXT="username"/>
-      <FIELD NAME="username" TYPE="char" LENGTH="200" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="viauserid" NEXT="usertype"/>
+      <FIELD NAME="viauserid" TYPE="char" LENGTH="200" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="userid" NEXT="username"/>
+      <FIELD NAME="username" TYPE="char" LENGTH="200" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="viauserid" NEXT="usertype"/>
       <FIELD NAME="usertype" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="username" NEXT="timecreated"/>
       <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="usertype" NEXT="timemodified"/>
       <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timecreated"/>
@@ -69,8 +70,7 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
       <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_users"/>
     </KEYS>
     <INDEXES>
-      <INDEX NAME="viauserid" UNIQUE="true" FIELDS="viauserid" NEXT="userid"/>
-      <INDEX NAME="userid" UNIQUE="true" FIELDS="userid" PREVIOUS="viauserid"/>
+      <INDEX NAME="userid" UNIQUE="true" FIELDS="userid" />
     </INDEXES>
   </TABLE>
 	 

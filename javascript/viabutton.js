@@ -1,5 +1,5 @@
 window.onload = function () {
-var checkbox = document.getElementById("checkbox");
+    var checkbox = document.getElementById("checkbox");
     if (checkbox){
         if (checkbox.checked) {
             document.getElementById("active").className = "accessbutton active";
@@ -13,8 +13,8 @@ var checkbox = document.getElementById("checkbox");
 }
 var checkbox = document.getElementById("checkbox");
 if (checkbox) {
-    checkbox.onclick = function () {  
-    
+    checkbox.onclick = function () {
+
         if (checkbox.checked) {
             document.getElementById("active").className = "accessbutton active";
             document.getElementById("inactive").className = "accessbutton inactive hide";
@@ -33,21 +33,15 @@ if (link) {
     }
 }
 
-//$(document).ready(function () {
-//    $('input.ispublic').change(function () {
+function submitform(myform){
+    document.getElementById(myform).submit();
+}
 
-//        $this = $(this);
-
-//        $.post(
-//          "edit_review.php",
-//          {
-//              value: $this.val(),
-//              checked: $this.is(':checked')
-//          },
-//          function (data) {
-//              // do something with returned data
-//          },
-//          'json'
-//        );
-//    });
-//});
+function confirmdelete(myform, text){
+    var answer = confirm(text)
+    if (answer) {
+        document.getElementById(myform).submit();
+    } else {
+        false;
+    }
+}

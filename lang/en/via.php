@@ -1,9 +1,34 @@
-<?php 
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ *
+ * @package    mod
+ * @subpackage via
+ * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * 
+ */
 
 $string['pluginadministration'] = 'Via administration';
 $string['pluginname'] = 'Via';
-$string['pluginversion'] = 'Version : '; // do not modify structure without changing nettest. 
-$string['modulename_help'] = 'The Via module allows you to create synchronous meetings in a virtual classroom to share live using voice and video for: remote classes in real time, meetings, work-team meetings, tutoring, seminars, etc. 
+$string['pluginversion'] = 'Version : ';
+$string['modulename'] = 'Via';
+$string['modulenameplural'] = 'Via';
+$string['modulename_help'] = 'The Via module allows you to create synchronous meetings in a virtual classroom to share live using voice and video for: remote classes in real time, meetings, work-team meetings, tutoring, seminars, etc.
 
 This tool allows you to manage sub-work-groups, annotations, screen sharing, import or present documents and to share by voice and/or video.
 
@@ -11,16 +36,18 @@ The \'Participant enrolments\' options allow you to manually enroll participants
 
 The \'Session parameters\' allow you to set the recording mode you wish and select the availability of these to your learners.
 
-Note: Editing and modifying recordings must be made in the Via environment.  ';
+Note: Editing and modifying recordings must be made in the Via environment.';
 $string['recentrecordings'] = 'Recent recordings';
 $string['audiomodelabel'] = 'Audio type for the conference';
+$string['portalaccess'] = 'Via portal access.';
+$string['portalaccessdesc'] = 'Permits users to access the Via portal without loging in.';
 $string['configassist'] = 'Setup wizard';
 $string['technicalassist'] = 'Technical support ';
 $string['manageparticipants'] = 'Manage users';
 $string['noparticipants'] = 'There are no participants yet for this activity.';
 $string['noanimators'] = 'There are no animators yet for this activity.';
 $string['subscribeparticipants'] = 'Participants subscription';
-$string['gotoactivity'] = 'Click here to get to the activity';
+$string['gotoactivity'] = 'Click here to access the activity';
 $string['notstarted'] = 'This activity hasn\'t started yet.';
 $string['activitydone'] = 'This activity is finished.';
 $string['reviewactivity'] = 'Click here to review this activity';
@@ -52,10 +79,10 @@ $string['timeduration'] = 'Duration :';
 $string['headerduration'] = 'Duration';
 $string['sessionparameters'] = 'Session parameters';
 $string['roomtype'] = 'Activity type';
-$string['roomtype_help'] = 'The "Standard" type is an activity in which all participants are listed and can interact normally, depending on the role assigned. If instead you choose an activity type "Webinar", only the presenter and animators will see the names of the participants. In addition, they will only be able to interact through chatting. The latter type is ideal for activities including large audiences (over 100 participants) or confidential activities. 
-
-When the "Permanent" option is selected, the activity will no longer have a fixed date and time. All participants associated with this activity can then access at any time. Please note that only the multiple recordings option is available for this type of activity
-';
+$string['roomtype_help'] = 'The "Standard" type is an activity in which all participants are listed and can interact normally, depending on the role assigned. If instead you choose an activity type "Webinar",
+ only the presenter and animators will see the names of the participants. In addition, they will only be able to interact through chatting. The latter type is ideal for activities including large audiences
+ (over 100 participants) or confidential activities. When the "Permanent" option is selected, the activity will no longer have a fixed date and time.
+ All participants associated with this activity can then access at any time. Please note that only the multiple recordings option is available for this type of activity';
 $string['standard'] = 'Standard';
 $string['seminar'] = 'Seminar';
 $string['mode'] = 'Audio mode';
@@ -82,6 +109,8 @@ $string['multiple'] = 'Multiple';
 $string['preparation'] = 'Prepare your activity: ';
 $string['accessactivity'] = 'Access your activity: ';
 $string['edit'] = 'Modify';
+$string['delete'] = 'Delete';
+$string['confirmdelete'] = 'Are you sure you want to delete this recording permanently?';
 $string['view'] = 'View';
 $string['viausers'] = 'Users:';
 $string['role'] = 'Role';
@@ -124,7 +153,7 @@ $string['cat_intro'] = 'Choose the Via categories that you wish to make availabl
 $string['cats_modified'] = 'The categories were successfully modified!';
 $string['no_default'] = 'No default category.';
 $string['cat_name'] = 'Category names';
-$string['cat_check'] = 'Add'; 
+$string['cat_check'] = 'Add';
 $string['cat_default'] = 'Set as default';
 $string['enrolmentheader'] = 'Participant enrolments';
 $string['enrolmenttype'] = 'Participants enrolment management';
@@ -133,8 +162,6 @@ Manual Registration: Participants must be added from the list of participants ch
 ';
 $string['automaticenrol'] = 'Automatic enrolment';
 $string['manualenrol'] = 'Manual enrolment';
-$string['modulename'] = 'Via - Virtual teaching';
-$string['modulenameplural'] = 'Via - Virtual teaching';
 $string['name'] = 'Name';
 $string['date'] = 'Activity date';
 $string['passdate'] = 'The selected date is passed';
@@ -178,6 +205,7 @@ $string['testadminid'] = 'Test the moodle key';
 $string['adminid_success'] = 'The moodle key is valid';
 $string['adminid_toolow'] = 'The user\'s rights do not permit the creation of activities. Please contact the administrator to increase the rights.';
 $string['adminid_nosuccess'] = 'The mooodle key provided is not valid.';
+$string['adminnotrenrolled'] = 'As administrator you may access the activity although you are not enrolled.';
 
 $string['reminderemailsubject'] = 'REMINDER: {$a->title}';
 $string['reminderemail'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
@@ -203,6 +231,7 @@ To go to the activity, follow this link : {$a->activitylink}
 ---------------------------------------------------------------------
 
 Attention : This activity can be recorded. Please do not access this activity if you do not want to be recorded. This email contains personnal connection informations. Those informations must not be shared';
+
 $string['reminderemailhtml'] = '<p>Hello {$a->username}reminderemailhtml,</p>
 <p>This is a reminder for an activity coming soon:</p>
 <p><b>Title:</b> {$a->title} <br/>
@@ -237,9 +266,9 @@ To go to the activity, follow this link : {$a->activitylink}
 
 Attention : This activity can be recorded. Please do not access this activity if you do not want to be recorded. This email contains personnal connection informations. Those informations must not be shared';
 $string['inviteemailhtml'] = '<p>Hello {$a->username},</p>
-<p>Moodle invites you to participate in the activity &laquo; {$a->title} &raquo; that will take place on <b>{$a->datebegin}</b> between <b>{$a->hourbegin}</b> and <b>{$a->hourend}</b>.</p><p>{$a->invitemsg}</p>';	
+<p>Moodle invites you to participate in the activity &laquo; {$a->title} &raquo; that will take place on <b>{$a->datebegin}</b> between <b>{$a->hourbegin}</b> and <b>{$a->hourend}</b>.</p><p>{$a->invitemsg}</p>';
 
-/* invites modified for permanent activities*/
+/* Invites modified for permanent activities*/
 $string['inviteemailpermanent'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
 ---------------------------------------------------------------------
 {$a->datesend}
@@ -264,7 +293,7 @@ To go to the activity, follow this link : {$a->activitylink}
 
 Attention : This activity can be recorded. Please do not access this activity if you do not want to be recorded. This email contains personnal connection informations. Those informations must not be shared';
 $string['inviteemailhtmlpermanent'] = '<p>Hello {$a->username},</p>
-<p>{$a->invitemsg}</p>';	
+<p>{$a->invitemsg}</p>';
 
 $string['invitewebaccesshtml'] = 'Web access';
 $string['invitepreparationhtml'] = 'Activity preparation';
@@ -285,7 +314,7 @@ $string['resetparticipants'] = 'Delete all participants and animators (works onl
 $string['resetdisablereviews'] = 'Disable reviews for all activities';
 $string['by'] = 'by';
 $string['list_activities'] = 'List of all Via activities in this course';
-$string['no_categories'] ='There are no categories, these must be created in the Via portal by and administrator';
+$string['no_categories'] = 'There are no categories, these must be created in the Via portal by and administrator';
 $string['via:addinstance'] = 'Add a new via activity';
 $string['activity_deleted'] = 'The Via activity was deleted directly in the Via environment by a user. It is therefore impossible to access. We recommend that you delete this activity in Moodle and create a new one.';
 $string['noparticipantscheckbox'] = 'Add students as animators';
@@ -306,11 +335,10 @@ $string['nousers'] = 'Warning - There are no users associated to this activity!'
 
 /* permissions */
 $string['via:manage'] = 'Manage Via Activities';
-$string['via:viewrecordings'] = 'View Via Recordings';
 $string['via:view'] = 'View Via Activities';
-$string['via:delete'] = 'Delete Via Acitivies';
 
 /* Errors */
+$string['error_user'] = 'User {$a} could not be added to the activity.';
 $string['error:deletefailed'] = 'The removal of all activities has failed.';
 $string['error:resetparticipants'] = 'The removal of all participants has failed.';
 $string['error:disablereviews'] = 'Disabling review mode has failed.';
@@ -394,7 +422,5 @@ $string['error:TITLE_TOO_LONG'] = 'TITLE_TOO_LONG - The Title value exceeds the 
 $string['error:UNABLE_TO_CREATEDATE'] = 'UNABLE_TO_CREATEDATE - The was an error in the creation of the perioditcity dates.';
 $string['error:USER_DOES_NOT_EXIST'] = 'USER_DOES_NOT_EXIST - The user is invalid.';
 $string['error:USERID_EMPTY'] = 'USERID_EMPTY - The value UserID is invalid.';
-$string['error:STATUS_INVALID']= 'The connection to the web conference room was not possible as your user is either deleted or inactive.<br/>Please contact the Via administrator od your institution in order to reactivate your Via user.';
-$string['STATUS_INVALID']= 'The connection was impossible, the status is invalid.';
-
-?>
+$string['error:STATUS_INVALID'] = 'The connection to the web conference room was not possible as your user is either deleted or inactive.<br/>Please contact the Via administrator od your institution in order to reactivate your Via user.';
+$string['STATUS_INVALID'] = 'The connection was impossible, the status is invalid.';

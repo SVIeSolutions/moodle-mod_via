@@ -15,16 +15,33 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
+ * The EVENTNAME event.
  *
- * @package    mod
- * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @package    Via
+ * @copyright  2014 SVI e Solutions
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
  */
 
-defined('MOODLE_INTERNAL') || die;
+namespace mod_via\event;
 
-function xmldb_via_install() {
-    global $CFG;
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * The mod_via  course module viewed event class.
+ *
+ * @since     Moodle 2.7
+ * @copyright 2014 SVI e Solutions
+ * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ **/
+
+class course_module_viewed extends \core\event\course_module_viewed {
+
+    protected function init() {
+        $this->data['objecttable'] = 'via';
+        $this->data['crud'] = 'r';
+        $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
+    }
+
 }
+
+

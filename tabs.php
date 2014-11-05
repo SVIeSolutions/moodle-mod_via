@@ -1,54 +1,48 @@
-<?php  
-///////////////////////////////////////////////////////////////////////////
-//                                                                       //
-// NOTICE OF COPYRIGHT                                                   //
-//                                                                       //
-// Moodle - Modular Object-Oriented Dynamic Learning Environment         //
-//          http://moodle.org                                            //
-//                                                                       //
-// Copyright (C) 2005 Martin Dougiamas  http://dougiamas.com             //
-//                                                                       //
-// This program is free software; you can redistribute it and/or modify  //
-// it under the terms of the GNU General Public License as published by  //
-// the Free Software Foundation; either version 2 of the License, or     //
-// (at your option) any later version.                                   //
-//                                                                       //
-// This program is distributed in the hope that it will be useful,       //
-// but WITHOUT ANY WARRANTY; without even the implied warranty of        //
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the         //
-// GNU General Public License for more details:                          //
-//                                                                       //
-//          http://www.gnu.org/copyleft/gpl.html                         //
-//                                                                       //
-///////////////////////////////////////////////////////////////////////////
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-// This file to be included so we can assume config.php has already been included.
-// We also assume that $user, $course, $currenttab have been set
+/**
+ *
+ * @package    mod
+ * @subpackage via
+ * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * 
+ */
 
+if (empty($currenttab) or empty($course)) {
+    print_error('You cannot call this script in that way');
+}
 
-    if (empty($currenttab) or empty($course)) {
-        print_error('You cannot call this script in that way');
-    }
-	
-	$context = context_module::instance($cm->id);
+$context = context_module::instance($cm->id);
 
-    $inactive = NULL;
-    $activetwo = NULL;
-    $tabs = array();
-    $row = array();
-	
-	if($via->noparticipants != 1){
-		$row[] = new tabobject('participants', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=1', get_string("participants", "via"));
-	}
-	
-    $row[] = new tabobject('animators', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=3', get_string("animators", "via"));
-	
-	$row[] = new tabobject('presentator', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=2', get_string("presentator", "via"));
+$inactive = null;
+$activetwo = null;
+$tabs = array();
+$row = array();
 
+if ($via->noparticipants != 1) {
+    $row[] = new tabobject('participants', $CFG->wwwroot.'/mod/via/manage.php?id='.
+    $via->id.'&t=1', get_string("participants", "via"));
+}
 
+$row[] = new tabobject('animators', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=3', get_string("animators", "via"));
 
-    $tabs[] = $row;
+$row[] = new tabobject('presentator', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=2', get_string("presentator", "via"));
 
-	print_tabs($tabs, $currenttab);
+$tabs[] = $row;
 
-?>
+print_tabs($tabs, $currenttab);
