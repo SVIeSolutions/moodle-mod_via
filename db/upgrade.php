@@ -21,19 +21,6 @@ function xmldb_via_upgrade($oldversion = 0) {
 
     $result = true;
 
-    // Dropping all enums/check contraints from core. MDL-18577.
-    if ($oldversion < 2009042700) {
-
-        // Changing list of values (enum) of field type on table via to none.
-        $table = new xmldb_table('via');
-        $field = new xmldb_field('type', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'general', 'course');
-
-        $dbman->drop_enum_from_field($table, $field);
-
-        // Savepoint reached.
-        upgrade_mod_savepoint($result, 2009042700, 'via');
-    }
-
     // Define field introformat to be added to via.
     if ($oldversion < 2009042701) {
 
@@ -163,7 +150,6 @@ function xmldb_via_upgrade($oldversion = 0) {
         upgrade_mod_savepoint($result, 2014080162, 'via');
 
     }
-
     if ($oldversion < 2014080163) {
 
         $table = new xmldb_table('via');
@@ -183,7 +169,7 @@ function xmldb_via_upgrade($oldversion = 0) {
 
         $table = new xmldb_table('via_users');
 
-        $field = new xmldb_field('username', XMLDB_TYPE_TEXT, '200', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'viauserid');
+        $field = new xmldb_field('username', XMLDB_TYPE_TEXT, '200', XMLDB_UNSIGNED, null, null, null, 'viauserid');
         if ($dbman->field_exists($table, $field)) {
             $dbman->change_field_precision($table, $field);
         }
@@ -206,6 +192,69 @@ function xmldb_via_upgrade($oldversion = 0) {
 
         // Savepoint reached!
         upgrade_mod_savepoint($result, 2014080167, 'via');
+    }
+
+    if ($oldversion < 2014110100) {
+
+        $table = new xmldb_table('via');
+
+        $field = new xmldb_field('presence', XMLDB_TYPE_INTEGER, '4', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '30', 'duration');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $table = new xmldb_table('via_presence');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'id');
+        $table->add_field('activityid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'userid');
+        $table->add_field('connection_duration', XMLDB_TYPE_NUMBER, '10,2', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null,
+                          'activityid');
+        $table->add_field('playback_duration', XMLDB_TYPE_NUMBER, '10,2', XMLDB_UNSIGNED, null, null, null, 'connection_duration');
+        $table->add_field('status', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'connection_duration');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'status');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2014110100, 'via');
+    }
+
+    if ($oldversion < 2014120101) {
+
+        unset_config('via_sendinvitation', 'via');
+        unset_config('via_moodleemailnotification', 'via');
+
+        $table = new xmldb_table('via');
+        $field = new xmldb_field('moodleismailer');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+        $field = new xmldb_field('grade');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+        $table = new xmldb_table('via_participants');
+        $field = new xmldb_field('synchvia', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, null, null, null, 'participanttype');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $table = new xmldb_table('via_users');
+        $field = new xmldb_field('setupstatus', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, null, null, null, 'username');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2014120101, 'via');
+    }
+
+    if ($oldversion < 2015012001) {
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2015012001, 'via');
     }
 
 }

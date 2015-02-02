@@ -110,28 +110,28 @@ if ($ADMIN->fulltree) {
     '', array(1), array(1 => get_string('modevoiceweb', 'via') )));
 
     /****
-    Email notifications settings
-    ****/
-    $settings->add(new admin_setting_configcheckbox('via/via_moodleemailnotification',
-    get_string('moodleemailnotification', 'via'), get_string('moodleemailnotificationdesc', 'via'), 1));
-
-    /****
     Participant confirmations
     ****/
     $settings->add(new admin_setting_configcheckbox('via/via_participantmustconfirm',
     get_string('participantmustconfirm', 'via'), get_string('participantmustconfirmdesc', 'via'), 0));
 
     /****
-    Send personalized invitations
-    ****/
-    $settings->add(new admin_setting_configcheckbox('via/via_sendinvitation',
-    get_string('sendinvitation', 'via'), get_string('sendinvitationdesc', 'via'), 1));
-
-    /****
     Participant information synchronization
     ****/
     $settings->add(new admin_setting_configcheckbox('via/via_participantsynchronization',
     get_string('participantsynchronization', 'via'), get_string('participantsynchronizationdesc', 'via'), 0));
+
+    /****
+    Permit playback download
+    ****/
+    $settings->add(new admin_setting_configcheckbox('via/via_downloadplaybacks',
+        get_string('downloadplaybacks', 'via'), get_string('downloadplaybacksdesc', 'via'), 0));
+
+    /****
+    Display user presence status
+    ****/
+    $settings->add(new admin_setting_configcheckbox('via/via_presencestatus',
+        get_string('presencestatus', 'via'), get_string('presencestatusdesc', 'via'), 1));
 
     /****
     Permit permanent activities
@@ -164,7 +164,7 @@ if ($ADMIN->fulltree) {
     get_string('duplication', 'via'), get_string('duplicationdesc', 'via'), 1));
 
     /****
-    Activity backup
+    Activity backup settings
     ****/
     $settings->add(new admin_setting_configcheckbox('via/via_backupcontent',
     get_string('backup', 'via'), get_string('backupdesc', 'via'), 1));

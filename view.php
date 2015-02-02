@@ -30,6 +30,7 @@ global $DB, $CFG, $USER;
 
 $action = optional_param('action', null, PARAM_CLEAN);
 $id = required_param('id', PARAM_INT);
+$error = optional_param('error', null, PARAM_TEXT);
 
 if (!($cm = get_coursemodule_from_id('via', $id))) {
     error("Course module ID is incorrect");
@@ -81,16 +82,22 @@ if ($frm = data_submitted()) {
 
 // We validate if the activity was deleted in Via + if the user has editing rights we update Via with the information in moodle.
 try {
-    $api = new mod_via_api();
-    $sviinfos = $api->activity_get($via);
-    if ($sviinfos == "ACTIVITY_DOES_NOT_EXIST") {
-        $deleted = true;
-    } else if ($via->timemodified > time() + 2 * 60 && has_capability('mod/via:manage', $context)) {
-        $update = $api->activity_edit($via);
-    }
+    $previous = $_SERVER['HTTP_REFERER'];
+    $connectedusers = 0;
+    if (strpos($previous, 'modedit') == false && strpos($previous, 'via/view') == false ) {
+        // We only check or update if we are not coming directly from the editing page.
+        $api = new mod_via_api();
+        $sviinfos = $api->activity_get($via);
 
+        if ($sviinfos == "ACTIVITY_DOES_NOT_EXIST") {
+            $deleted = true;
+
+        } else if (has_capability('mod/via:manage', $context)) {
+            $update = $api->activity_edit($via);
+            $connectedusers = $sviinfos["NbConnectedUsers"];
+        }
+    }
 } catch (Exception $e) {
-    $result = false;
     notify(get_string("error:".$e->getMessage(), "via"));
 }
 
@@ -119,9 +126,9 @@ if (isset($deleted)) {
     if ($via->activitytype != 2) {
         $row = array();
         $row[] = "<p style='text-align:left; margin: 0.5em 0;'><b>".get_string("startdate", "via").
-        ":</b> " . userdate($via->datebegin) .'</p>';
+            ":</b> " . userdate($via->datebegin) .'</p>';
         $row[] = "<p style='text-align:left; margin: 0.5em 0;'><b>".get_string("enddate", "via").
-        ":</b> " .  userdate($via->datebegin + ($via->duration * 60)) .'</p>';
+            ":</b> " .  userdate($via->datebegin + ($via->duration * 60)) .'</p>';
         $table->data[] = $row;
 
         $cell = new html_table_cell("<p style='text-align:left; margin: 0.5em 0;'>
@@ -131,22 +138,20 @@ if (isset($deleted)) {
     }
 
     $cell = new html_table_cell("<p style='text-align:left; margin: 0.5em 0;'>
-    <b>".get_string("description", "via").":</b> " . strip_tags($via->intro)."</p>");
+    <b>".get_string("description", "via").":</b></p>" . format_module_intro('via', $via, $cm->id));
 
     $cell->colspan = 2;
     $table->data[] = new html_table_row(array($cell));
 
     if (has_capability('mod/via:view', $context)) {
-        // Get the type of access user can view.
-        $access = via_access_activity($via);
 
         if (get_config('via', 'via_technicalassist_url') == null) {
-            $assistant = '<a class="button" target="configvia" href="'.$CFG->wwwroot.'/mod/via/view.assistant.php?redirect=6"
+            $assistant = '<a class="viabutton"" target="configvia" href="'.$CFG->wwwroot.'/mod/via/view.assistant.php?redirect=6"
             onclick="this.target=\'configvia\';
             return openpopup(null, {url:\'/mod/via/view.assistant.php?redirect=6\',
             name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});">';
         } else {
-            $assistant = '<a class="button" target="configvia" href="' . get_config('via', 'via_technicalassist_url'). '"
+            $assistant = '<a class="viabutton"" target="configvia" href="' . get_config('via', 'via_technicalassist_url'). '"
             onclick="this.target=\'configvia\';
             return openpopup(null, {url:\'' . get_config('via', 'via_technicalassist_url').'\',
             name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});">';
@@ -154,16 +159,16 @@ if (isset($deleted)) {
 
         $row2 = array();
         $row2[] = '<p class="title">'.get_string('preparation', 'via') . '</p>
-        <a class="button" target="configvia" href="' . $CFG->wwwroot .'/mod/via/view.assistant.php?redirect=7"
+        <a class="viabutton"" target="configvia" href="' . $CFG->wwwroot .'/mod/via/view.assistant.php?redirect=7"
         onclick="this.target=\'configvia\';
         return openpopup(null, {url:\'/mod/via/view.assistant.php?redirect=7\',
         name:\'configvia\', options:\'menubar=0,location=0,scrollbars,resizable,width=750,height=700\'});">
         <img src="' . $CFG->wwwroot . '/mod/via/pix/config.png" width="27" height="27" hspace="5" alt="' .
-        get_string('recentrecordings', 'via') . '" />' .get_string("configassist", "via").'</a>';
+            get_string('recentrecordings', 'via') . '" />' .get_string("configassist", "via").'</a>';
 
         $row2[] = '<p class="title"><br/></p>'. $assistant .'<img src="' .
-        $CFG->wwwroot . '/mod/via/pix/assistance.png" width="27" height="27" hspace="5" alt="' .
-        get_string('recentrecordings', 'via') . '" />'.get_string("technicalassist", "via").'</a>';
+            $CFG->wwwroot . '/mod/via/pix/assistance.png" width="27" height="27" hspace="5" alt="' .
+            get_string('recentrecordings', 'via') . '" />'.get_string("technicalassist", "via").'</a>';
 
         $table->data[] = $row2;
     }
@@ -171,15 +176,14 @@ if (isset($deleted)) {
     if (has_capability('mod/via:manage', $context)) {
 
         $row3 = array();
-        if (get_config('via', 'via_sendinvitation')) {// If user can send invites.
-            $row3[] = "<a class='button' href='send_invite.php?id=$cm->instance'>
-            <img src='" . $CFG->wwwroot . "/mod/via/pix/mail.png' width='27' height='27' alt='".
-            get_string("sendinvite", "via") . "' title='".get_string("sendinvite", "via") . "'
-            hspace='5'/>".get_string("sendinvite", "via")."</a>";
-        }
+
+        $row3[] = "<a class='viabutton' href='send_invite.php?id=$cm->instance'>
+        <img src='" . $CFG->wwwroot . "/mod/via/pix/mail.png' width='27' height='27' alt='".
+        get_string("sendinvite", "via") . "' title='".get_string("sendinvite", "via") . "'
+        hspace='5'/>".get_string("sendinvite", "via")."</a>";
 
         // For animator, presentator, show link to manage participants.
-        $row3[] = "<a class='button' href='manage.php?id=$cm->instance'>
+        $row3[] = "<a class='viabutton' href='manage.php?id=$cm->instance'>
         <img src='" . $CFG->wwwroot . "/mod/via/pix/users.png' width='27' height='27' alt='".
         get_string("manageparticipants", "via") . "' title='".get_string("manageparticipants", "via") . "'
         hspace='5'/>".get_string("manageparticipants", "via")."</a>";
@@ -194,8 +198,6 @@ if (isset($deleted)) {
         $confirmation = true;
 
         if ($ptypes = $DB->get_records('via_participants', array('userid' => $USER->id, 'activityid' => $via->id))) {
-            // Check if participant confirmation status changed on Via server.
-            via_update_moodle_confirmationstatus($via, $USER->id);
 
             foreach ($ptypes as $participanttype) {
                 if ($participanttype->confirmationstatus == 1) {
@@ -234,6 +236,11 @@ if (isset($deleted)) {
 
     }
 
+
+    // Get the type of access user can view.
+    $access = via_access_activity($via);
+    $viewinfo = true;
+
     if (has_capability('mod/via:view', $context)) {
 
         $cell = new html_table_cell();
@@ -247,47 +254,25 @@ if (isset($deleted)) {
                 if ($via->recordingmode != 0) {
                     $cell->text .= '<p>' .get_string('recordwarning', 'via') .'</p>';
                     $cell->text .= '<p><input type="checkbox" id="checkbox" />'.get_string('recordaccept', 'via').
-                    '<p id="error" class="error hide">'.get_string('mustaccept', 'via').'</p>';
-
-                    $cell->text .= "<a id='active' class='accessbutton active hide' href='view.via.php?id=$cm->id'
-                    target='_blank'><img src='" . $CFG->wwwroot . "/mod/via/pix/access.png' width='27' height='27'
-                    alt='".get_string("gotoactivity", "via") . "' title='".get_string("gotoactivity", "via") . "'
-                    hspace='5' />".get_string("gotoactivity", "via")."</a>";
-
-                    $cell->text .= "<a id='inactive' class='accessbutton inactive' href='#' >
-                    <img src='" . $CFG->wwwroot . "/mod/via/pix/access.png' width='27' height='27'
-                    alt='".get_string("gotoactivity", "via") . "' title='".get_string("gotoactivity", "via")
-                    . "' hspace='5' />".get_string("gotoactivity", "via")."</a>";
+                        '<p id="error" class="error hide">'.get_string('mustaccept', 'via').'</p>';
+                    $cell->text .= via_add_button(true, true, $cm->id);
+                    $cell->text .= via_add_button(true, false);
                 } else {
-                    $cell->text .= "<a class='accessbutton' href='view.via.php?id=$cm->id' target='_blank'>
-                    <img src='" . $CFG->wwwroot . "/mod/via/pix/access.png' width='27' height='27' alt='".
-                    get_string("gotoactivity", "via") . "' title='".get_string("gotoactivity", "via") . "'
-                     hspace='5' />".get_string("gotoactivity", "via")."</a>";
+                    $cell->text .= via_add_button(false, false, $cm->id);
                 }
                 $table->data[] = new html_table_row(array($cell));
                 break;
             case 2:
                 // Acitivity isn't started yet, but animators and presentators can access it to do some preparation.
                 $cell->text .= '<p>' .get_string("notstarted", "via").'</p><br/>';
-
                 if ($via->recordingmode != 0) {
                     $cell->text .= '<p>' .get_string('recordwarning', 'via') .'</p>';
                     $cell->text .= '<p><input type="checkbox" id="checkbox" />'.get_string('recordaccept', 'via').'
                     <p id="error" class="error hide">'.get_string('mustaccept', 'via').'</p>';
-                    $cell->text .= "<a id='active' class='accessbutton active hide' href='view.via.php?id=$cm->id'
-                    target='_blank'><img src='" . $CFG->wwwroot . "/mod/via/pix/access.png' width='27' height='27' alt='".
-                    get_string("prepareactivity", "via") . "' title='".get_string("prepareactivity", "via") . "' hspace='5' />".
-                    get_string("prepareactivity", "via")."</a>";
-                    $cell->text .= "<a id='inactive' class='accessbutton inactive' href='#' >
-                    <img src='" . $CFG->wwwroot . "/mod/via/pix/access.png'
-                    width='27' height='27' alt='".get_string("prepareactivity", "via") . "' title='".
-                    get_string("prepareactivity", "via") . "'
-                    hspace='5' />".get_string("prepareactivity", "via")."</a>";
+                    $cell->text .= via_add_button(true, true, $cm->id, true);
+                    $cell->text .= via_add_button(true, false, null, true);
                 } else {
-                    $cell->text .= "<a class='accessbutton' href='view.via.php?id=$cm->id' target='_blank'>
-                    <img src='" . $CFG->wwwroot . "/mod/via/pix/access.png' width='27'
-                    height='27' alt='".get_string("prepareactivity", "via") . "'
-                    title='".get_string("prepareactivity", "via") . "' hspace='5' />".get_string("prepareactivity", "via")."</a>";
+                    $cell->text .= via_add_button(false, false, $cm->id, true);
                 }
                 $table->data[] = new html_table_row(array($cell));
                 break;
@@ -305,15 +290,16 @@ if (isset($deleted)) {
                 // Participant can't access activity, he is not enroled in it.
                 $cell->text .= get_string("notenrolled", "via");
                 $table->data[] = new html_table_row(array($cell));
+                $viewinfo = false;
                 break;
             case 7;
                 // Admin user which is not enrolled but can access the activity anyways.
-                $cell->text .= '<p>' .get_string("adminnotrenrolled", "via").'</p><br/>';
-
-                $cell->text .= "<a class='accessbutton' href='view.via.php?id=$cm->id&fa=1' target='_blank'>
-                    <img src='" . $CFG->wwwroot . "/mod/via/pix/access.png' width='27' height='27' alt='".
-                    get_string("gotoactivity", "via") . "' title='".get_string("gotoactivity", "via") . "'
-                     hspace='5' />".get_string("gotoactivity", "via")."</a>";
+                if ($via->activitytype == 1 && $via->datebegin + ($via->duration * 60) < time()) {
+                    $cell->text .= get_string("activitydone", "via");
+                } else {
+                    $cell->text .= '<p>' .get_string("adminnotrenrolled", "via").'</p><br/>';
+                    $cell->text .= via_add_button(false, true, $cm->id, false, true);
+                }
                 $table->data[] = new html_table_row(array($cell));
                 break;
             default :
@@ -324,136 +310,49 @@ if (isset($deleted)) {
 
         echo $OUTPUT->box_end();
 
-        function is_mobile_phone() {
-
-            $ua = strtolower($_SERVER['HTTP_USER_AGENT']);
-            $mobiles = array("iphone", "ipod", "blackberry", "nokia", "phone",
-                "mobile safari", "iemobile", "ipad", "android");
-            foreach ($mobiles as $mobile) {
-                if (strpos($ua, $mobile)) {
-                    return true;
-                }
-            }
-            return false;
-        }
-
         // Print recordings list.
-        if (has_capability('mod/via:view', $context) && is_mobile_phone() == false) {
-            if (isset($_REQUEST['error'])) {
+        if ($viewinfo && has_capability('mod/via:view', $context) && is_mobile_phone() == false) {
+            if (isset($error)) {
                 echo  'this title aready exists';
             }
 
             $playbacks = via_get_all_playbacks($via);
 
             if ($playbacks) {
-
-                echo "<table cellpadding='2' cellspacing='0' class='generaltable boxaligncenter' id='via_recordings'>";
-                $formname = 0;
-                foreach ($playbacks as $key => $playback) {
-                    // Lists all playbacks for acitivity.
-                    if (isset($playback->playbackrefid)) {
-                        $style = "atelier";
-                        $li = "<li style='list-style-image:url(".$CFG->wwwroot."/mod/via/pix/arrow.gif);'>";
-                        $endli = "</li>";
-                    } else {
-                        $style = "";
-                        $li = "";
-                        $endli = "";
-                    }
-
-                    $private = $playback->ispublic ? "" : "dimmed_text";
-
-                    if ($playback->ispublic || has_capability('mod/via:manage', $context)) {
-                        // If playback is public and/or if user is animator or presentator.
-                        if (!isset($header)) {// We only display it once.
-                            $header = "<h2 class='main'>".get_string("recordings", "via")."</h2>";
-                            echo $header;
-                        }
-                        echo "<tr class='$style'>";
-
-                        echo "<td class='title $style  $private'>$li";
-
-                        echo $playback->title;
-
-                        echo "$endli</td>";
-
-                        echo "<td class='duration  $private' style='text-align:left'>".
-                        userdate(strtotime($playback->creationdate))."<br/> ".
-                        get_string("timeduration", "via")." ".gmdate("H:i:s",  $playback->duration)."</td>";
-
-                        if (has_capability('mod/via:manage', $context)) {
-
-                            if ($playback->ispublic == 1) {
-                                $checked = get_string("mask", "via");
-                                $css = 'maskvia';
-                            } else {
-                                $checked = get_string("show", "via");
-                                $css = 'show';
-                            }
-
-                            echo "<td class='modify $private'>";
-                            echo '<form class="editplayback '.$css.'" action="edit_review.php?id='.$via->id.'" method="post">
-                            <input type="hidden" name="playbackid" id="playbackid" value="'.$key.'">
-                            <input type="hidden" name="edit" id="edit" value="Enregistrer"  />
-                            <input type="submit" name="ispublic" id="ispublic" value="'.$checked.'" /></form>';
-                            echo "</td>";
-
-                            echo "<td class='modify $private'>";
-                            echo '<form class="modify" id="'.$key.'" action="edit_review.php?id='.$via->id.'" method="post">
-                            <input type="hidden" name="playbackid" id="playbackid" value="'.$key.'">
-                            <input id="'.$key.'" type="submit" value="'.get_string("edit", "via").'" />
-                            </form>';
-                            echo "</td>";
-
-                            echo "<td class='modify $private'>";
-
-                            echo '<form class="deleteplayback" id="deleteplayback'.$formname.'" name="deleteplayback'.$formname.'"
-                                action="edit_review.php?id='.$via->id.'&delete=delete" method="post"">
-                                <input type="hidden" name="playbackid" id="playbackid" value="'.$key.'">
-                                <a href="javascript: confirmdelete(\'deleteplayback'.$formname.'\',\''.
-                                get_string("confirmdelete", "via").'\');" >'.get_string("delete", "via").'</a>
-                            </form>';
-                            echo "</td>";
-
-                        }
-
-                        echo "<td class='review $private'>";
-                        if ($private == "dimmed_text") {
-                            $param = '&p=1';
-                        } else {
-                            $param = '';
-                        }
-
-                        echo '<form class="playback" id="viewplayback'.$formname.'" name="viewplayback'.$formname.'"
-                            action="view.via.php?id='.$cm->id.'&review=1'.$param.'" target="_blank" method="post">
-                            <a href="javascript: submitform(\'viewplayback'.$formname.'\');" class="view">
-                            <img style="vertical-align:middle;" src="' . $CFG->wwwroot . '/mod/via/pix/access.png"
-                            width="25" height="25" alt="' .get_string('recentrecordings', 'via') . '" />'.
-                            get_string("view", "via").'</a>
-                            <input type="hidden" name="playbackid" value="'.$key.'"></form>';
-
-                        echo "</td>";
-
-                        echo "</tr>";
-                    }
-                    $formname = $formname + 1;
-                }
-
-                echo "</table>";
+                echo via_get_playbacks_table($playbacks, $via, $context);
             }
 
         }
 
-        // Print user list!
-        echo get_participants_list_table($via, $context);
+        // If activity is finished and the user has the right to see reports, we display the report.
+        echo $OUTPUT->box_start('center');
+
+        if (get_config('via', 'via_presencestatus') && $via->activitytype == 1 &&
+            ($via->datebegin + ($via->duration * 60)) < time()) {
+            if ($connectedusers == 0 && has_capability('mod/via:viewpresence', $context)) {
+
+                echo via_report_btn($via->id);
+
+                echo via_get_participants_table($via, $context, true);
+
+                echo via_report_btn($via->id);
+
+                echo "<p style='margin: auto; width: 90%;'>".get_string("presencewarning", "via")."</p>";
+            }
+        } else {
+            // If the activity has not yet started we print the user list for everyone to see!
+            echo via_get_participants_table($via, $context);
+        }
+
+        echo $OUTPUT->box_end();
 
         echo '<hr>';
         echo '<a class="index" href="'.$CFG->wwwroot .'/mod/via/index.php?id='.$course->id.'">'.
-        get_string('list_activities', 'via').'</a>';
+            get_string('list_activities', 'via').'</a>';
 
         echo '<div class="vialogo" ><img src = "' . $CFG->wwwroot . '/mod/via/pix/logo_via.png" width="60"
         height="33" alt="VIA" /> '.get_string('by', 'via').'&nbsp;&nbsp;<img src = "' .
-        $CFG->wwwroot . '/mod/via/pix/logo_svi.png" width="52" height="33" alt="VIA" /></div>';
+            $CFG->wwwroot . '/mod/via/pix/logo_svi.png" width="52" height="33" alt="VIA" /></div>';
     }
 }
 

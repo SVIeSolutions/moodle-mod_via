@@ -71,6 +71,16 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->disabledif ('duration', 'activitytype', 'checked');
         $mform->disabledif ('duration', 'pastevent', 'eq', 1);
 
+        $mform->addElement('html', '<script type="text/javascript"
+                            src="'.$CFG->wwwroot.'/mod/via/javascript/presence.js"></script>');
+
+        // Presence!
+        $mform->addElement('text', 'presence', get_string('presence', 'via'), array('size' => '4'));
+        $mform->addHelpButton('presence', 'presence', 'via');
+        $mform->setType('presence', PARAM_INT);
+        $mform->setDefault('presence', '30');
+        $mform->disabledif ('presence', 'activitytype', 'checked');
+
         // Automatic reminders!
         $onehour = 60 * 60;
         $twohours = (60 * 60) * 2;
@@ -244,7 +254,7 @@ class mod_via_mod_form extends moodleform_mod {
     // Sets default values for empty properties before the form is rendered.
     public function data_preprocessing(&$defaultvalues) {
         if (isset($defaultvalues['viaactivityid']) && $defaultvalues['viaactivityid']) {
-            if ($sviinfos = update_info_database($defaultvalues)) {
+            if ($sviinfos = via_update_info_database($defaultvalues)) {
                 foreach ($sviinfos as $key => $svi) {
                     $defaultvalues[$key] = $svi;
                 }
@@ -295,9 +305,6 @@ class mod_via_mod_form extends moodleform_mod {
             $errors['recordingmode'] = get_string('nounifiedrecordpermanent', 'via');
         }
 
-        if (($data['enroltype'] == 1) || (!isset($data['noparticipants']))) {
-            $DB->set_field('via', 'noparticipants', '0', array('id' => $this->_instance));
-        }
         return $errors;
     }
 

@@ -51,6 +51,17 @@ $capabilities = array(
                 )
             ),
 
+        // Ability to view presence report.
+        'mod/via:viewpresence' => array(
+
+            'captype' => 'read',
+            'contextlevel' => CONTEXT_MODULE,
+            'archetypes' => array(
+                'editingteacher' => CAP_ALLOW,
+                'manager' => CAP_ALLOW
+                )
+            ),
+
         // Ability to view activities.
         'mod/via:view' => array(
 
@@ -63,6 +74,6 @@ $capabilities = array(
                 'editingteacher' => CAP_ALLOW,
                 'manager' => CAP_ALLOW
                 )
-            ),
+            )
 
         );

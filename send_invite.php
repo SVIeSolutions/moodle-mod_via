@@ -45,7 +45,7 @@ require_login($course->id, false, $cm);
 
 $context = context_module::instance($cm->id);
 
-if (!has_capability('mod/via:manage', $context) || !get_config('via', 'via_sendinvitation')) {
+if (!has_capability('mod/via:manage', $context)) {
     print_error('You do not have the permission to send invites');
 }
 
@@ -60,11 +60,17 @@ if ($frm = data_submitted()) {
 
     // A form was submitted so process the input.
     if (!empty($frm->msg)) {
-        $via->invitemsg = $frm->msg;
+        $via->invitemsg = $frm->msg['text'];
     }
     $via->sendinvite = 1;
     $DB->update_record("via", $via);
     redirect($CFG->wwwroot."/mod/via/view.php?id=".$cm->id, get_string("invitessend", "via"), 0);
+}
+
+if (isset($via->invitemsg)) {
+    $msg = $via->invitemsg;
+} else {
+    $msg = "";
 }
 
 // Print the page header.
@@ -72,7 +78,9 @@ echo $OUTPUT->header();
 
 echo $OUTPUT->box_start('center');
 
-require('send_invite.form.html');
+$mform = new via_send_invite_form('', array('message' => $msg, 'id' => $id));
+
+$mform->display();
 
 echo $OUTPUT->box_end();
 

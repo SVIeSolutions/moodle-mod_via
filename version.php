@@ -25,10 +25,10 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2014080167;
+$plugin->version = 2015012001;// Needs API version 6.5 or greater!
 
 $plugin->component = 'mod_via';
-$plugin->requires = 2014050800;
+$plugin->requires = 2014050800; // Moodle2.7!
 $plugin->cron     = 300;
 
 $plugin->maturity  = MATURITY_STABLE;

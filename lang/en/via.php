@@ -25,9 +25,9 @@
 
 $string['pluginadministration'] = 'Via administration';
 $string['pluginname'] = 'Via';
-$string['pluginversion'] = 'Version : ';
 $string['modulename'] = 'Via';
 $string['modulenameplural'] = 'Via';
+$string['pluginversion'] = 'Version : ';
 $string['modulename_help'] = 'The Via module allows you to create synchronous meetings in a virtual classroom to share live using voice and video for: remote classes in real time, meetings, work-team meetings, tutoring, seminars, etc.
 
 This tool allows you to manage sub-work-groups, annotations, screen sharing, import or present documents and to share by voice and/or video.
@@ -74,6 +74,8 @@ $string['permanent'] = 'Permanent activity';
 $string['permanent_help'] = 'Check "Permanent" to make your activity accessible at all times. You will then be obliged to use the waiting room to restrict access to registered users with the "participant" status.';
 $string['startdate'] = 'Starts on';
 $string['enddate'] = 'Ends on';
+$string['presence'] = 'Minimum attendance required';
+$string['presence_help'] = 'Text must be changed!!!! Value corresponding to the time in minutes from which the user gets the presence status for the activity.';
 $string['duration'] = 'Duration (minutes)';
 $string['timeduration'] = 'Duration :';
 $string['headerduration'] = 'Duration';
@@ -104,12 +106,23 @@ $string['mustaccept'] = 'Check the box in order to acces the activity.';
 $string['editrecord'] = 'Recording edit';
 $string['notactivated'] = 'Do not record';
 $string['recordingtitle'] = 'Recording title';
+$string['recordingisdownloadable'] = 'Recording is downloadable';
+$string['recordingisdownloadableinfo'] = 'Note : you must first export the video in order for it to be avaiable for downlaod.';
+$string['fullvideo'] = 'Full video (MP4)';
+$string['mobilevideo'] = 'Mobile (MP4)';
+$string['audiorecord'] = 'Audio (MP3)';
+$string['fullvideoinfo'] = 'As viewed in the recording. Resolution : 1024x768';
+$string['mobilevideoinfo'] = 'Optimised for mobile. Resolution : 480x320';
+$string['audiorecordinfo'] = 'Audio only';
+$string['export'] = 'View/Export';
 $string['unified'] = 'Unified';
 $string['multiple'] = 'Multiple';
 $string['preparation'] = 'Prepare your activity: ';
 $string['accessactivity'] = 'Access your activity: ';
 $string['edit'] = 'Modify';
 $string['delete'] = 'Delete';
+$string['save'] = 'Save';
+$string['cancel'] = 'Cancel';
 $string['confirmdelete'] = 'Are you sure you want to delete this recording permanently?';
 $string['view'] = 'View';
 $string['viausers'] = 'Users:';
@@ -177,12 +190,14 @@ $string['moodle_adminid'] = 'Moodle Admin unique ID';
 $string['moodleidsetting'] = 'Unique admin user for this moodle';
 $string['viaaudiotypes'] = 'Select audio mode that you want to keep.';
 $string['options'] = 'Activity options';
-$string['moodleemailnotification'] = 'Use Moodle for email invitations and reminders';
-$string['moodleemailnotificationdesc'] = 'Moodle will send email invitations. If not check, the API will send the email invitations and reminders.';
 $string['participantmustconfirm'] = 'Participants must confirm participation';
 $string['participantmustconfirmdesc'] = 'If checked, participants must confirm if they will be part of the activity.';
 $string['participantsynchronization'] = 'Synchronize participants\' information';
 $string['participantsynchronizationdesc'] = 'If checked, the participants\' information will by synchronized with those saved in Moodle. The only information that will not be updated are : the login, the password and the user type in Via.';
+$string['downloadplaybacks'] = 'Download Recordings';
+$string['downloadplaybacksdesc'] = 'If checked, users with editing roles will be permitted to download Via recordings. Before checking this option, please contact SVIesolutions to validate that your server permits it.';
+$string['presencestatus'] = 'Display presence status';
+$string['presencestatusdesc'] = 'If checked, a new option will apear in the activitie\'s parameters to set a minimum amount of time that users need to be present to be concidered present for an activity. A printable version will also be available.';
 $string['permanentactivities'] = 'Permanent activities';
 $string['permanentactivitiesdesc'] = 'If checked, it will be possible to create permanent activities.';
 $string['technicalassist_url'] = 'Use a personalised technical support page.';
@@ -215,7 +230,7 @@ $string['reminderemail'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
 
 Hello {$a->username},reminderemail
 
-Moodle invites you to participate in the activity « {$a->title} » that will take place on {$a->datebegin} between {$a->hourbegin} and {$a->hourend}
+Moodle invites you to participate in the activity &quot; {$a->title} &quot; that will take place on {$a->datebegin} between {$a->hourbegin} and {$a->hourend}
 
 ---------------------------------------------------------------------
 Activity preparation
@@ -247,7 +262,7 @@ $string['inviteemail'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
 
 Hello {$a->username},
 
-Moodle invites you to participate in the activity " {$a->title} " that will take place on {$a->datebegin} between {$a->hourbegin} and {$a->hourend}
+Moodle invites you to participate in the activity &quot; {$a->title} &quot; that will take place on {$a->datebegin} between {$a->hourbegin} and {$a->hourend}
 
 {$a->invitemsg}
 
@@ -321,8 +336,8 @@ $string['noparticipantscheckbox'] = 'Add students as animators';
 $string['noparticipants_help'] = 'This option is available only with automatic enrollment and ensures that users with the student status are all added as animators in Via.';
 $string['userispresentor'] = 'This user is the presenter, chose a new one in order to give this user a new role.';
 $string['choosepresentor'] = 'To chose a new presenter, simply add a new user to replace the existing presenter. The can only be one presenter.';
-$string['mask'] = 'Hide';
-$string['show'] = 'Show';
+$string['mask'] = 'Hidden';
+$string['show'] = 'Displayed';
 $string['availabledate'] = 'Available from';
 $string['title_exists'] = 'The title already exists, please try again.';
 $string['copied'] = ' - Copy';
@@ -332,9 +347,23 @@ $string['oldapiversion'] = 'You are using an API version that is older than $a';
 $string['activitywaserased'] = 'Could not find this activity on SVI server. It seems to have been erased.';
 $string['groupusers'] = 'Users of the accosiated grouping: {$a} cannot be removed from the activity, but others may be added.';
 $string['nousers'] = 'Warning - There are no users associated to this activity!';
+$string['presencetable'] = 'Presence status: ';
+$string['presenceheader'] = 'Online presence (h:m:s)';
+$string['playbackheader'] = 'Playback viewed (h:m:s)';
+$string['presenceheaderreport'] = 'Online presence';
+$string['present'] = 'Present';
+$string['absent'] = 'Absent';
+$string['presencewarning'] = 'Important: The online presence status is determined by the minimum time required to be considered present for thE activity. The status influences the participant\'s progress bar. It is possible to adjust the status by changing the &laquo; Minimum attendance required &raquo; value in the activity\'s parameters.';
+$string['basedon'] = 'The presence status is based on {$a} minutes.';
+$string['report'] = 'Presence report';
+$string['createdby'] = 'Report created by: ';
+$string['creationdate'] = 'Report created on: ';
+$string['return'] = 'Back';
+$string['cancel'] = 'Cancel';
 
 /* permissions */
 $string['via:manage'] = 'Manage Via Activities';
+$string['via:viewpresence'] = 'View Presence Reports for Via Activities';
 $string['via:view'] = 'View Via Activities';
 
 /* Errors */
@@ -424,3 +453,8 @@ $string['error:USER_DOES_NOT_EXIST'] = 'USER_DOES_NOT_EXIST - The user is invali
 $string['error:USERID_EMPTY'] = 'USERID_EMPTY - The value UserID is invalid.';
 $string['error:STATUS_INVALID'] = 'The connection to the web conference room was not possible as your user is either deleted or inactive.<br/>Please contact the Via administrator od your institution in order to reactivate your Via user.';
 $string['STATUS_INVALID'] = 'The connection was impossible, the status is invalid.';
+$string['error:INVALID_RECORD_TYPE'] = 'INVALID_RECORD_TYPE - The recording type requested is invalide.';
+$string['error:RECORD_NOT_DOWNLOADABLE'] = 'RECORD_NOT_DOWNLOADABLE - The recording is not downloadable.';
+$string['error:USER_DOWNLOAD_NOT_ALLOWED'] = 'USER_DOWNLOAD_NOT_ALLOWED - The user is not allowed to download this recording.';
+$string['error:PLAYBACK_NOT_PUBLIC'] = 'PLAYBACK_NOT_PUBLIC - This playback is not public.';
+

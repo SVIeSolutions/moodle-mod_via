@@ -1,33 +1,60 @@
-<?php 
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+/**
+ *
+ * @package    mod
+ * @subpackage via
+ * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ * 
+ */
 
 $string['manageparticipants'] = 'G&eacute;rer les utilisateurs';
 $string['pluginadministration'] = 'Administration de Via';
 $string['pluginname'] = 'Via';
-$string['pluginversion'] = 'Version : ';   
-$string['modulename_help'] = 'Le module Via vous permet de cr&eacute;er des rencontres en classe virtuelle synchrone afin d\'&eacute;changer en  direct &agrave; l\'aide de la voix et la vid&eacute;o pour : 
--	Des classes &agrave; distance en temps r&eacute;el
--	Des r&eacute;unions
--	Des rencontres pour les travaux d\'&eacute;quipes
--	Du tutorat
--	Des s&eacute;minaires
--	Etc.
+$string['pluginversion'] = 'Version : ';
+$string['modulename_help'] = 'Le module Via vous permet de cr&eacute;er des rencontres en classe virtuelle synchrone afin d\'&eacute;changer en  direct &agrave; l\'aide de la voix et la vid&eacute;o pour :
+-Des classes &agrave; distance en temps r&eacute;el
+-Des r&eacute;unions
+-Des rencontres pour les travaux d\'&eacute;quipes
+-Du tutorat
+-Des s&eacute;minaires
+-Etc.
 
 L\'outils permet de g&eacute;rer des sous-groupes de travails, d\'annoter, de partager son &eacute;cran, d\'importer/pr&eacute;senter des documents et d\'&eacute;changer par la voix/vid&eacute;o.
 
 L\'option &laquo; Inscription des participants &raquo; vous permet d\'inscrire manuellement les participants ou encore de les synchroniser automatiquement avec les droits de votre espace Moodle par la s&eacute;lection de l\'option &laquo; Inscription automatique &raquo;.
 
-La section &laquo; Param&egrave;tres de sessions &raquo; vous permet de param&eacute;trer l\'enregistrement des rencontres et la disponibilit&eacute; de ces derniers pour vos apprenants. 
+La section &laquo; Param&egrave;tres de sessions &raquo; vous permet de param&eacute;trer l\'enregistrement des rencontres et la disponibilit&eacute; de ces derniers pour vos apprenants.
 
 NB. L\'&eacute;dition et la modification des enregistrements doivent se faire dans l\'environnement Via.';
 $string['audiomodelabel'] = 'Mode audio pour la conf&eacute;rence';
-$string['noanimators'] = 'Il n\'y a pas encore d\'animateurs pour cette activit&eacute;.';
+$string['portalaccess'] = 'Acc&egrave;s au portail Via.';
+$string['portalaccessdesc'] = 'Permet aux utilisateur d\'acc&eacute;der au portail Via  &agrave; partir de leur &eacute;&eacute;tat de session dans Moodle. En effet, lorsque l\'utilisateur acc &egrave;s  &agrave; une activit&eacute; Via  &agrave; partir de Moodle, son &eacute;tat de session est actif dans le
+ portail Via et il est en mesure, simplement en ouvrant un nouvel onglet de son navigateur et en acc&eacute;dant au portail, de s\'y connecter sans avoir  &agrave; entrer de code utilisateur/mot de passe. Autrement, si l\'option n\'est pas activ&eacute;e, l\'utilisateur ne
+ peut pas se connecter au portail Via  &agrave; partir de son &eacute;tat de session Moodle.';
 $string['recentrecordings'] = 'Enregistrement r&eacute;cent';
 $string['configassist'] = 'Assistant de configuration';
 $string['technicalassist'] = 'Assistance technique';
+$string['noanimators'] = 'Aucun animateur n\'est inscrit &agrave; cette activit&eacute;.';
 $string['noparticipants'] = 'Aucun participant n\'est inscrit &agrave; cette activit&eacute;.';
 $string['subscribeparticipants'] = 'Inscription des usagers';
 $string['gotoactivity'] = 'Cliquez ici pour acc&eacute;der &agrave; l\'activit&eacute;';
-$string['notstarted'] = 'Cette activit&eacute; n\'a pas encore d&eacute;but&eacute;e.';
+$string['notstarted'] = 'Cette activit&eacute; n\'a pas encore d&eacute;but&eacute;.';
 $string['activitydone'] = 'Cette activit&eacute; est termin&eacute;e.';
 $string['reviewactivity'] = 'Cliquez ici pour revoir l\'activit&eacute;.';
 $string['prepareactivity'] = 'Pr&eacute;parer votre activit&eacute;.';
@@ -52,6 +79,8 @@ $string['permanent'] = 'Activit&eacute; permanente';
 $string['permanent_help'] = 'Cocher l\'option &laquo; Permanente &raquo; afin de rendre votre activit&eacute; toujours accessible, sans date pr&eacute;cise. Vous serez alors dans l\'obligation d\'utiliser la salle d\'attente afin d\'en limiter l\'acc&egrave;s aux utilisateurs inscrits ayant le statut &laquo; participant &raquo;. ';
 $string['startdate'] = 'D&eacute;bute le ';
 $string['enddate'] = 'Termine le ';
+$string['presence'] = 'Temps minimum requis de pr&eacute;sence';
+$string['presence_help'] = 'Valeur correspondante &agrave; la dur&eacute;e en minutes &agrave; partir de laquelle l\'utilisateur obtient le statut de pr&eacute;sence pour l\'activit&eacute;.';
 $string['duration'] = 'Dur&eacute;e (minutes)';
 $string['timeduration'] = 'Dur&eacute;e :';
 $string['headerduration'] = 'Dur&eacute;e';
@@ -78,8 +107,12 @@ $string['recording'] = 'Enregistrement';
 $string['preparation'] = 'Pr&eacute;parer votre activit&eacute; : ';
 $string['accessactivity'] = 'Acc&eacute;der &agrave; votre activit&eacute; : ';
 $string['edit'] = 'Modifier';
+$string['delete'] = 'Supprimer';
+$string['save'] = 'Enregistrer';
+$string['cancel'] = 'Annuler';
+$string['confirmdelete'] = '&Ecirc;tes-vous certain de vouloir supprimer cet enregistrement d&eacute;finitivement ?';
 $string['view'] = 'Visionner';
-$string['viausers'] = 'Utilisateurs :';
+$string['viausers'] = 'Utilisateurs ';
 $string['role'] = 'R&ocirc;le';
 $string['config'] = 'Configuration';
 $string['finish'] = 'Compl&eacute;t&eacute;e';
@@ -89,7 +122,16 @@ $string['recordwarning'] = 'Les activit&eacute;s peuvent &ecirc;tre enregistr&ea
 $string['recordaccept'] = ' J\'accepte';
 $string['mustaccept'] = 'Cochez la case pour acc&eacute;der &agrave; l\'activit&eacute;.';
 $string['editrecord'] = 'Modification d\'un enregistrement';
+$string['editrecord'] = 'Modification d\'un enregistrement';
 $string['recordingtitle'] = 'Titre de l\'enregistrement ';
+$string['recordingisdownloadable'] = 'L\'enregistrement est t&eacute;l&eacute;chargeable';
+$string['recordingisdownloadableinfo'] = 'Important : vous devez d\'abord exporter la vid&eacute;o afin qu\'elle soit disponible pour t&eacute;l&eacute;chargement.';
+$string['fullvideo'] = 'Grand format (MP4)';
+$string['mobilevideo'] = 'Mobile (MP4)';
+$string['audiorecord'] = 'Audio (MP3)';
+$string['export'] = 'Visionner/Exporter';
+$string['fullvideoinfo'] = 'Tel que disponible en revoir. R&eacute;solution : 1024x768';
+$string['mobilevideoinfo'] = 'Optimis&eacute; pour un affichage r&eacute;duit. R&eacute;solution : 480x320';
 $string['notactivated'] = 'D&eacute;sactiv&eacute;';
 $string['unified'] = 'Unifi&eacute;';
 $string['multiple'] = 'Multiple';
@@ -107,7 +149,7 @@ $string['notattending'] = 'Je ne participerai pas';
 $string['hasconfirmed'] = 'Vous avez confirm&eacute; votre pr&eacute;sence &agrave; l\'activit&eacute;';
 $string['hasconfirmednot'] = 'Vous avez confirm&eacute; que vous ne serez pas pr&eacute;sent &agrave; l\'activit&eacute;.';
 $string['sendinvite'] = 'Envoyer un courriel d\'invitation';
-$string['personalinvitemsg'] = 'Message personnalis&eacute; (optionnel) : ';
+$string['personalinvitemsg'] = 'Message personnalis&eacute; : ';
 $string['submitinvite'] = 'Envoyer les invitations';
 $string['invitessend'] = 'Les courriels d\'invitation seront envoy&eacute;s d\'ici 15 minutes.';
 $string['reviewacitvity'] = 'Rendre public tous les enregistrements par d&eacute;faut';
@@ -125,8 +167,7 @@ $string['description'] = 'Description ';
 $string['enrolmentheader'] = 'Inscription des participants';
 $string['enrolmenttype'] = 'Gestion de l\'inscription des participants';
 $string['enrolmenttype_help'] = 'Inscription automatique : tous les utilisateurs inscrits au cours seront ajout&eacute;s &agrave; l\'activit&eacute; Via. Si un &eacute;tudiant est ajout&eacute; au cours apr&egrave;s la cr&eacute;ation de l\'activit&eacute; Via, il sera ajout&eacute; lors de la prochaine synchronisation du Cron. Si par compte il acc&egrave;de   &agrave; l\'activit&eacute; avant que le cron l\'ait ajout&eacute;, il sera ajout&eacute;   &agrave; l\'affichage de la page des d&eacute;tails de l\'activit&eacute;. Les utilisateurs inscrits avec des droits d\'&eacute;dition dans le cours moodle seront automatiquement synchronis&eacute;s comme animateurs, mais cette liste demeure &eacute;ditable.
-Inscription manuelle : les participants doivent &ecirc;tre ajout&eacute;s   &agrave; partir de la liste des participants en choisissant le participant parmi la liste des &laquo; Participants potentiels &raquo; (droit) et ajout&eacute;s   &agrave; l\'aide de la fl&egrave;che au &quot;Participant actuel&quot; (gauche). NB.  Dans les deux modes d\'inscription, l\'utilisateur qui cr&eacute;era l\'activit&eacute; est ajout&eacute; comme pr&eacute;sentateur de fa&ccedil;on automatique, mais reste &eacute;ditable, tout comme la liste des animateurs. Il n\'est pas possible d\'avoir plus d\'un pr&eacute;sentateur.  
-';
+Inscription manuelle : les participants doivent &ecirc;tre ajout&eacute;s   &agrave; partir de la liste des participants en choisissant le participant parmi la liste des &laquo; Participants potentiels &raquo; (droit) et ajout&eacute;s   &agrave; l\'aide de la fl&egrave;che au &quot;Participant actuel&quot; (gauche). NB.  Dans les deux modes d\'inscription, l\'utilisateur qui cr&eacute;era l\'activit&eacute; est ajout&eacute; comme pr&eacute;sentateur de fa&ccedil;on automatique, mais reste &eacute;ditable, tout comme la liste des animateurs. Il n\'est pas possible d\'avoir plus d\'un pr&eacute;sentateur.';
 $string['automaticenrol'] = 'Inscription automatique';
 $string['manualenrol'] = 'Inscription manuelle';
 $string['categoriesheader'] = 'Cat&eacute;gories';
@@ -134,12 +175,16 @@ $string['nocategories'] = 'Aucune cat&eacute;gorie';
 $string['category'] = 'Choisissez une cat&eacute;gorie';
 $string['via_categoriesdesc'] = 'Si cette case est coch&eacute;e, des cat&eacute;gories cr&eacute;&eacute;es dans Via pourront &ecirc;tre ajout&eacute; &agrave; l\'activit&eacute;.';
 $string['choosecategories'] = 'Configurez les cat&eacute;gories';
+$string['downloadplaybacks'] = 'T&eacute;l&eacute;charger les enregistrements';
+$string['downloadplaybacksdesc'] = 'Si cette case est coch&eacute;e, les utilisateurs avec des roles d\'&eacute;dition seront autoris&eacute;s &agrave; t&eacute;l&eacute;charger des enregistrements  Via. Avant de cocher cette case, veuillez contacter SVIesolutions pour valider que votre serveur le permet.';
+$string['presencestatus'] = 'Rapport de pr&eacute;sence sur les activit&eacute;s';
+$string['presencestatusdesc'] = 'Si cette case est coch&eacute;e, il vous est alors possible de fixer un temps minimum de pr&eacute;sence (en minutes) afin que vos utilisateurs soient consid&eacute;r&eacute;s comme pr&eacute;sents dans votre activit&eacute;. Ainsi, si vous fixez  &agrave; 50 minutes le seuil de pr&eacute;sence pour votre activit&eacute;, et que votre utilisateur s\'y connecte pendent 48 minutes, il sera consid&eacute;r&eacute; comme absent par le syst &egrave;me.';
 $string['cat_intro'] = 'Choisissez les cat&eacute;gories de Via que vous voulez rendre disponible dans Moodle.';
 $string['no_default'] = 'Aucune cat&eacute;gorie par d&eacute;faut.';
 $string['cats_modified'] = 'Les cat&eacute;gories ont &eacute;t&eacute; modifi&eacute;es avec succ&egrave;s';
 $string['cat_name'] = 'Noms des cat&eacute;gories';
-$string['cat_check'] = 'Ajouter'; 
-$string['cat_default'] = 'Par d&eacute;faut'; 
+$string['cat_check'] = 'Ajouter';
+$string['cat_default'] = 'Par d&eacute;faut';
 $string['modulename'] = 'Via';
 $string['modulenameplural'] = 'Via';
 $string['name'] = 'Nom ';
@@ -157,36 +202,33 @@ $string['moodle_adminid'] = 'Cl&eacute; Admin Moodle';
 $string['moodleidsetting'] = 'ID Administrateur unique pour ce moodle';
 $string['viaaudiotypes'] = 'S&eacute;lectionnez les modes audios que vous voulez conserver.';
 $string['options'] = 'Options pour l\'activit&eacute;';
-$string['moodleemailnotification'] = 'Moodle envoie les invitations et rappels';
-$string['moodleemailnotificationdesc'] = 'Si cette option  est activ&eacute;e, Moodle enverra les courriels d\'invitation et de rappel. Si cette case est d&eacute;coch&eacute;e, les courriels seront envoy&eacute;s par VIA.';
 $string['participantmustconfirm'] = 'Confirmation de pr&eacute;sence';
-$string['participantmustconfirmdesc'] = 'Si cette case est coch&eacute;e, les participants devront confirmer s\'ils seront pr&eacute;sents &agrave; l\'activit&eacute;.';
+$string['participantmustconfirmdesc'] = 'Si cette option est coch&eacute;e, l\'option est disponible lors de la cr&eacute;ation des nouvelles l\'activit&eacute;s. Le tableau de confirmation de pr&eacute;sence appara &icirc;tra dans le bas de la page de la liste des participants apr &egrave;s la fin de l\'activit&eacute;.';
 $string['participantsynchronization'] = 'Synchroniser les informations des participants';
-$string['participantsynchronizationdesc'] = 'Si cette case est coch&eacute;e, les informations des utilisateurs Via seront remplac&eacute;es par les informations contenues dans Moodle. Les seules informations du profil qui ne sont pas synchronis&eacute;es sont : le nom d\'utilisateur, le mot de passe et le type d\'utilisateur dans Via.';
+$string['participantsynchronizationdesc'] = 'Cette option permet de synchroniser les informations des utilisateurs, incluant leur avatar, lors de leur connexion  &agrave; Via. M &ecirc;me si cette option est coch&eacute;e, le code d\'utilisateur Via, le type d\'utilisateur Via et le mot de passe dans Via ne seront pas mis  &agrave; jour.';
 $string['permanentactivities'] = 'Activit&eacute;s permanents';
-$string['permanentactivitiesdesc'] = 'Si cette case est coch&eacute;e, ce sera possible de cr&eacute;er des activit&eacute;s permanents.';
-$string['technicalassist_url'] = 'Utilisez une page d\'assistance technique personnalis&eacute;';
-$string['technicalassist_urldesc'] = 'Par d&eacute;faut, la page d\'assistance technique affichera les informations fournies dans Via. Vous pouvez ajouter une page de soutien personnalis&eacute; en appelant directement l\'URL. Cela peut &ecirc;tre une page cr&eacute;&eacute;e dans Moodle ou un autre site tous ensemble..';
-$string['activitydeletion'] = 'Limit&eacute; la suppression d\'activit&eacute;';
+$string['permanentactivitiesdesc'] = 'Cochez cette case si vous d&eacute;sirez que vos utilisateurs puissent cr&eacute;er des activit&eacute;s permanentes (qui n\'ont pas de date de d&eacute;but et de fin).';
+$string['technicalassist_url'] = 'Sp&eacute;cifier une page d\'assistance technique';
+$string['technicalassist_urldesc'] = 'Par d&eacute;faut, la page d\'assistance technique affichera les informations fournies dans Via. Vous pouvez sp&eacute;cifier une page personnalis&eacute;e d’assistance en appelant directement l\'URL. Cela peut  &ecirc;tre une page cr&eacute;&eacute;e dans Moodle ou un autre site. ';
+$string['activitydeletion'] = 'Limiter la suppression d\'activit&eacute;';
 $string['activitydeletiondesc'] = 'Si cette case est coch&eacute;e, les activiti&eacute;s seront supprim&eacute;es dans Moodle, mais pas dans Via.';
 $string['versionscompatible'] = 'Les versions du module et de VIA sont compatible.';
 $string['versions_not_compatible'] = 'Les versions du module et de VIA ne sont pas compatible. Cette version du module requi&egrave;re un minimum de ';
 
 $string['backup_options'] = 'Sauvegarde d\'activit&eacute; et les options de duplication';
-$string['duplication'] = 'Incure dans la duplication';
-$string['duplicationdesc'] = 'Si cette case est coch&eacute;e, les tableaux blancs et sondages d\'une activit&eacute; seront inclus &agrave; la nouvelle activit&eacute; cr&eacute;&eacute;e pendant le processus de duplication. Les utilisateurs et les documents sont toujours inclus dans ce processus.';
-$string['backup'] = 'Incure dans la sauvegarde de cours';
-$string['backupdesc'] = 'Si cette case est coch&eacute;e, les tableaux blancs et sondages d\'une activit&eacute; seront inclus &agrave; la nouvelle activit&eacute; cr&eacute;&eacute;e pendant le processus de duplication. Les documents sont toujours inclus dans ce processus. L\'ajout des utilisateurs  est facultatif.';
+$string['duplication'] = 'Inclure dans la duplication';
+$string['duplicationdesc'] = 'Si cette case est coch&eacute;e, les tableaux blancs et sondages d\'une activit&eacute; seront inclus  &agrave; la nouvelle activit&eacute; cr&eacute;&eacute;e pendant le processus de duplication. Les utilisateurs et les documents sont toujours inclus dans ce processus.';
+$string['backup'] = 'Inclure dans la sauvegarde de cours';
+$string['backupdesc'] = 'Si cette case est coch&eacute;e, les tableaux blancs et sondages d\'une activit&eacute; seront inclus dans la sauvegarde du cours. Les documents sont toujours inclus dans ce processus tandis que l\'ajout des utilisateurs est facultatif.';
 
 $string['emails_alert_address'] = 'Courriels pour l\'envoie d\'avertissements';
 $string['emails_alert_addressdesc'] = 'Adresses courriels pour l\'envoie des avertissements de d&eacute;bordement. Si plusieurs, s&eacute;parer les adresses par des virgules.';
-$string['sendinvitation'] = 'Envoi de courriels d\'invitation';
-$string['sendinvitationdesc'] = 'Si coch&eacute;e, il sera possible d\'envoyer des courriels d\'invitation &agrave; tous les participants d\'une activit&eacute;.';
 $string['testconnection'] = 'Tester la connexion &agrave; l\'API';
 $string['testadminid'] = 'Tester la cl&eacute; moodle';
 $string['adminid_success'] = 'La cl&eacute; moodle a &eacute;t&eacute; test&eacute;e avec succ&egrave;ss.';
 $string['adminid_toolow'] = 'Les droits de l\'utilisateur ne permettront pas la cr&eacute;ation d\'activit&eacute;s, veuillez contacter l\'administrateur du site pour faire augmenter les droits';
 $string['adminid_nosuccess'] = 'La cl&eacute; moodle n\'est pas valide.';
+$string['adminnotrenrolled'] = 'En tant qu\'administrateur vous avez acc&egrave;s &agrave; l\'activit&eacute; malgr&eacute; ne pas &ecirc;tre inscrit.';
 
 $string['reminderemailsubject'] = 'RAPPEL : {$a->title}';
 $string['reminderemail'] = '{$a->coursename} -> {$a->modulename} -> {$a->title} reminderemail
@@ -196,7 +238,7 @@ $string['reminderemail'] = '{$a->coursename} -> {$a->modulename} -> {$a->title} 
 
 Bonjour {$a->username},
 
-L\'actitiv&eacute; " {$a->title} " qui aura lieu le {$a->datebegin} de {$a->hourbegin} &agrave; {$a->hourend}.
+L\'actitiv&eacute; &quot; {$a->title} &quot; qui aura lieu le {$a->datebegin} de {$a->hourbegin} &agrave; {$a->hourend}.
 
 ---------------------------------------------------------------------
 Pr&eacute;paration &agrave; l\'activit&eacute;
@@ -229,7 +271,7 @@ $string['inviteemail'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
 
 Bonjour {$a->username},
 
-L\'actitiv&eacute; " {$a->title} " qui aura lieu le {$a->datebegin} de {$a->hourbegin} &agrave; {$a->hourend}. 
+L\'actitiv&eacute; &quot; {$a->title} &quot; qui aura lieu le {$a->datebegin} de {$a->hourbegin} &agrave; {$a->hourend}.
 
 {$a->invitemsg}
 
@@ -250,9 +292,9 @@ Pour acc&eacute;der &agrave; l\'activit&eacute;, cliquez sur ce lien : {$a->acti
 Attention : Chaque activit&eacute; peut &ecirc;tretre enregistr&eacute;e. Merci de ne pas y acc&eacute;der si vous ne voulez pas &ecirc;tre enregistr&eacute;. Ce courriel contient vos informations personnelles de connexion. Ces informations ne doivent pas &ecirc;tre partag&eacute;es.';
 
 $string['inviteemailhtml'] = '<p>Bonjour {$a->username},</p>
-<p>L\'activit&eacute; &laquo; {$a->title} &raquo; aura lieu le <b>{$a->datebegin}</b> de <b>{$a->hourbegin}</b> &agrave; <b>{$a->hourend}</b>.</p><p>{$a->invitemsg}</p>';	
+<p>L\'activit&eacute; &laquo; {$a->title} &raquo; aura lieu le <b>{$a->datebegin}</b> de <b>{$a->hourbegin}</b> &agrave; <b>{$a->hourend}</b>.</p><p>{$a->invitemsg}</p>';
 
-/* invites modified for permanent activities*/
+/* Invites modified for permanent activities. */
 $string['inviteemailpermanent'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
 ---------------------------------------------------------------------
 {$a->datesend}
@@ -279,7 +321,7 @@ Attention : Chaque activit&eacute; peut &ecirc;tretre enregistr&eacute;e. Merci 
 
 $string['inviteemailhtmlpermanent'] = '<p>Bonjour {$a->username},</p>
 
-<p>{$a->invitemsg}</p>';	
+<p>{$a->invitemsg}</p>';
 
 $string['invitewebaccesshtml'] = 'Acc&egrave;s Web';
 $string['invitepreparationhtml'] = 'Pr&eacute;paration &agrave; l\'activit&eacute;';
@@ -291,8 +333,8 @@ $string['automatic'] = 'Automatique';
 $string['manual'] = 'Manuel';
 $string['waitingroomaccessmode'] = 'Salle d\'attente';
 $string['waitingroomaccessmode_help'] = 'L\'option &laquo; En attente d\'autorisation &raquo; permet au pr&eacute;sentateur d\'autoriser individuellement l\'acc&egrave;s des participants tandis que l\'option &laquo; En l\'absence du pr&eacute;sentateur &raquo; vous assure qu\'aucun utilisateur ne pourra acc&eacute;der   &agrave; l\'activit&eacute; tant que le pr&eacute;sentateur n\'est pas connect&eacute;. Cette derni&egrave;re option est particuli&egrave;rement utile lors d\'activit&eacute;s permanentes';
-$string['donousewaitingroom'] = 'Ne pas utiliser (d&eacute;sactiv&eacute;)';
-$string['awaitingauthorization'] = 'En attente d\'autorisation (manuel)';
+$string['donousewaitingroom'] = 'Ne pas utiliser (d&eacute;sactiver;)';
+$string['awaitingauthorization'] = 'En attente d\'autorisation (manuelle)';
 $string['inpresentatorabsence'] = 'En l\'absence du pr&eacute;sentateur (automatique)';
 $string['notactivatedfeminin'] = 'D&eacute;sactiv&eacute;e';
 $string['resetdeletemodules'] = 'Supprimer toutes les activit&eacute;s';
@@ -300,15 +342,15 @@ $string['resetparticipants'] = 'Retirer tous les participants et animateurs (fon
 $string['resetdisablereviews'] = 'D&eacute;sactiver le revisionnement des activit&eacute;s';
 $string['by'] = 'par';
 $string['list_activities'] = 'Liste de toutes les activit&eacute;s Via dans ce cours';
-$string['no_categories'] ='Il n\'y a aucune cat&eacute;gories de disponible, celles-ci doivent &ecirc;tre cr&eacute;&eacute;s dans le portail Via par un administrateur.';
+$string['no_categories'] = 'Il n\'y a aucune cat&eacute;gories de disponible, celles-ci doivent &ecirc;tre cr&eacute;&eacute;s dans le portail Via par un administrateur.';
 $string['via:addinstance'] = 'Ajouter une activit&eacute; Via';
 $string['activity_deleted'] = 'L\'activit&eacute; Via a &eacute;t&eacute; supprim&eacute;e directement dans l\'environnement Via par un utilisateur. Il est donc impossible d\'y acc&eacute;der. Nous vous recommandons de supprimer cette activit&eacute; dans Moodle et d\'en cr&eacute;er une nouvelle. ';
 $string['noparticipantscheckbox'] = 'Ajouter les &eacute;tudiants comme animateurs.';
 $string['noparticipants_help'] = 'Cette option est disponible seulement en mode d\'inscription automatique et fait en sorte que les utilisateurs ayant le statut d\'&eacute;tudiant sont tous inscrits avec les droits d\'animateurs dans via.';
 $string['userispresentor'] = 'Cet utilisateur est le pr&eacute;sentateur. Veuillez d&eacute;signer un nouveau pr&eacute;sentateur afin de modifier le r&ocirc;le de cet utilisateur.';
 $string['choosepresentor'] = 'Un seul pr&eacute;sentateur peut &ecirc;tre associ&eacute; &agrave; l\'activit&eacute;. Pour choisir un nouveau pr&eacute;sentateur, simplement ajouter un utilisateur comme pr&eacute;sentateur. Il sera automatique substitu&eacute;.';
-$string['mask'] = 'Masquer';
-$string['show'] = 'Afficher';
+$string['mask'] = 'Cach&eacute;';
+$string['show'] = 'Affich&eacute;';
 $string['availabledate'] = 'Disponible d&egrave;s le';
 $string['title_exists'] = 'Le titre existe d&eacute;j&agrave;, veuillez essayer &agrave; nouveau.';
 $string['copied'] = ' - Copie';
@@ -317,14 +359,27 @@ $string['conntest'] = 'Test de connexion';
 $string['oldapiversion'] = 'Vous utilisez une version anterieur &agrave; {$a} de l\'API';
 $string['activitywaserased'] = 'Impossible de trouver cette activit&eacute; sur le serveur SVI. Elle semble avoir &eacute;t&eacute; supprim&eacute;e.';
 $string['groupusers'] = 'Les utilisateurs du groupement associ&eacute; : {$a} ne peuvent pas &ecirc;tre dissocier de l\'activit&eacute;, mais vous pouvez en ajouter.';
+$string['presencetable'] = 'Statut de pr&eacute;sence : ';
+$string['presenceheader'] = 'Pr&eacute;sence en direct (h:m:s)';
+$string['presenceheaderreport'] = 'Pr&eacute;sence en direct';
+$string['playbackheader'] = 'Diff&eacute;r&eacute; (h:m:s)';
+$string['present'] = 'Pr&eacute;sent';
+$string['absent'] = 'Absent';
+$string['presencewarning'] = 'Important : Le Statut de pr&eacute;sence en direct est d&eacute;termin&eacute; en fonction du temps minimum requis pour &ecirc;tre consid&eacute;r&eacute; pr&eacute;sent pour cette activit&eacute;. Ce statut influence la barre de progression du participant dans le d&eacute;roulement de son parcours. Il vous est possible d\'ajuster ce statut en modifiant la valeur &laquo; Temps minimum requis de pr&eacute;sence &raquo; dans les param&egrave;tres de l\'activit&eacute;.';
+$string['basedon'] = 'Le statut de pr&eacute;sence est bas&eacute; sur {$a} minutes.';
+$string['report'] = 'Rapport de pr&eacute;sence';
+$string['createdby'] = 'Rapport g&eacute;n&eacute;r&eacute; par : ';
+$string['creationdate'] = 'Date de cr&eacute;ation du rapport :';
+$string['return'] = 'Retour';
+$string['cancel'] = 'Annuler';
 
 /* Permissions */
 $string['via:manage'] = 'G&eacute;rer les activit&eacute;s Via';
+$string['via:viewpresence'] = 'Voir les rapports de pr&eacute;sence pour les activit&eacute;s Via';
 $string['via:view'] = 'Voir les activit&eacute;s Via';
-$string['via:viewrecordings'] = 'Voir les enregistrements Via';
-$string['via:delete'] = 'Delete Via Activities';
 
-/* Errors */ 
+/* Errors */
+$string['error_user'] = 'Une erreur est survenue, l\'utilisateur {$a} n\'a pas pu &ecirc;tre ajout&eacute; &agrave; l\'activit&eacute;.';
 $string['STATUS_INVALID'] = 'La connexion n&acute;est pas possible.';
 $string['error:deletefailed'] = 'La suppression des activit&eacute;s a &eacute;chou&eacute;e.';
 $string['error:resetparticipants'] = 'Le retrait des participants a &eacute;chou&eacute;.';
@@ -375,6 +430,7 @@ $string['error:INVALID_PERIODICITY_ENDDATE'] = 'INVALID_PERIODICITY_ENDDATE - Da
 $string['error:INVALID_PERIODICITY_STARTDATE'] = 'INVALID_PERIODICITY_STARTDATE - Date au format AAAA-MM-JJ HH:MM:SS.';
 $string['error:INVALID_PHONERIGHT'] = 'INVALID_PHONERIGHT - Le pont t&eacute;l&eacute;phonique n\'est pas actif pour cette compagnie.';
 $string['error:INVALID_PLAYBACK_ID'] = 'INVALID_PLAYBACK_ID - La valeur ID du playback n\'est pas valide.';
+$string['error:PLAYBACK_NOT_PUBLIC'] = 'PLAYBACK_NOT_PUBLIC - Ce playback n\'est pas disponible a tous.';
 $string['error:INVALID_PROFILID'] = 'INVALID_PROFILID - Le profil n\'est pas valide ou n\'existe pas pour le client.';
 $string['error:INVALID_RECNOTIFICATION'] = 'INVALID_RECNOTIFICATION - La valeur pass&eacute;e dans le noeud LANGAGE n\'est pas valide.';
 $string['error:INVALID_RECORDMODEBEHAVIOR'] = 'INVALID_RECORDMODEBEHAVIOR - La valeur pass&eacute;e dans le noeud RecordModeBehaviour n\'est pas valide.';
@@ -411,6 +467,7 @@ $string['error:USER_DOES_NOT_EXIST'] = 'USER_DOES_NOT_EXIST - L\'usager n\'est p
 $string['error:USERID_EMPTY'] = 'USERID_EMPTY - La valeur UserID est vide.';
 $string['error:STATUS_INVALID'] = 'La connexion &agrave; la salle de web conf&eacute;rence n&acute;est pas possible puisque votre utilisateur Via est supprim&eacute; ou inactif. <br/>
 Veuillez communiquer avec l&acute;administrateur Via de votre institution afin de faire r&eacute;activer votre utilisateur Via.';
-
-
-?>
+$string['error:RECORD_NOT_DOWNLOADABLE'] = 'L\'enregistrement n\'est pas disponible.';
+$string['error:INVALID_RECORD_TYPE'] = 'Le type d\'enregistrement n\'est pas valide.';
+$string['error:USER_DOWNLOAD_NOT_ALLOWED'] = 'L\'utilisateur n\'a pas le droit de t&eacute;l&eacute;charger l\'enregistrement.';
+$string['error:Problem reading result xm'] = 'Problem reading result xml';

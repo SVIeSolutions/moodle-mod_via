@@ -30,21 +30,18 @@ global $DB, $USER;
 
 $id = required_param('id', PARAM_INT);
 $review = optional_param('review', null, PARAM_INT);
+$fa = optional_param('fa', null, PARAM_INT);
+$playbackid = optional_param('playbackid', null, PARAM_PATH);
+// We only reload once, if the user was not fixed on the first reload we display the error.
+$reload = optional_param('r', null, PARAM_PATH);
 
 $connexion = false;
 $response = false;
 $forcedaccess = 0;
 $forcededit = 0;
-$playbackid = null;
+$msg = null;
 
-if (isset($_REQUEST['playbackid'])) {
-    $playbackid = $_REQUEST['playbackid'];
-}
-if (isset($_REQUEST['fa'])) {
-    $forcedaccess = 1;
-    $connexion = true;
-}
-if (isset($_REQUEST['p'])) {
+if ($fa) {
     $forcedaccess = 1;
     $forcededit = 1;
     $connexion = true;
@@ -88,38 +85,29 @@ $api = new mod_via_api();
 $viaparticipant = $DB->get_record('via_participants', array('userid' => $USER->id, 'activityid' => $via->id));
 if (!has_capability('moodle/site:approvecourse', context_system::instance())) {
     // Only users with a lower role are added.
-    if (isset($viaparticipant->timesynched)) {
+    if (isset($viaparticipant->synchvia) && $viaparticipant->synchvia == 1) {
         $connexion = true;
     } else {
         $viauser = $DB->get_record('via_users', array('userid' => $USER->id));
-        $participantslist = get_via_participants_list($via);
-        $participants = array();
-        if ($participantslist) {
-            foreach ($participantslist as $participant) {
-                if ($participant != 0) {
-                    $participants[] = $participant['UserID'];
-                }
+        // The user doesn't exists yet. We need to create it.
+        if (!$viauser) {
+
+            try {
+                $uservalidated = $api->validate_via_user($USER);
+                $viauser = $DB->get_record('via_users', array('viauserid' => $uservalidated));
+
+            } catch (Exception $e) {
+                print_error('error:'.$e->getMessage(), 'via'). $muser->firstname.' '.$muser->lastname;
             }
         }
-        if (in_array($viauser->viauserid, $participants)) {
-            $synched = $DB->set_field("via_participants", "timesynched", time(), array("id" => $viauser->userid));
+        try {
+            $type = via_user_type($viauser->userid, $course->id, $via->noparticipants);
+
+            $added = via_add_participant($viauser->userid, $via->id, $type, true);
             $connexion = true;
-        } else if ($via->enroltype == 0) {
-            $type = get_user_type($viauser->userid, $course->id);
-            // We only add participants automatically!
-            if ($type == 1) {
-                try {
-                    // Via_add_participant($userid, $viaid, $type, $confirmationstatus, $checkuserstatus, $adddeleteduser).
-                    $added = via_add_participant($viauser->userid, $via->id, $type, null, 1);
-                    if ($added === 'presenter') {
-                        echo "<div style='text-align:center; margin-top:0;' class='error'><h3>".
-                        get_string('userispresentor', 'via') ."</h3></div>";
-                    }
-                } catch (Exception $e) {
-                    echo '<div class="alert alert-block alert-info">'.
-                    get_string('error_user', 'via', $muser->firstname.' '.$muser->lastname).'</div>';
-                }
-            }
+
+        } catch (Exception $e) {
+            print_error('error:'.$e->getMessage(), 'via'). $muser->firstname.' '.$muser->lastname;
         }
     }
 } else {
@@ -140,12 +128,10 @@ try {
     if ($response) {
 
         $eventdata = array(
-        'objectid' => $via->id,
-        'context' => $context
-        );
-
+            'objectid' => $via->id,
+            'context' => $context
+            );
         $event = \mod_via\event\course_module_viewed::create($eventdata);
-
         $event->add_record_snapshot('course_modules', $cm);
         $event->add_record_snapshot('course', $course);
         $event->trigger();
@@ -165,15 +151,25 @@ try {
     }
 
 } catch (Exception $e) {
+    if ($e->getMessage() == 'INVALID_USER_ID' && !isset($reload)) {
+        // Changes were made very recently in Via and the userinformation in Moodle has not yet been updated.
+        $uservalidated = $api->get_user_via_id($USER->id, true, true);
+        if ($uservalidated) {
+            $reload = $CFG->wwwroot.'/mod/via/view.via.php?id='.$id.'&review='.$review.'&fa='.$fa.'&playbackid='.$playbackid.'&r=1';
+            redirect($reload);
+        } else {
+            $error = get_string('error:'.$e->getMessage(), 'via');
+        }
 
-    if ($e->getMessage() == 'STATUS_INVALID') {
-        echo $OUTPUT->header();
-        echo $OUTPUT->heading(get_string($e->getMessage(), 'via'));
-        echo $OUTPUT->box_start('notice');
-        echo get_string('error:'.$e->getMessage(), 'via');
-        echo $OUTPUT->footer($course);
     } else {
-        print_error('error:'.$e->getMessage(), 'via');
-        $result = false;
+        $error = get_string('error:'.$e->getMessage(), 'via');
     }
+
+    $PAGE->set_title($course->shortname);
+    $PAGE->set_heading($course->fullname);
+    echo $OUTPUT->header();
+    echo $OUTPUT->box_start('notice');
+    echo $error;
+    echo $OUTPUT->box_end();
+    echo $OUTPUT->footer($course);
 }

@@ -28,20 +28,9 @@ require_once("../../config.php");
 require_once("lib.php");
 
 $id    = required_param('id', PARAM_INT);// Via!
-$edit  = optional_param('edit', false, PARAM_INT);// Edit via recording.
-
-$error = '';
-$title = false;
-
-if (isset($_REQUEST['playbackid'])) {
-    $playbackid = $_REQUEST['playbackid'];
-}
-
-if (isset($_REQUEST['delete'])) {
-    $delete = $_REQUEST['delete'];
-} else {
-    $delete = false;
-}
+$edit  = optional_param('edit', false, PARAM_TEXT);// Edit via recording.
+$ispublic  = optional_param('ispublic', null, PARAM_TEXT);
+$playbackid = optional_param('playbackid', null, PARAM_TEXT);
 
 if (!$via = $DB->get_record('via', array('id' => $id))) {
     print_error("Via ID is incorrect");
@@ -62,30 +51,13 @@ if (!has_capability('mod/via:manage', $context)) {
     print_error('You do not have the permission to edit via playbacks');
 }
 
-if ($delete) {
-    try {
+if ($edit == get_string('cancel', 'via')) {
+    // If cancelled was clicked on the modification page, we simply redirect to the details page.
+    redirect("view.php?id=$cm->id");
+}
 
-        $api = new mod_via_api();
-        $result = $api->delete_playback($via->viaactivityid, $playbackid);
-        if ($result) {
-            redirect("view.php?id=$cm->id");
-        }
-
-    } catch (Exception $e) {
-        $result = false;
-        echo $OUTPUT->notification("error:".$e->getMessage());
-    }
-
-} else {
-
-    if (isset($_REQUEST['ispublic'])) {
-        if ($_REQUEST['ispublic'] == get_string('show', 'via')) {
-            $ispublic = 1;
-        } else {
-            $ispublic = 0;
-        }
-    }
-
+if ($edit != 'del' && $edit != get_string('delete', 'via')) {
+    // For all pages except delete we need to load the playback's info.
     $playbacks = via_get_all_playbacks($via);
 
     foreach ($playbacks as $key => $playbacksearch) {
@@ -94,72 +66,113 @@ if ($delete) {
             break;
         }
     }
+}
 
+if ($edit == get_string('delete', 'via')) {
 
-    if ($frm = data_submitted()) {
-        // Editing playback!
-
-        if (isset($frm->cancel)) {
+    try {
+        $api = new mod_via_api();
+        $result = $api->delete_playback($via->viaactivityid, $playbackid);
+        if ($result) {
             redirect("view.php?id=$cm->id");
         }
 
-        if (isset($frm->edit)) {
-            if (isset($frm->title)) {
-                foreach ($playbacks as $pb) {
-                    if ($pb->title == $frm->title) {
-                        $title = true;
-                        continue;
-                    }
-                }
-                if (!$title) {
-                    $playback->title = $frm->title;
-                }
-            }
-
-
-            try {
-                if (!$title) {
-                    if (isset($ispublic) ) {
-                        if ($ispublic == 1) {
-                            $playback->ispublic = 1;
-                        } else {
-                            $playback->ispublic = 0;
-                        }
-                    }
-
-                    $api = new mod_via_api();
-                    $result = $api->edit_playback($via, $playbackid, $playback);
-                    if ($result) {
-                        redirect("view.php?id=$cm->id");
-                    }
-
-                } else {
-                    $error = '<p class="error">'.get_string('title_exists', 'via').'</p>';
-                    $result = false;
-                }
-
-            } catch (Exception $e) {
-                $result = false;
-                echo $OUTPUT->notification("error:".$e->getMessage());
-            }
-        }
+    } catch (Exception $e) {
+        $error = $OUTPUT->notification("error:".$e->getMessage());
     }
 
-    $PAGE->set_url('/mod/via/edit_review.php', array('id' => $cm->id));
-    $PAGE->set_title($course->shortname.': '.$via->name);
-    $PAGE->set_heading($course->fullname);
-    echo $OUTPUT->header();
+} else if ($edit == get_string('save', 'via')) {
 
-    echo $OUTPUT->box_start('center');
+    if ($frm = data_submitted()) {
+        // Coming from form page with new values.
+        $playback->title = $frm->title;
 
-    echo "<h2>".get_string("editrecord", "via")."</h2>";
+        if (isset($frm->isdownloadable)) {
+            $isdownloadable = $frm->isdownloadable;
+        } else {
+            $isdownloadable = 0;
+        }
 
-    echo $error;
+        $playback->isdownloadable = $isdownloadable;
 
-    include('edit_review.form.php');
+    } else {
+        // Coming from view page and only show/hide can have been changed.
+        $playback->ispublic = $ispublic;
+    }
 
-    echo $OUTPUT->box_end();
+    try {
 
-    echo $OUTPUT->footer($course);
+        $api = new mod_via_api();
+        $result = $api->edit_playback($via, $playbackid, $playback);
+        if ($result) {
+            redirect("view.php?id=$cm->id");
+        }
+
+    } catch (Exception $e) {
+        $error = $OUTPUT->notification("error:".$e->getMessage());
+    }
 
 }
+
+$PAGE->set_url('/mod/via/edit_review.php', array('id' => $cm->id));
+$PAGE->set_title($course->shortname.': '.$via->name);
+$PAGE->set_heading($course->fullname);
+echo $OUTPUT->header();
+
+echo $OUTPUT->box_start('center');
+
+echo "<h2>".get_string("editrecord", "via")."</h2>";
+
+if (isset($error)) {
+    echo $error;
+}
+
+if ($edit == 'del') {
+    // Ask if the user really wants to delete!
+    $form = '<form method="post" action="edit_review.php?id='.$id.'" class="mform">';
+    $form .= get_string('confirmdelete', 'via'). '<br/><br/>';
+    $form .= '<input type="hidden" name="playbackid" value="'.$playbackid.'" />';
+    $form .= '<input type="submit" name="edit" id="edit" value="'.get_string('delete', 'via').'" />';
+    $form .= '<input type="submit" name="edit" id="edit" value="'.get_string('cancel', 'via').'"
+              onclick="skipClientValidation = true; return true;"/>';
+    $form .= '</form>';
+
+} else {
+
+    // The user can change the title and make the recordings downloadable.
+    $form = '<form id="editreviewform" method="post" action="edit_review.php?id='.$id.'" class="mform">';
+    $form .= '<input type="hidden" name="id" value="'.$id.'" />';
+    $form .= '<input type="hidden" name="playbackid" value="'.$playbackid.'" />';
+    $form .= '<div align="center"><table cellpadding="3">';
+    $form .= '<tr><td align="right"><label for="title">'. get_string("recordingtitle", "via").'</label>';
+    $form .= '</td>';
+    $form .= '<td align="left"><input type="text" name="title" maxlength="100" value="' . $playback->title .'" id="title" />';
+    $form .= '</td></tr>';
+
+    // If the option is activated in the settings!
+    if (get_config('via', 'via_downloadplaybacks')) {
+        $form .= '<tr><td align="right"><label for="isdownloadable">'.get_string("recordingisdownloadable", "via").'</label>';
+        $form .= '</td>';
+        if ($playback->isdownloadable == 1) {
+            $form .= '<td align="left"><input type="checkbox" name="isdownloadable" id="isdownloadable" value="0" checked >';
+        } else {
+            $form .= '<td align="left"><input type="checkbox" name="isdownloadable" id="isdownloadable" value="1"  >';
+        }
+        $form .= get_string("recordingisdownloadableinfo", "via");
+        $form .= '</td></tr>';
+    }
+
+    $form .= '<tr><td colspan="2" align="center"><p>';
+    $form .= '<input name="edit" value="'.get_string('save', 'via').'" type="submit" id="edit" />';
+    $form .= '<input name="edit" value="'.get_string('cancel', 'via').'" type="submit" id="cancel"
+             onclick="skipClientValidation = true; return true;"/>';
+    $form .= '</p></td></tr></table>';
+    $form .= '</div></form>';
+
+}
+
+echo $form;
+
+echo $OUTPUT->box_end();
+
+echo $OUTPUT->footer($course);

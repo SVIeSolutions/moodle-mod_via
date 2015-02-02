@@ -52,7 +52,7 @@ $PAGE->set_pagelayout('popup');
 
 // New with version 20140861.
 // We validate the version.
-$required = '6.2.0.0';
+$required = '6.5.0.0';
 
 // Print the page header.
 echo $OUTPUT->header();
@@ -78,7 +78,7 @@ if ($result) {
     } else {
         $version = 0;
     }
-    if (validate_api_version($required, $version)) {
+    if (via_validate_api_version($required, $version)) {
         echo '<div class="alert alert-block alert-info">'.get_string('versionscompatible', 'via').'</div>';
     } else {
         echo '<div class="alert alert-block alert-error">'.get_string('versions_not_compatible', 'via').$required.'</div>';

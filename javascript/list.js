@@ -16,7 +16,7 @@ for (var i = 0; i < checkboxes.length; i++) {
 
     if (checkboxes[i].checked == false) {
         var checboxValue = checkboxes[i].value;
-        var checkboxVal = checboxValue.split("/", 1);
+        var checkboxVal = checboxValue.split("$", 1);
 
        if (radioButtons[i].value == checkboxVal) {
            radioButtons[i].disabled = true;

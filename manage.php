@@ -41,10 +41,9 @@ if (!$course = $DB->get_record('course', array('id' => $via->course))) {
 if (! $cm = get_coursemodule_from_instance("via", $via->id, $course->id)) {
     $cm->id = 0;
 }
-
-if ($via->noparticipants == 1 && $participanttype == 1) {
+if ($via->noparticipants == "1" && $participanttype == "1") {
     // There are no participants only animators and a presentor.
-    $participanttype = 3;
+    $participanttype = "3";
 
 }
 
@@ -80,6 +79,7 @@ $PAGE->set_button($button);
 
 // Print the page header!
 echo $OUTPUT->header();
+echo '<a class="returnvia" href="'.$CFG->wwwroot.'/mod/via/view.php?id='.$cm->id.'">'.get_string('return', 'via').'</a>';
 echo $OUTPUT->heading(format_string($via->name));
 
 // Print the main part of the page.
@@ -165,6 +165,7 @@ if ($via->enroltype == 0 && $participanttype == 1) {
     if ($frm = data_submitted()) {
         // A form was submitted so process the input.
         if (!empty($frm->add) and !empty($frm->addselect)) {
+            $count = 1;
             foreach ($frm->addselect as $addsubscriber) {
                 if ($participanttype == 2) {// Presentator!
                     // Remove other presentors and add the new one selected.
@@ -174,10 +175,10 @@ if ($via->enroltype == 0 && $participanttype == 1) {
 
                         if ($via->enroltype == 0 ) {// Automatic enrollment.
 
-                            $type = get_user_type($p->userid, $via->course, isset($via->noparticipants));
+                            $type = via_user_type($p->userid, $via->course, $via->noparticipants);
 
                             try {
-                                via_add_participant($p->userid, $via->id, $type);
+                                via_add_participant($p->userid, $via->id, $type, true);
                             } catch (Exception $e) {
                                 print_error($p->userid);
                             }
@@ -185,25 +186,33 @@ if ($via->enroltype == 0 && $participanttype == 1) {
                     }
                 }
                 try {
-                    $added = via_add_participant($addsubscriber, $id, $participanttype);
+                    // Like in automatic enrollment we only add the top 50 users to via,
+                    // the others are only added to Moodle and will be synched on connection.
+                    if ($count < 50) {
+                        $callvia = true;
+                    } else {
+                        $callvia = false;
+                    }
+
+                    $added = via_add_participant($addsubscriber, $id, $participanttype, $callvia);
                     if ($added === 'presenter') {
                         echo "<div style='text-align:center; margin-top:0;' class='error'><h3>".
                             get_string('userispresentor', 'via') ."</h3></div>";
                     }
                 } catch (Exception $e) {
                     echo '<div class="alert alert-block alert-info">'.
-                    get_string('error_user', 'via', $muser->firstname.' '.$muser->lastname).'</div>';
+                        get_string('error_user', 'via', $muser->firstname.' '.$muser->lastname).'</div>';
                 }
+                $count ++;
             }
         } else if (!empty($frm->remove) and !empty($frm->removeselect)) {
             foreach ($frm->removeselect as $removesubscriber) {
                 if ($via->enroltype == 0) {
                     // If enrollment is automatique we add the user as participant - we do not unenrol him/her.
                     try {
-                        via_add_participant($removesubscriber, $via->id, 1);
+                        via_add_participant($removesubscriber, $via->id, 1, true);
                     } catch (Exception $e) {
-                        echo '<div class="alert alert-block alert-info">'.get_string('error_user', 'via',
-                        $muser->firstname.' '.$muser->lastname).'</div>';
+                        echo get_string('error:'.$e->getMessage(), 'via') . $muser->firstname.' '.$muser->lastname;
                     }
                 } else {
                     try {
@@ -238,9 +247,9 @@ if ($via->enroltype == 0 && $participanttype == 1) {
 
         if ($groupingid != 0) {
             $usergroupingid = $DB->get_records_sql('SELECT distinct gg.groupingid
-                                                FROM mdl_groups_members gm
-                                                LEFT JOIN mdl_groups g ON gm.groupid = g.id
-                                                LEFT JOIN mdl_groupings_groups gg ON gg.groupid = g.id
+                                                FROM {groups_members} gm
+                                                LEFT JOIN {groups} g ON gm.groupid = g.id
+                                                LEFT JOIN {groupings_groups} gg ON gg.groupid = g.id
                                                 WHERE gm.userid = '.$subscriber->id.' AND g.courseid = '.$via->course.'');
             // Some users might be in more than one group.
             if ($usergroupingid) {

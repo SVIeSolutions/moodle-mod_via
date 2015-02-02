@@ -1,7 +1,25 @@
 
 This file defines the changes made to Via - Virtual teaching
 
-Last update 01/08/2014 (2014080167)
+
+Last update 01/12/2014 (2014120100)
+
+- Avatars added in Moodle will be added to Via.
+- It is now possible to download Via recordings.
+- For activities that are not permanent a 'prensece status' will be calculated from the minutes 
+  entered in the activity parameters. A printable version of this status is available.
+- Both these options can be activated or not from the plugins' settings.
+- Cleaned up code following commentes made by Moodle.org
+ -- removed mdl_ prefixs that had been hardcoded at Moodle.org's request.
+ -- added via_ to add function that did not already have it.
+ -- removed all $_POST references
+ -- displaced many functions to locallib
+ -- replaced fopen by cURL for security reasons
+- the via interface opens as a new page without tools to use as much of the screen as possible.
+
+
+
+Last update 01/08/2014 (2014080162)
 
 NEEDS VIA 6.2!
 

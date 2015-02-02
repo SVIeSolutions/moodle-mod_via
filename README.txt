@@ -1,8 +1,8 @@
-Version 2014080162
+Version 2015012001
 
 
 /* for more information on the version please see mod/via/version.php */
-/* This plugin required Via 6.2 */
+/* This plugin required Via 6.5 */
 
 
 Procedure for a NEW installation of the Via plugin for Moodle 2.3 to 2.7 :
@@ -30,36 +30,9 @@ Procedure for updating the Via plugin for Moodle 2.3 to 2.7 :
 
 1 - Copy the via folder into the mod folder of your moodle, replacing the old version.
 
-2 - Remove the code that used to be needed for synchronising users in lib/enrollib.php 
-    in function 'public function enrol_user()' 
-    before 'if ($userid == $USER->id)'
-    in moodle 2.0 this is at line +/- 1098
-    in moodle 2.4 this is at line +/- 1317
-	
-	/********************************************/			
-	/*Added in order to update Via participants */		
-	require_once($CFG->dirroot.'/mod/via/lib.php');		
-	add_participant_via($userid,  $instance->courseid);		
-	/********************************************/
+2 - Add the moodle key and test it. This is new, if you have not received it yet please contact SVIesolutions.
 
-    AND 
-
-    in function 'public function unenrol_user()'
-    before '$DB->delete_records('user_lastaccess', array('userid'=>$userid, 'courseid'=>$courseid));'
-    in moodle 2.0 this is at line +/- 1220
-    in moodle 2.4 this is at line +/- 1448 
-
-	/**********************************************/		
-	/*Added in order to update Via participants */		
-	require_once("$CFG->dirroot/mod/via/lib.php");		
-	remove_participant_via($userid, $courseid);		
-	/**********************************************/
-
-    From this version on the users added by automatic enrollment will be synchronised with the cron, the modifications are therefore not instant and may take up to 10 minutes, depending at how often the cron runs.
-
-4 - Add the moodle key and test it. This is new, if you have not received it yet please contact SVIesolutions.
-
-5 - Empty all caches.
+3 - Empty all caches.
 
 Your existing activities will not be affected  by these changes.
 

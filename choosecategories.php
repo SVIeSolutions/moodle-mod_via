@@ -54,7 +54,7 @@ echo $OUTPUT->header();
 
 echo $OUTPUT->box_start('center', '100%');
 
-$viacatgeories = get_via_categories();
+$viacatgeories = via_get_categories();
 
 if (empty($_POST)) {
     $none = '';
@@ -77,7 +77,7 @@ if (empty($_POST)) {
         foreach ($existingcats as $exists) {
             if ($viacatgeories["Category"]["CategoryID"] == $exists->id_via) {
                 $checked = ' checked';
-                if ($defaultcat && $$viacatgeories["Category"]["CategoryID"] == $defaultcat->id_via) {
+                if ($defaultcat && $viacatgeories["Category"]["CategoryID"] == $defaultcat->id_via) {
                     $picked = ' Checked';
                 }
             }
@@ -95,9 +95,9 @@ if (empty($_POST)) {
                 $checked = '';
                 $picked = '';
                 foreach ($existingcats as $exists) {
-                    if ($cat["Category"]['CategoryID'] == $exists->id_via) {
+                    if ($cat['CategoryID'] == $exists->id_via) {
                         $checked = ' checked';
-                        if ($defaultcat && $cat["Category"]['CategoryID'] == $defaultcat->id_via) {
+                        if ($defaultcat && $cat['CategoryID'] == $defaultcat->id_via) {
                             $picked = ' Checked';
                         }
                     }
@@ -161,12 +161,10 @@ if (empty($_POST)) {
                     $message = get_string('cats_modified', 'via');
                 }
             }
-
-            echo $message;
-            echo '<center><input type="button" onclick="self.close();" value="' . get_string('closewindow') . '" /></center>';
-
         }
     }
+    echo $message;
+    echo '<center><input type="button" onclick="self.close();" value="' . get_string('closewindow') . '" /></center>';
 }
 
 echo $OUTPUT->box_end();

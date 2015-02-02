@@ -1,194 +1,141 @@
-/* VIA */
-
-table#via_activity.generaltable,
+﻿table#via_activity.generaltable,
 table.via_recordings {
     border: 1px solid #c5c5c5;
 }
-
 table#via_activity TD {
     border-top: 1px solid #c5c5c5;
     border-bottom: 1px solid #c5c5c5;
     background: #fff !important;
     padding: 1em 0.5em;
 }
-
+table#via_activity .title {
+    text-align: left;
+    font-weight: bold;
+}
 table#via_activity A {
     padding: 10px;
     color: #fff !important;
     font-weight: bold;
     white-space: nowrap;
 }
-
+table#via_activity .no-overflow {
+    text-align:left;
+}
 .recordwarning A,
-table#via_activity A /*,
-table#via_recordings A*/ {
+table#via_activity A  {
     margin: 0 20px;
     text-align: center;
 }
-
-A.button {
+A.viabutton {
     background-color: #5c707c;
     padding: 0 2px;
 }
-
-FORM.editplayback,
-FORM.deleteplayback,
-FORM.modify,
-FORM.playback {
-    margin: 0;
-}
-FORM.playback {
-    margin-top:15px;
-}
-
-FORM.playback A,
-A.accessbutton {
+A.viaaccessbutton {
     background-color: #6ab605;
     color: #fff !important;
     white-space: nowrap;
     font-weight: bold !important;
 }
-FORM.playback,
-FORM.deleteplayback {
-    text-align:left;
+#via_recordings A.viaaccessbutton {
+    padding:10px;
 }
-FORM.deleteplayback {
-    padding: 10px 0px 10px 18px;
-}
-FORM.playback A{
-    padding: 10px 18px 10px 18px;
-    text-align:left;
-}
-FORM.deleteplayback A{
-    padding: 2px 0px 0px;
-
+.viaaccessbutton {
+    vertical-align: middle;
 }
 
-TABLE#via_recordings input[type=submit] {
-    box-shadow: none !important;
-    text-shadow: none !important;
-    border-radius: 0 !important;
-    border: none !important;
-    color: #505050 !important;
-    font-weight: bold !important;
-    cursor: pointer;
-    white-space: nowrap;
-    padding: 10px 0px 10px 20px;
+A.viaaccessbutton.inactive {
+    background-color: #CCC;
+    pointer-events: none;
+    cursor: default;
 }
 
-TABLE#via_recordings .dimmed_text input[type=submit],
 TABLE#via_recordings .dimmed_text .deleteplayback A {
     color: #999 !important;
 }
 
-FORM.modify input[type=submit] {
+TABLE#via_recordings A.modify {
     background: url([[pix:moodle|i/edit]]) left center no-repeat;
+    padding-left: 20px;
 }
-FORM.deleteplayback A {
-    color: #505050 !important;
-    font-weight: bold !important;
-}
-FORM.deleteplayback {
+TABLE#via_recordings A.deleteplayback {
     background: url([[pix:moodle|t/delete]]) left center no-repeat;
+    padding-left: 20px;
 }
 
-FORM.editplayback.maskvia input[type=submit] {
+TABLE#via_recordings A.maskvia {
     background: url([[pix:moodle|i/show]]) left center no-repeat;
+    padding-left: 20px;
 }
 
-FORM.editplayback.show input[type=submit] {
+TABLE#via_recordings A.showvia {
     background: url([[pix:moodle|i/hide]]) left center no-repeat;
+    padding-left: 20px;
+}
+TABLE#via_recordings A.download {
+    background: url([[pix:moodle|a/download_all]]) left center no-repeat;
+    padding-left: 20px;
 }
 
-FORM.deleteplayback input[type=submit]:hover,
-FORM.editplayback input[type=submit]:hover,
-FORM.modify input[type=submit]:hover,
-FORM.playback input[type=submit]:hover {
-    text-decoration: underline;
-}
-
-.playback label:hover,
-.playback label:active,
-.playback input:hover + label,
-.playback input:active + label,
-.modify label:hover,
-.modify label:active,
-.modify input:hover + label,
-.modify input:active + label {
-    text-decoration: underline;
-}
-
-INPUT.accessbutton {
-    vertical-align: middle;
-}
-
-FORM.playback LABEL {
-    margin-bottom: 5px;
-}
-
-A.accessbutton.inactive {
-    background-color: #CCC;
-}
-
-table#via_activity .title {
-    text-align: left;
-    font-weight: bold;
-}
-
-.accessbutton IMG,
-.button IMG {
+.viaaccessbutton IMG,
+.viabutton IMG {
     position: relative;
     vertical-align: text-bottom;
     top: 5px;
 }
 
 table#via_recordings {
-    width: 99%;
+    width: 90%;
     background-color: #fff;
+    margin:0 auto;
 }
 
-    table#via_recordings tr {
-        border-top: 1px solid #ccc;
-        border-bottom: 1px solid #ccc;
-    }
+table#via_recordings tr {
+    border-top: 1px solid #ccc;
+    border-bottom: 1px solid #ccc;
+}
 
-        table#via_recordings tr.atelier {
-            background-color: #f5f5f5;
-            border-top: none;
-        }
+table#via_recordings tr.atelier {
+    background-color: #f5f5f5;
+    border-top: none;
+}
 
-    table#via_recordings td {
-        text-align: left;
-    }
+table#via_recordings td {
+    text-align: left;
+}
 
-        table#via_recordings td.title.dimmed_text, table#via_recordings td.title.dimmed_text a {
-            color: #AAAAAA;
-            font-weight: normal;
-        }
+table#via_recordings td.title.dimmed_text,
+table#via_recordings td.title.dimmed_text A {
+    color: #AAAAAA;
+    font-weight: normal;
+}
 
-        table#via_recordings td.title {
-            font-size: 1em;
-            font-weight: bold;
-            width: 30%;
-        }
+table#via_recordings td.title {
+    font-size: 1em;
+    font-weight: bold;
+    width: 30%;
+}
 
-        table#via_recordings td.atelier {
-            padding-left: 4em;
-            font-size: 0.8em;
-            width: 30%;
-        }
+table#via_recordings td.atelier {
+    padding-left: 4em;
+    font-size: 0.8em;
+    width: 30%;
+}
 
-        table#via_recordings td.modify {
-            border-left: none;
-            width: 13%;
-            vertical-align: top;
-        }
+table#via_recordings td.duration {
+    width: 25%;
+}
 
-        table#via_recordings td.review {
-            border-right: none;
-            text-align: center;
-            width: 13%;
-        }
+table#via_recordings td.modify {
+    border-left: none;
+    width: 10%;
+    vertical-align: top;
+}
+
+table#via_recordings td.review {
+    text-align: center;
+    vertical-align:middle;
+    width: 10%;
+}
 
 table#via_confirmation .lastcol {
     text-align: center;
@@ -233,12 +180,10 @@ A.index {
 
 INPUT.hide,
 .error.hide,
-.accessbutton.hide,
+.viaaccessbutton.hide,
 INPUT#choosecategories.hide {
     display: none;
 }
-
-/*.activity.via A.editing_delete {display:none !important; } */
 
 #page-admin-setting-modsettingvia #adminsettings H3.main {
     border: none !important;
@@ -247,5 +192,90 @@ INPUT#choosecategories.hide {
 #editreviewform input#title {
     width: 500px !important;
 }
+TABLE#via_recordings TD.nowrap,
+TABLE.viausers TD.nowrap {
+    white-space:nowrap;
+}
 
-/* FIN VIA */
+A.returnvia {
+    float:right;
+    background-color: #5c707c;
+    padding: 6px 10px;
+    color: #fff !important;
+    font-weight: bold;
+    white-space: nowrap;
+}
+A.returnvia:hover {
+    text-decoration:underline;
+}
+
+SPAN.viagreen {
+    color: #72ba12;
+}
+
+SPAN.viayellow {
+    color: #dab316;
+}
+
+SPAN.viared {
+    color: #da1616;
+}
+.reportbtndiv {
+    margin: 15px auto;
+    text-align: right;
+    width: 90%;
+}
+
+A.reportbtn {
+    background-color: #5c707c;
+    padding: 10px;
+    text-decoration: none;
+    font-weight: bold;
+}
+
+A.reportbtn:hover {
+    text-decoration: underline;
+    font-weight: bold;
+}
+A.reportbtn,
+A.reportbtn:hover,
+A.reportbtn:link,
+A.reportbtn:visited {
+    color: #fff;
+}
+#viapresence th {
+    background: none;
+    color:#000 !important;
+}
+#viaparticipants td:first-child,
+#viapresence td:first-child {
+    white-space:nowrap;
+    vertical-align: bottom !important;
+}
+#presence,
+#presence .generaltable {
+    font-family: Arial,​Verdana,​Helvetica,​sans-serif;
+    color: #505050;
+    font-size: 14px;
+}
+#presence .generaltable {
+    border: 1px solid #cdcdcd;
+    padding: 5px;
+}
+#presence .generaltable th {
+    height: 35px;
+}
+#presence .generaltable td {
+    border-bottom: 1px dotted #cdcdcd;
+    height: 35px;
+}
+#presence .basedon {
+    color: #7e7d7d;
+    margin-top: 40px;
+    margin-bottom: 0;
+}
+.viapaging {
+    width:90%;
+    margin:auto;
+    font-size:120%
+}

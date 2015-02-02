@@ -70,12 +70,12 @@ try {
 if ($result) {
     if ($response['Result']['ResultState'] == 'SUCCESS') {
         if ($response['UserType'] >= '4') {
-            notify(get_string('adminid_success', 'via'));
+            echo '<div class="alert alert-block alert-info">'. get_string('adminid_success', 'via'). '</div>';
         } else {
-            notify(get_string('adminid_toolow', 'via'));
+            echo '<div class="alert alert-block alert-error">'.get_string('adminid_toolow', 'via').$required.'</div>';
         }
     } else {
-        notify(get_string('adminid_nosuccess', 'via'));
+        echo '<div class="alert alert-block alert-error">'.get_string('adminid_nosuccess', 'via').$required.'</div>';
     }
 }
 
