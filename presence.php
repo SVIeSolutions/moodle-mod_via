@@ -16,6 +16,8 @@
 
 /**
  *
+ * Creates printable presence status page.
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

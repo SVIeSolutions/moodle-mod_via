@@ -16,6 +16,8 @@
 
 /**
  *
+ * View activity details
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

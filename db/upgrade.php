@@ -14,6 +14,22 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+/**
+ * This file keeps track of upgrades to the via module
+ *
+ * @package    mod
+ * @subpackage via
+ * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+/**
+ * This is function xmldb_via_upgrade
+ *
+ * @param mixed $oldversion This is a description
+ * @return mixed This is the return value description
+ *
+ */
 function xmldb_via_upgrade($oldversion = 0) {
     global $CFG, $DB;
 
@@ -42,7 +58,7 @@ function xmldb_via_upgrade($oldversion = 0) {
             $rs->close();
         }
 
-        // Savepoint reached.
+        // Via savepoint reached.
         upgrade_mod_savepoint($result, 2009042702, 'via');
     }
 
@@ -93,6 +109,7 @@ function xmldb_via_upgrade($oldversion = 0) {
             $dbman->create_table($table);
         }
 
+        // Via savepoint reached.
         upgrade_mod_savepoint($result, 2013092002, 'via');
     }
 
@@ -116,7 +133,7 @@ function xmldb_via_upgrade($oldversion = 0) {
         unset_config('via_adminid');
         unset_config('via_categories');
 
-        // Savepoint reached!
+        // Via savepoint reached.
         upgrade_mod_savepoint($result, 2014040100, 'via');
     }
 
@@ -146,7 +163,7 @@ function xmldb_via_upgrade($oldversion = 0) {
             $dbman->drop_table($table);
         }
 
-        // Savepoint reached!
+        // Via savepoint reached.
         upgrade_mod_savepoint($result, 2014080162, 'via');
 
     }
@@ -161,7 +178,7 @@ function xmldb_via_upgrade($oldversion = 0) {
             $dbman->add_field($table, $field);
         }
 
-        // Savepoint reached!
+        // Via savepoint reached.
         upgrade_mod_savepoint($result, 2014080163, 'via');
     }
 
@@ -190,7 +207,7 @@ function xmldb_via_upgrade($oldversion = 0) {
             grade_update('mod/via', $via->course, 'mod', 'via', $via->id, 0, null, array('deleted' => 1));
         }
 
-        // Savepoint reached!
+        // Via savepoint reached.
         upgrade_mod_savepoint($result, 2014080167, 'via');
     }
 
@@ -219,7 +236,7 @@ function xmldb_via_upgrade($oldversion = 0) {
             $dbman->create_table($table);
         }
 
-        // Savepoint reached!
+        // Via savepoint reached.
         upgrade_mod_savepoint($result, 2014110100, 'via');
     }
 
@@ -248,13 +265,14 @@ function xmldb_via_upgrade($oldversion = 0) {
             $dbman->add_field($table, $field);
         }
 
-        // Savepoint reached!
+        // Via savepoint reached.
         upgrade_mod_savepoint($result, 2014120101, 'via');
     }
 
-    if ($oldversion < 2015012001) {
-        // Savepoint reached!
-        upgrade_mod_savepoint($result, 2015012001, 'via');
+    if ($oldversion < 2015012002) {
+
+        // Via savepoint reached.
+        upgrade_mod_savepoint($result, 2015012002, 'via');
     }
 
 }

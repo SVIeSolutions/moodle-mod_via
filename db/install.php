@@ -16,6 +16,8 @@
 
 /**
  *
+ * Post installation and migration code.
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
@@ -25,6 +27,12 @@
 
 defined('MOODLE_INTERNAL') || die;
 
+/**
+ * This is function xmldb_via_install
+ *
+ * @return mixed This is the return value description
+ *
+ */
 function xmldb_via_install() {
     global $CFG;
 }

@@ -16,6 +16,8 @@
 
 /**
  *
+ * Provides tables to manage users within an activity
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

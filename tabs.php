@@ -16,6 +16,8 @@
 
 /**
  *
+ * Creates tabs (participant, animator, presentor) for the manage page.
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

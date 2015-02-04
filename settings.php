@@ -16,6 +16,8 @@
 
 /**
  *
+ * Provides some custom settings for the via module
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

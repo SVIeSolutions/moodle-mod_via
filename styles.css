@@ -5,7 +5,7 @@ table.via_recordings {
 table#via_activity TD {
     border-top: 1px solid #c5c5c5;
     border-bottom: 1px solid #c5c5c5;
-    background: #fff !important;
+    background: #fff;
     padding: 1em 0.5em;
 }
 table#via_activity .title {
@@ -14,7 +14,7 @@ table#via_activity .title {
 }
 table#via_activity A {
     padding: 10px;
-    color: #fff !important;
+    color: #fff;
     font-weight: bold;
     white-space: nowrap;
 }
@@ -32,12 +32,13 @@ A.viabutton {
 }
 A.viaaccessbutton {
     background-color: #6ab605;
-    color: #fff !important;
+    color: #fff;
     white-space: nowrap;
-    font-weight: bold !important;
+    font-weight: bold;
 }
 #via_recordings A.viaaccessbutton {
     padding:10px;
+    color: #fff;
 }
 .viaaccessbutton {
     vertical-align: middle;
@@ -47,10 +48,11 @@ A.viaaccessbutton.inactive {
     background-color: #CCC;
     pointer-events: none;
     cursor: default;
+    color: #fff;
 }
 
 TABLE#via_recordings .dimmed_text .deleteplayback A {
-    color: #999 !important;
+    color: #999;
 }
 
 TABLE#via_recordings A.modify {
@@ -186,11 +188,11 @@ INPUT#choosecategories.hide {
 }
 
 #page-admin-setting-modsettingvia #adminsettings H3.main {
-    border: none !important;
+    border: none;
 }
 
 #editreviewform input#title {
-    width: 500px !important;
+    width: 500px;
 }
 TABLE#via_recordings TD.nowrap,
 TABLE.viausers TD.nowrap {
@@ -201,7 +203,7 @@ A.returnvia {
     float:right;
     background-color: #5c707c;
     padding: 6px 10px;
-    color: #fff !important;
+    color: #fff;
     font-weight: bold;
     white-space: nowrap;
 }
@@ -245,12 +247,12 @@ A.reportbtn:visited {
 }
 #viapresence th {
     background: none;
-    color:#000 !important;
+    color:#000;
 }
 #viaparticipants td:first-child,
 #viapresence td:first-child {
     white-space:nowrap;
-    vertical-align: bottom !important;
+    vertical-align: bottom;
 }
 #presence,
 #presence .generaltable {

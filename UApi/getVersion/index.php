@@ -16,6 +16,8 @@
 
 /**
  *
+ * Gets moodle version for authenitifcation coming from the via mobile app.
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

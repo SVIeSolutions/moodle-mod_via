@@ -1,6 +1,7 @@
 function testConnection() {
-// This function will open a popup window to test the server parameters for successful connection.
-    if ((document.getElementById('id_s_via_via_apiurl').value.length == 0) || (document.getElementById('id_s_via_via_apiurl').value == '')) {
+    // This function will open a popup window to test the server parameters for successful connection.
+    // This function is called when the button 'test connexion' is clicked in the settings page.
+    if ((document.getElementById('id_s_via_via_apiurl').value.length === 0) || (document.getElementById('id_s_via_via_apiurl').value === '')) {
         alert("L'URL de l'API est vide! / The URL for the API is empty!");
         return false;
     }
@@ -15,8 +16,9 @@ function testConnection() {
 }
 
 function testAdminId() {
-    // This function will open a popup window to test the server parameters for successful connection.
-    if ((document.getElementById('id_s_via_via_apiurl').value.length == 0) || (document.getElementById('id_s_via_via_apiurl').value == '')) {
+    // This function will open a popup window to test the user permissions of the admin id provided.
+    // This function is called when the button 'test admin' is clicked in the settings page.
+    if ((document.getElementById('id_s_via_via_apiurl').value.length === 0) || (document.getElementById('id_s_via_via_apiurl').value === '')) {
         alert("L'URL de l'API est vide! / The URL for the API is empty!");
         return false;
     }
@@ -39,5 +41,5 @@ if (categories) {
         } else {
             document.getElementById("choosecategories").className = "hide";
         }
-    }
+    };
 }

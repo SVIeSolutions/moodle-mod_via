@@ -16,6 +16,9 @@
 
 /**
  *
+ * Permits admin to test the API connection information.
+ * As well as the API version.
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

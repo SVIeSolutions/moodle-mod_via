@@ -16,6 +16,8 @@
 
 /**
  *
+ * Authenticates user in Moodle coming from the Via mobile app.
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

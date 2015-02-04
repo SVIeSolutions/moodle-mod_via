@@ -16,6 +16,8 @@
 
 /**
  *
+ * Via module capability definition
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

@@ -16,6 +16,8 @@
 
 /**
  *
+ * Redirects user with token to the via activity or playback after validating him/her.
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

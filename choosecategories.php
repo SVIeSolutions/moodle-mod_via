@@ -16,6 +16,8 @@
 
 /**
  *
+ * Permits user to manage Via categories available when creating activities
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

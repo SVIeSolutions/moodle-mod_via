@@ -27,15 +27,22 @@ namespace mod_via\event;
 defined('MOODLE_INTERNAL') || die();
 
 /**
- * The mod_via  course module viewed event class.
+ * The mod_via course module viewed event class.
  *
  * @since     Moodle 2.7
+ * @package   mod_via
  * @copyright 2014 SVI e Solutions
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  **/
 
 class course_module_viewed extends \core\event\course_module_viewed {
 
+    /**
+     * This is method init
+     *
+     * @return mixed This is the return value description
+     *
+     */
     protected function init() {
         $this->data['objecttable'] = 'via';
         $this->data['crud'] = 'r';

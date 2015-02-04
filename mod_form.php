@@ -16,6 +16,8 @@
 
 /**
  *
+ * Instance add/edit form
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
@@ -251,7 +253,13 @@ class mod_via_mod_form extends moodleform_mod {
         $this->add_action_buttons();
     }
 
-    // Sets default values for empty properties before the form is rendered.
+    /**
+     * Load in existing data as form defaults. Usually new entry defaults are stored directly in
+     * form definition (new entry form); this function is used to load in data where values
+     * already exist and data is being edited (edit entry form).
+     *
+     * @param mixed $default_values object or array of default values
+     */
     public function data_preprocessing(&$defaultvalues) {
         if (isset($defaultvalues['viaactivityid']) && $defaultvalues['viaactivityid']) {
             if ($sviinfos = via_update_info_database($defaultvalues)) {
@@ -288,6 +296,13 @@ class mod_via_mod_form extends moodleform_mod {
         }
     }
 
+    /**
+     * Some basic validation
+     *
+     * @param $data
+     * @param $files
+     * @return array
+     */
     public function validation($data, $files) {
         global $DB;
 

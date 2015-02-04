@@ -16,6 +16,8 @@
 
 /**
  *
+ * Code fragment to define the version of the via module
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
@@ -25,7 +27,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015012001;// Needs API version 6.5 or greater!
+$plugin->version = 2015012002;// Needs API version 6.5 or greater!
 
 $plugin->component = 'mod_via';
 $plugin->requires = 2014050800; // Moodle2.7!

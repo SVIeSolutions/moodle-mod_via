@@ -5,4 +5,4 @@ input.onchange = function () {
     input = document.getElementById("id_duration").value;
     duration = Math.round(input / 2);
     document.getElementById("id_presence").value = duration;
-}
+};

@@ -16,6 +16,8 @@
 
 /**
  *
+ * Edit playback name
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

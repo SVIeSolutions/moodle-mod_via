@@ -34,7 +34,7 @@ require_once($CFG->dirroot.'/mod/via/api.class.php');
  * Called by via_cron to remove users in table via_users 
  * if they have been deleted in moodle
  *
- * @return object $via object
+ * @return true or false
  */
 function via_synch_users() {
     global $DB, $CFG;
@@ -79,10 +79,10 @@ function via_synch_users() {
 }
 
 /**
- * Call by via_cron to synch participants in via activities
+ * Called by via_cron to synch participants in via activities
  * with automaitic enrollment
  *
- * @return object $via object
+ * @return true or false
  */
 function via_synch_participants() {
     global $DB, $CFG;
@@ -237,6 +237,13 @@ function via_get_categories() {
     return $response;
 }
 
+/**
+ * Gets user enroleid.
+ *
+ * @param object $course
+ * @param integer $userid
+ * @return integer enrolid.
+ */
 function via_get_enrolid($course, $userid) {
     global $DB;
 
@@ -367,12 +374,11 @@ function via_get_potential_participants($viacontext, $fields, $sort) {
  * Returns list of user objects that are participants to this via activity
  *
  * @param object $course the course
- * @param forum $via the via activity
- * @param integer $groupid group id, or 0 for all.
+ * @param object $via the via activity
+ * @param integer $participanttype, users role in the activity.
  * @param object $context the via context, to save re-fetching it where possible.
  * @return array list of users.
  */
-
 function via_participants($course, $via, $participanttype, $context = null) {
     global $CFG, $DB;
 
@@ -430,6 +436,13 @@ function via_get_random_letter() {
     return $lettres[rand(0, count($lettres) - 1)];
 }
 
+/**
+ * Creates displayable status with image and text
+ *
+ * @param integer $status
+ * @return string with image and string
+ */
+
 function via_get_confirmationstatus($status) {
     global $CFG;
 
@@ -476,7 +489,7 @@ function via_get_list_profils() {
 }
 
 /**
- *  Get all the playbacks for an acitivity
+ * Get all the playbacks for an acitivity
  *
  * @param object $via the via object
  * @return obejct list of playbacks
@@ -555,6 +568,12 @@ function via_get_all_playbacks($via) {
 
 }
 
+/**
+ * Button to call presence report
+ *
+ * @param integer $viaid
+ * @return html string to display button
+ */
 function via_report_btn($viaid) {
 
     $btn = '<div class="reportbtndiv">';
@@ -566,8 +585,13 @@ function via_report_btn($viaid) {
 
 }
 
-
-
+/**
+ * Builds table head for presence or user list table
+ *
+ * @param object $via
+ * @param integer $presence
+ * @return html string to display table head
+ */
 function via_get_table_head($via, $presence = null) {
 
     $table = new html_table();
@@ -620,6 +644,14 @@ function via_get_table_head($via, $presence = null) {
 
 }
 
+/**
+ * Builds presence status or user list table
+ *
+ * @param object $via
+ * @param object $conext
+ * @param integer $presence
+ * @return populated table
+ */
 function via_get_participants_table($via, $context, $presence = null) {
     global $DB, $CFG;
 
@@ -743,107 +775,11 @@ function via_get_participants_table($via, $context, $presence = null) {
     return html_writer::table($table);
 }
 
-function via_get_participants_list_table($via, $context) {
-    global $DB, $CFG;
-
-    $participantslist = via_get_participants_list($via);
-
-    if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation) {
-        $conf = '<th>'. get_string("confirmationstatus", "via").'</th>';
-    } else {
-        $conf = '';
-    }
-
-    $userlist = "<h2 class='main'>".get_string("viausers", "via")."</h2>";
-    $userlist .= "<table cellpadding='2' cellspacing='0' class='generaltable boxaligncenter viausers' style='width: 99%;'>";
-    $userlist .= '<tr><th style="text-align:left" >'.
-        get_string("role", "via").'</th><th style="text-align:left" >'. get_string("lastname").', '.
-        get_string("firstname").'</th><th style="text-align:left" >'.
-        get_string("email").'</th>'.$conf.'<th style="text-align:center">'. get_string("config", "via").'</th></tr>';
-
-    $confstatus = '';
-
-    if ($participantslist) {
-        foreach ($participantslist as $key => $value) {
-            if (strpos($key, 'attr') !== false ) {
-
-                if ($value['ParticipantType'] == "1") {
-                    $role = '<img src="' . $CFG->wwwroot . '/mod/via/pix/participant.png" width="25" height="25"
-                              alt="participant" style="vertical-align: bottom;" /> ' . get_string("participant", "via");
-                } else if ($value['ParticipantType'] == "2") {
-                    $role = '<img src="' . $CFG->wwwroot . '/mod/via/pix/presentor.png" width="25" height="25"
-                              alt="presentor" style="vertical-align: bottom;" /> ' . get_string("presentator", "via");
-                } else {
-                    $role = '<img src="' . $CFG->wwwroot . '/mod/via/pix/animator.png" width="25" height="25"
-                              alt="animator" style="vertical-align: bottom;" /> ' . get_string("animator", "via");
-                }
-
-                if ($value['SetupState'] == "0") {
-                    $state = '<span style="color:#72ba12;" >'.get_string("finish", "via"). '</span>';
-                } else if ($value['SetupState'] == "1") {
-                    $state = '<span style="color:#dab316;" >'. get_string("incomplete", "via"). '</span>';
-                } else {
-                    $state = '<span style="color:#da1616;" >'.get_string("neverbegin", "via"). '</span>';
-                }
-
-                if ($conf != '') {
-                    $confstatus = via_get_confirmationstatus($value["ConfirmationStatus"]);
-                }
-
-                $vuser = $DB->get_record_sql('SELECT * FROM {via_users} vu
-                                            LEFT JOIN {user} u ON u.id = vu.userid
-                                            WHERE vu.viauserid = \''.$value['UserID'] .'\' AND u.deleted = 0');
-                if (has_capability('mod/via:manage', $context)) {// Students can not see the user profiles.
-                    if ($vuser) {
-                        $userinfo = '<a href="'. $CFG->wwwroot .'/user/profile.php?id='.$vuser->userid.'">'.
-                            $value['LastName'].', '. $value['FirstName'].'</a>';
-                    }
-                } else {
-                    $userinfo = $value['LastName'].', '. $value['FirstName'];
-                }
-
-                if ($vuser) {// Only add if the user is in via_users table.
-                    $userlist .= '<tr><td class="nowrap">'. $role .'</td><td>'.$userinfo.'</td><td>'.
-                        $value['Email'].'</td>'.$confstatus.'<td style="text-align:center">'. $state .'</td></tr>';
-                }
-            }
-        }
-    } else {
-        $presenter = $DB->get_record_sql('SELECT u.*, vp.* FROM {via_participants} vp
-                                        LEFT JOIN {user} u ON vp.userid = u.id
-                                        WHERE activityid='.$via->id. ' AND vp.participanttype=2 ');
-        if ($presenter) {
-            $role = '<img src="' . $CFG->wwwroot . '/mod/via/pix/presentor.png" width="25" height="25"
-                    alt="presentor" style="vertical-align: bottom;" /> ' . get_string("presentator", "via");
-            if ($conf != '') {
-                $confstatus = via_get_confirmationstatus($presenter->confirmationstatus);
-            }
-            if (has_capability('mod/via:manage', $context)) {// Students can not see the user profiles.
-                $userinfo = '<a href="'. $CFG->wwwroot .'/user/profile.php?id='.$presenter->id.'">'.
-                    $presenter->lastname.', '. $presenter->firstname.'</a>';
-            } else {
-                $userinfo = $presenter->lastname.', '. $presenter->firstname;
-            }
-
-            $userlist .= '<tr><td>'. $role .'</td><td>'.$userinfo.'</td><td>'. $presenter->email.'</td>'.
-                $confstatus .'<td style="text-align:center">--</td></tr>';
-        } else {
-            $userlist .= '<tr><td class="error">'.get_string('nousers', 'via').'</td></tr>';
-        }
-    }
-
-    $userlist .= '</table>';
-
-    return $userlist;
-}
-
 /**
- * get user logs from via 
+ * Get user logs from via.
  *
- * @param object $viauserid the user via id from via_users table
- * @param object $viaid the via activity id
- * @return list.
- * 
+ * @param object $participant
+ * @return string presence and playback times.
  */
 function via_userlogs($participant) {
     global $DB;
@@ -948,11 +884,12 @@ function via_userlogs($participant) {
 }
 
 /**
- *  Create playback table for via activity
+ * Create playback table for via activity details page.
  * 
  * @param object $playbacks list of via playbacks assiciated to the activity
  * @param object $via the via object
- * @return obejct moodle $context
+ * @param object $context moodle object
+ * @return table
  */
 function via_get_playbacks_table($playbacks, $via, $context) {
     global $CFG;
@@ -1089,9 +1026,8 @@ function via_get_playbacks_table($playbacks, $via, $context) {
 
 }
 
-
 /**
- *  Get the remindertime for an activity
+ * Get the remindertime for an activity
  *
  * @param object $via the via object
  * @return object containing the remindertime
@@ -1101,7 +1037,12 @@ function via_get_remindertime($via) {
     return $remindertime;
 }
 
-
+/**
+ * Get the presenter for an activity
+ *
+ * @param integer $activityid
+ * @return object containing the user's information
+ */
 function  via_get_presenter($activityid) {
     global $DB;
 
@@ -1115,6 +1056,15 @@ function  via_get_presenter($activityid) {
     return $from;
 }
 
+/**
+ * Build the invitation mail html that will be sent be the cron
+ *
+ * @param integer $courseid
+ * @param object $via
+ * @param object $muser
+ * @param boolean is reminder or invite message
+ * @return html mail
+ */
 function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $reminder=false) {
     global $CFG, $DB;
 
@@ -1249,6 +1199,14 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
     return $posthtml;
 }
 
+/**
+ * Gets user type for automatic enrollement
+ *
+ * @param integer $userid
+ * @param integer $courseid
+ * @param boolean noparticipants, if true all users will be added as animators
+ * @return integer representing the user's type for the activity within the course.
+ */
 function via_user_type($userid, $courseid, $noparticipants = null) {
     global $DB, $CFG;
 
@@ -1268,6 +1226,13 @@ function via_user_type($userid, $courseid, $noparticipants = null) {
     return $type;
 }
 
+/**
+ * Validates the API version with plugin version
+ *
+ * @param string $required
+ * @param string $buildversion
+ * @return true or false
+ */
 function via_validate_api_version($required, $buildversion) {
 
     $req = explode(".", $required);
@@ -1293,6 +1258,16 @@ function via_validate_api_version($required, $buildversion) {
 
 }
 
+/**
+ * Validates which type of access button to add, with with text and permissions
+ *
+ * @param boolean $recordingmode
+ * @param boolean $active
+ * @param interger $cmid context id
+ * @param boolean $preperation
+ * @param boolean $forceaccess 
+ * @return html link
+ */
 function via_add_button($recordingmode, $active = null, $cmid = null, $preperation = null, $forceaccess = null) {
     global $CFG;
 
@@ -1337,6 +1312,12 @@ function via_add_button($recordingmode, $active = null, $cmid = null, $preperati
     return $link;
 }
 
+/**
+ * Validates if the user is on a mobile device
+ * if on a mobile device the VIA moobile application should be used
+ *
+ * @return true or false
+ */
 function is_mobile_phone() {
 
     $ua = strtolower($_SERVER['HTTP_USER_AGENT']);
@@ -1350,6 +1331,12 @@ function is_mobile_phone() {
     return false;
 }
 
+/**
+ * Creates html button to call presence status printable report
+ *
+ * @param integer $viaid
+ * @return html string
+ */
 function via_get_report_btn($viaid) {
 
     $btn = '<div class="reportbtndiv">';
@@ -1361,6 +1348,12 @@ function via_get_report_btn($viaid) {
     return $btn;
 }
 
+/**
+ * Gets printable time from Unix time for display in tables
+ *
+ * @param integer $time unix time
+ * @return html string (00:00:00) hh mm ss
+ */
 function via_get_converted_time($time) {
 
     $minutes = floor($time);
@@ -1390,6 +1383,12 @@ function via_get_converted_time($time) {
     return $duration;
 }
 
+/**
+ * Gets html string to display the user type.
+ *
+ * @param integer$type user type within the activity
+ * @return html string with image and string
+ */
 function via_get_role($type) {
     global $CFG;
 
@@ -1406,19 +1405,4 @@ function via_get_role($type) {
 
     return $role;
 
-}
-
-function via_get_user_picturte($muserid) {
-    global $DB, $CFG;
-
-    $usercontext = context_user::instance($muserid, MUST_EXIST);
-    $file = $DB->get_record('files', array('contextid' => $usercontext->id,
-                                            'component' => 'user',
-                                            'filearea' => 'icon',
-                                            'itemid' => '0',
-                                            'filename' => 'f3.png'));
-    $usericon = file_get_contents($CFG->dataroot .'/filedir/'.substr($file->contenthash, 0, 2) . '/'
-                . substr($file->contenthash, 2, 2) .'/' .$file->contenthash);
-
-    return $usericon;
 }

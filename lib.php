@@ -16,6 +16,8 @@
 
 /**
  *
+ * This file contains a library of functions and constants for the via module
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
@@ -29,6 +31,12 @@ require_once($CFG->dirroot .'/mod/via/locallib.php');
 require_once($CFG->dirroot .'/mod/via/api.class.php');
 require_once($CFG->dirroot .'/calendar/lib.php');
 
+/**
+ * Return the list if Moodle features this module supports
+ *
+ * @param string $feature FEATURE_xx constant for requested feature
+ * @return mixed True if module supports feature, null if doesn't know
+ */
 function via_supports($feature) {
     switch($feature) {
 
@@ -53,7 +61,6 @@ function via_supports($feature) {
             return null;
     }
 }
-
 
 /**
  * Given an object containing all the necessary data (defined in mod_form.php),
@@ -382,6 +389,7 @@ function via_add_participants($users, $viaid, $type) {
  * @param integer $userid the user id we are updating his status
  * @param integer $viaid the via activity ID
  * @param integer $type the user type (presentator, animator or partcipant)
+ * @param integer $callvia to lighten the amount of calls to via we do not add all users to via only the first 50.
  * @param integer $confirmationstatus if enrol directly on Via, get his confirmation status 
  * @return bool Success/Fail.
  */
@@ -464,35 +472,12 @@ function via_add_participant($userid, $viaid, $type, $callvia = null, $confirmat
 }
 
 /**
- * get participants list on via 
- *
- * @param object $via the via
- * @return list.
- * 
- */
-function via_get_participants_list($via) {
-
-    $result = true;
-
-    $api = new mod_via_api();
-
-    try {
-        $result = $api->get_userslist_activity($via->viaactivityid);
-    } catch (Exception $e) {
-        notify(get_string("error:".$e->getMessage(), "via"));
-        $result = false;
-    }
-
-    return $result;
-}
-
-
-/**
  * Removes user from the participant list
  *
  * @param integer $userid the user id 
  * @param integer $viaid the via id
- * @param integer $type role we have to remove of user on via (if has more than 1 role for activity)
+ * @param integer $synched if the user was synched (added to Via) we need to remove them from Via too
+ * otherwise we can simply remove them from the participants list in moodle
  * @return bool Success/Fail
  */
 function via_remove_participant($userid, $viaid, $synched = null) {
@@ -549,8 +534,8 @@ function via_get_is_user_presentator($userid, $activityid) {
 }
 
 /**
- *  Verifies what a user can view for an activity, depending of his role and
- *  if activity is done or not. If there's reviews ect.
+ * Verifies what a user can view for an activity, depending of his role and
+ * if activity is done or not. If there are playbacks etc.
  *
  * @param object $via the via 
  * @return integer what user can view
@@ -646,6 +631,8 @@ function via_print_overview($courses, &$htmlarray) {
 
 /**
  * Delete grade item for given activity
+ * All referece to grades have been removed.
+ * This function is called upon upgrade only from a version that permitted grades.
  *
  * @param object $via object
  * @return object va
@@ -664,9 +651,13 @@ function via_grade_item_delete($via) {
 
 /**
  * Function to be run periodically according to the moodle cron
- * updates remindertime on VIA server if parameter via_moodleemailnotification is change
- * Updates participant list on Moodle, if changes directly on via server
- * Finds all invitation and reminders that have to be sent and send them
+ * Sends reminder for actvities.
+ * Sends invitations with personnalised text.
+ * Adds enrolids - only for versions before enrolids were added
+ * synch_users - Deletes users from via_users if deleted in moodle,
+ * synch_participants - Adds or removes users from activities with automatic enrollement
+ * check_categories - checks that the categories still exist in Via, if not they are deleted
+ * These categories refer to via categories that are only used for invvoicing perpouses.
  * @return bool $result sucess/fail
  */
 function via_cron() {
@@ -809,9 +800,9 @@ function via_send_reminders() {
 }
 
  /**
-  * gets all activity that need reminders to ben sent
+  * Gets all activity that need reminders to ben sent
   *
-  * @return object $via object
+  * @return object $reminders - which inclued the user's and activity's information.
   */
 function via_get_reminders() {
     global $CFG, $DB;
@@ -1017,11 +1008,10 @@ function via_send_moodle_invitations($i, $user, $from) {
     return $result;
 }
 
-
 /**
  * gets all activity that need invitations to ben sent
  *
- * @return object $via object
+ * @return object $invitations - which inclues the user's and activity information
  */
 function via_get_invitations() {
     global $CFG, $DB;
@@ -1163,7 +1153,6 @@ function via_remove_participants($vias) {
     return $result;
 }
 
-
 /**
  * Disables the review mode for all activities
  * @param object $vias all via activiites for a given course
@@ -1204,6 +1193,8 @@ function via_disable_review_mode($vias) {
 /**
  * Changes confirmation status of a participant
  * @param integer $viaid Via id on Moodle DB
+ * @param integer $present status
+ * @return true / false
  */
 function via_set_participant_confirmationstatus($viaid, $present) {
     global $CFG, $USER, $DB;
@@ -1219,14 +1210,17 @@ function via_set_participant_confirmationstatus($viaid, $present) {
             $DB->update_record("via_participants", $type);
             try {
                 $response = $api->edituser_activity($via, $type->participanttype);
+                $result = true;
             } catch (Exception $e) {
                 print_error(get_string("error:".$e->getMessage(), "via"));
                 $result = false;
             }
         }
     }
+    return $result;
 }
 
+require_once($CFG->dirroot.'/lib/formslib.php');
 /**
  * The form used by users to send instant messages
  *
@@ -1234,8 +1228,6 @@ function via_set_participant_confirmationstatus($viaid, $present) {
  * @copyright 2009 Sam Hemelryk
  * @license   http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-require_once($CFG->dirroot.'/lib/formslib.php');
-
 class via_send_invite_form extends moodleform {
 
     public function definition () {

@@ -16,6 +16,8 @@
 
 /**
  *
+ * Language strings for the Via module
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>

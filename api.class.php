@@ -15,6 +15,8 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
  /**
+  * Data access class for the via module.
+  *
   * @package    mod
   * @subpackage via
   * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
@@ -28,7 +30,7 @@ class mod_via_api {
     /**
      * Creates a user on VIA
      *
-     * @param object $user an object user
+     * @param object $muser an object user
      * @param bool $edit if true, edit an existing user, else create a new one
      * @param Array $infoplus additional info when creating/editing user
      * @return Array containing response from Via
@@ -126,10 +128,10 @@ class mod_via_api {
     /**
      * gets a user on Via
      *
-     * @param object $user the user
+     * @param integer $viauserid 
      * @return Array containing response from Via
      */
-    public function via_user_get($viauserid, $checkingstatus=null) {
+    public function via_user_get($viauserid) {
         global $CFG;
 
         $url = 'UserGet';
@@ -324,9 +326,9 @@ class mod_via_api {
             $data .= "<DateBegin>".$this->change_date_format($via->datebegin)."</DateBegin>";
             $data .= "<Duration>".$via->duration."</Duration>";
         }
-        $data .= "<IncludeUsers>".$via->include_userInfo."</IncludeUsers>";// 0 = Non ; 1 = Oui!
+        $data .= "<IncludeUsers>".$via->include_userInfo."</IncludeUsers>";// 0 = No; 1 = Yes!
         $data .= "<IncludeDocuments>1</IncludeDocuments>";// 1 = Yes : documents are always added!
-        $data .= "<IncludeSurveyAndWBoards>".$via->include_surveyandwboards."</IncludeSurveyAndWBoards>";// 0 = Non ; 1 = Oui!
+        $data .= "<IncludeSurveyAndWBoards>".$via->include_surveyandwboards."</IncludeSurveyAndWBoards>";// 0 = No; 1 = Yes!
         $data .= "</cApiActivityDuplicate>";
         $data .= "</soap:Body>";
         $data .= "</soap:Envelope>";
@@ -349,7 +351,7 @@ class mod_via_api {
      * Edits an acitivity on Via
      *
      * @param object $via the via object
-     * @param bool $delete if true, activity needs to be deleted on Via
+     * @param integer $activitystate if 2, activity needs to be deleted on Via
      * @return Array containing response from Via
      */
     public function activity_edit($via, $activitystate=1) {
@@ -441,7 +443,7 @@ class mod_via_api {
     }
 
     /**
-     * gets all categories for this company from Via
+     * Gets all categories for this company from Via
      *
      * @return Array containing response from Via
      */
@@ -479,8 +481,8 @@ class mod_via_api {
     /**
      * gets user logs for one user at a time
      *
-     * @param object $viauserid the VIA via id
-     * @param object $viaid the VIA via id
+     * @param integer $viauserid the VIA via id
+     * @param integer $viaactivityid the VIA via id
      * @return Array containing response from Via
      */
     public function via_get_user_logs($viauserid, $viaactivityid) {
@@ -516,7 +518,7 @@ class mod_via_api {
 
 
     /**
-     * gets all profiles available for a given company
+     * Gets all profiles available for a given company
      *
      * @return Array containing response from Via
      */
@@ -551,12 +553,15 @@ class mod_via_api {
 
 
     /**
-     * gets a token to redirect a user to VIA
+     * Gets a token to redirect a user to VIA
      *
      * @param object $via the via
      * @param integer $redirect where to redirect
      * @param string $playback id of the playback to redirect to
-     * @return string URL
+     * @param boolean $forceaccess permits those with editing rights in moodle to view recording taht are not public
+     * @param boolean $forceedit permits those with editing rights in moodle to edit recording
+     * @param integer $mobile is userid already validated by uapi/auth
+     * @return string URL for redirect
      */
     public function userget_ssotoken($via=null, $redirect=null, $playback=null, $forceaccess=null, $forceedit=null, $mobile=null) {
         global $CFG, $USER;
@@ -658,6 +663,7 @@ class mod_via_api {
      * Edits a user enrolment in an activity
      *
      * @param object $via the via
+     * @param integer $participanttype; 1=pariticipant, 2=presentor , 3=animator
      * @return Array containing response from Via
      */
     public function edituser_activity($via, $participanttype = null) {
@@ -744,10 +750,11 @@ class mod_via_api {
 
 
     /**
-     * remove a user in an activity
+     * Remove a user in an activity
      *
      * @param string $viaid the VIA via id
      * @param integer $userid the id of the user to remove
+     * @param boolean $moodleid used to remove the moodle admin key once the activity is created.
      * @return Array containing response from Via
      */
     public function removeuser_activity($viaid, $userid, $moodleid = true) {
@@ -791,7 +798,7 @@ class mod_via_api {
     }
 
     /**
-     * gets a list of playback available for a given activity
+     * Gets a list of playback available for a given activity
      *
      * @param object $via the via object
      * @return Array containing response from Via
@@ -827,7 +834,7 @@ class mod_via_api {
     }
 
     /**
-     * edit a given playback for a given activity
+     * Edit a given playback for a given activity
      *
      * @param object $via the via object
      * @param string $playbackid the id of the playback 
@@ -873,9 +880,8 @@ class mod_via_api {
     /**
      * delete a given playback for a given activity
      *
-     * @param object $via the via object
+     * @param string $viaactivityid the id of the via activity
      * @param string $playbackid the id of the playback 
-     * @param object $playback the playback object 
      * @return Array containing response from Via
      */
     public function delete_playback($viaactivityid, $playbackid) {
@@ -914,10 +920,10 @@ class mod_via_api {
     /**
      *download playback for a given activity
      *
-     * @param object $via the via object
+     * @param string $viauserid the via userid
      * @param string $playbackid the id of the playback 
-     * @param object $playback the playback object 
-     * @return Array containing response from Via
+     * @param integer $recordtype; 1=fullvideo, 2=mobile video, 3=audio only.
+     * @return string with download token for redirect
      */
     public function via_download_record($viauserid, $playbackid, $recordtype) {
         global $CFG;
@@ -1080,7 +1086,8 @@ class mod_via_api {
      * validates user to see if the uesr already exists on Via
      * If the user exists we associate him/her
      * If the user does not exist we create him/her
-     *
+     * 
+     * @param object $muser moodle user
      * @return string via user id
      */
     public function validate_via_user($muser) {
@@ -1166,6 +1173,7 @@ class mod_via_api {
      * Only if the option to synchronise user information has been checked in the plugins parameters
      *
      * @param string $muserid the userid
+     * @return image file
      */
     public function via_get_user_picture($muserid) {
         global $DB, $CFG;
@@ -1193,7 +1201,8 @@ class mod_via_api {
      * Gets the Via id of a user. If not found, we create a new user
      *
      * @param integer $u the moodle id of the user
-     * @param bool $teacher true if the user is a teacher
+     * @param bool $connection true if the this is function is called on ssotoken user validation
+     * @param bool $forceupdate user information is only updated after 30 minutes unless we force the update.
      * @return string via user id
      */
     public function get_user_via_id($u, $connection=false, $forceupdate = null) {
