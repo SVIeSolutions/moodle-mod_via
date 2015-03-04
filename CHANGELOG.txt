@@ -1,9 +1,30 @@
 
 This file defines the changes made to Via - Virtual teaching
 
+last update 04/03/2015 (2015012005)
+- correction in via_get_list_profils() if no connexion information is provided.
+- correction in playback is downloadable, a modification was also made in via.
 
-Last update 01/12/2014 (2014120100)
+last update 20/01/2015 (2015012004)
+- Indexes were corrected in the install page.
+- Resizeable was added to the view.via openpopup parameters.
+- Access to the activity for admins was modified.
 
+last update 20/01/2015 (2015012002)
+- Indexes were add to the via tables to increase efficiency.
+
+last update 20/01/2015 (2015012001)
+
+- New pagination on the via details page, only the first 50 users will be displayed.
+- Removed the setting in the plugins parameters to permit sending reminders from Via. They are always send through moodle.
+- We have modified how users are synchronized with Via to reduce the amount of calls made to via.
+-- Only the first 50 users will be synched.
+--- on creation on an activity or on modification.
+-- the 50 displayed in the details page will be synched
+-- the presence status will be calculated on the display of the presence report.
+-- cron - new enrollements will be added to the via_pariticipants table but not added to via
+-- cron - old enrollements will be removed from the via_participants table and from via, only if they had been synched.
+- a wysiwyg was added to the via invitation page for flexibility.
 - Avatars added in Moodle will be added to Via.
 - It is now possible to download Via recordings.
 - For activities that are not permanent a 'prensece status' will be calculated from the minutes 
@@ -18,6 +39,12 @@ Last update 01/12/2014 (2014120100)
 - the via interface opens as a new page without tools to use as much of the screen as possible.
 
 
+last update 01/11/2014 (2014110101)
+
+- New capability was created to view presence reports
+- New option was added during the creation of an activity to add the minimum time required for an activity to be considered present.
+- New table was created that calculated if the user was present or not depending on the value above.
+- A printable version of this table is created on the click of a button.
 
 Last update 01/08/2014 (2014080162)
 

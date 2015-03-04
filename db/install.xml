@@ -2,110 +2,120 @@
 <XMLDB PATH="mod/via/db" VERSION="2010021901" COMMENT="XMLDB file for the Moodle VIA module"
 xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
-  <TABLES>
-    <TABLE NAME="via" COMMENT="Contains VIA activity data for each course module" NEXT="via_categories">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="course"/>
-        <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
-        <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="course" NEXT="intro"/>
-        <FIELD NAME="intro" TYPE="text" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="name" NEXT="introformat"/>
-        <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="false" DEFAULT="1" SEQUENCE="false" PREVIOUS="intro" NEXT="creator"/>
-        <FIELD NAME="creator" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="introformat" NEXT="viaactivityid"/>
-        <FIELD NAME="viaactivityid" TYPE="char" LENGTH="200" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="creator" NEXT="datebegin"/>
-        <FIELD NAME="datebegin" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="viaactivityid" NEXT="duration"/>
-        <FIELD NAME="duration" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="datebegin" NEXT="presence"/>
-        <FIELD NAME="presence" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="duration" NEXT="audiotype"/>
-        <FIELD NAME="audiotype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="presence" NEXT="recordingmode"/>
-        <FIELD NAME="recordingmode" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="audiotype" NEXT="recordmodebehavior"/>
-        <FIELD NAME="recordmodebehavior" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="recordingmode" NEXT="isreplayallowed"/>
-        <FIELD NAME="isreplayallowed" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="recordmodebehavior" NEXT="private"/>
-        <FIELD NAME="private" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="isreplayallowed" NEXT="profilid"/>
-        <FIELD NAME="profilid" TYPE="char" LENGTH="200" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="private" NEXT="category"/>
-        <FIELD NAME="category" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="profilid" NEXT="activitytype"/>
-        <FIELD NAME="activitytype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="category" NEXT="remindertime"/>
-        <FIELD NAME="remindertime" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false"  PREVIOUS="activitytype" NEXT="needconfirmation"/>
-        <FIELD NAME="needconfirmation" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="remindertime" NEXT="roomtype"/>
-        <FIELD NAME="roomtype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="needconfirmation" NEXT="waitingroomaccessmode"/>
-        <FIELD NAME="waitingroomaccessmode" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="1" SEQUENCE="false" PREVIOUS="roomtype" NEXT="activitystate"/>
-        <FIELD NAME="activitystate" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="waitingroomaccessmode" NEXT="enroltype"/>
-        <FIELD NAME="enroltype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="activitystate" NEXT="mailed"/>
-        <FIELD NAME="mailed" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="enroltype" NEXT="sendinvite"/>
-        <FIELD NAME="sendinvite" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="mailed" NEXT="invitemsg"/>
-        <FIELD NAME="invitemsg" TYPE="text" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="sendinvite" NEXT="usersynchronization"/>
-        <FIELD NAME="usersynchronization" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="invitemsg" NEXT="groupingid"/>
-        <FIELD NAME="groupingid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="usersynchronization" NEXT="timecreated"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="groupingid" NEXT="timemodified"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timecreated" NEXT="noparticipants"/>
-        <FIELD NAME="noparticipants" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timemodified"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via"/>
-      </KEYS>
-    </TABLE>
+<TABLES>
+  <TABLE NAME="via" COMMENT="Contains VIA activity data for each course module" NEXT="via_categories">
+    <FIELDS>
+      <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="course"/>
+      <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
+      <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="course" NEXT="intro"/>
+      <FIELD NAME="intro" TYPE="text" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="name" NEXT="introformat"/>
+      <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="false" DEFAULT="1" SEQUENCE="false" PREVIOUS="intro" NEXT="creator"/>
+      <FIELD NAME="creator" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="introformat" NEXT="viaactivityid"/>
+      <FIELD NAME="viaactivityid" TYPE="char" LENGTH="200" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="creator" NEXT="datebegin"/>
+      <FIELD NAME="datebegin" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="viaactivityid" NEXT="duration"/>
+      <FIELD NAME="duration" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="datebegin" NEXT="presence"/>
+      <FIELD NAME="presence" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="duration" NEXT="audiotype"/>
+      <FIELD NAME="audiotype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="presence" NEXT="recordingmode"/>
+      <FIELD NAME="recordingmode" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="audiotype" NEXT="recordmodebehavior"/>
+      <FIELD NAME="recordmodebehavior" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="recordingmode" NEXT="isreplayallowed"/>
+      <FIELD NAME="isreplayallowed" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="recordmodebehavior" NEXT="private"/>
+      <FIELD NAME="private" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="isreplayallowed" NEXT="profilid"/>
+      <FIELD NAME="profilid" TYPE="char" LENGTH="200" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="private" NEXT="category"/>
+      <FIELD NAME="category" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="profilid" NEXT="activitytype"/>
+      <FIELD NAME="activitytype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="category" NEXT="remindertime"/>
+      <FIELD NAME="remindertime" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false"  PREVIOUS="activitytype" NEXT="needconfirmation"/>
+      <FIELD NAME="needconfirmation" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="remindertime" NEXT="roomtype"/>
+      <FIELD NAME="roomtype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="needconfirmation" NEXT="waitingroomaccessmode"/>
+      <FIELD NAME="waitingroomaccessmode" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="1" SEQUENCE="false" PREVIOUS="roomtype" NEXT="activitystate"/>
+      <FIELD NAME="activitystate" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="waitingroomaccessmode" NEXT="enroltype"/>
+      <FIELD NAME="enroltype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="activitystate" NEXT="mailed"/>
+      <FIELD NAME="mailed" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="enroltype" NEXT="sendinvite"/>
+      <FIELD NAME="sendinvite" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="mailed" NEXT="invitemsg"/>
+      <FIELD NAME="invitemsg" TYPE="text" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="sendinvite" NEXT="usersynchronization"/>
+      <FIELD NAME="usersynchronization" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="invitemsg" NEXT="groupingid"/>
+      <FIELD NAME="groupingid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="usersynchronization" NEXT="timecreated"/>
+      <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="groupingid" NEXT="timemodified"/>
+      <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timecreated" NEXT="noparticipants"/>
+      <FIELD NAME="noparticipants" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timemodified"/>
+    </FIELDS>
+    <KEYS>
+      <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via"/>
+    </KEYS>
+    <INDEXES>
+      <INDEX NAME="course" UNIQUE="false" FIELDS="course"/>
+    </INDEXES>
+  </TABLE>
 
-    <TABLE NAME="via_categories" COMMENT="Contains categories created in via and made avaiable in Moodle by the admin" PREVIOUS="via" NEXT="via_users">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="id_via"/>
-        <FIELD NAME="id_via" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
-        <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id_via" NEXT="isdefault"/>
-        <FIELD NAME="isdefault" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="name"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_id"/>
-      </KEYS>
-    </TABLE>
+  <TABLE NAME="via_categories" COMMENT="Contains categories created in via and made avaiable in Moodle by the admin" PREVIOUS="via" NEXT="via_users">
+  <FIELDS>
+    <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="id_via"/>
+    <FIELD NAME="id_via" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="name"/>
+    <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id_via" NEXT="isdefault"/>
+    <FIELD NAME="isdefault" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="name"/>
+  </FIELDS>
+  <KEYS>
+    <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_id"/>
+  </KEYS>
+  </TABLE>
 
-    <TABLE NAME="via_users" COMMENT="Contains via info about users" PREVIOUS="via_categories" NEXT="via_participants">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="userid"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="viauserid"/>
-        <FIELD NAME="viauserid" TYPE="char" LENGTH="200" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="userid" NEXT="username"/>
-        <FIELD NAME="username" TYPE="char" LENGTH="200" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="viauserid" NEXT="setupstatus"/>
-        <FIELD NAME="setupstatus" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="username" NEXT="usertype"/>
-        <FIELD NAME="usertype" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="setupstatus" NEXT="timecreated"/>
-        <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="usertype" NEXT="timemodified"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timecreated"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_users"/>
-      </KEYS>
-      <INDEXES>
-        <INDEX NAME="userid" UNIQUE="true" FIELDS="userid" />
-      </INDEXES>
-    </TABLE>
+  <TABLE NAME="via_users" COMMENT="Contains via info about users" PREVIOUS="via_categories" NEXT="via_participants">
+    <FIELDS>
+      <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="userid"/>
+      <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="viauserid"/>
+      <FIELD NAME="viauserid" TYPE="char" LENGTH="200" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="userid" NEXT="username"/>
+      <FIELD NAME="username" TYPE="char" LENGTH="200" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="viauserid" NEXT="setupstatus"/>
+      <FIELD NAME="setupstatus" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="username" NEXT="usertype"/>
+      <FIELD NAME="usertype" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="setupstatus" NEXT="timecreated"/>
+      <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="usertype" NEXT="timemodified"/>
+      <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timecreated"/>
+    </FIELDS>
+    <KEYS>
+      <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_users"/>
+    </KEYS>
+    <INDEXES>
+      <INDEX NAME="userid" UNIQUE="true" FIELDS="userid" />
+    </INDEXES>
+  </TABLE>
 
-    <TABLE NAME="via_participants" COMMENT="Contains via info about participants" PREVIOUS="via_users" NEXT="via_presence">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="activityid"/>
-        <FIELD NAME="activityid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="enrolid"/>
-        <FIELD NAME="enrolid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="activityid" NEXT="userid"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="enrolid" NEXT="participanttype"/>
-        <FIELD NAME="participanttype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="userid" NEXT="synchvia"/>
-        <FIELD NAME="synchvia" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="participanttype" NEXT="confirmationstatus"/>
-        <FIELD NAME="confirmationstatus" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="synchvia" NEXT="timemodified"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="confirmationstatus" NEXT="timesynched"/>
-        <FIELD NAME="timesynched" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timemodified" />
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_id"/>
-      </KEYS>
-    </TABLE>
+  <TABLE NAME="via_participants" COMMENT="Contains via info about participants" PREVIOUS="via_users" NEXT="via_presence">
+    <FIELDS>
+      <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="activityid"/>
+      <FIELD NAME="activityid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="enrolid"/>
+      <FIELD NAME="enrolid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="activityid" NEXT="userid"/>
+      <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="enrolid" NEXT="participanttype"/>
+      <FIELD NAME="participanttype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="userid" NEXT="synchvia"/>
+      <FIELD NAME="synchvia" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="participanttype" NEXT="confirmationstatus"/>
+      <FIELD NAME="confirmationstatus" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="synchvia" NEXT="timemodified"/>
+      <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="confirmationstatus" NEXT="timesynched"/>
+      <FIELD NAME="timesynched" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timemodified" />
+    </FIELDS>
+    <KEYS>
+      <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_id"/>
+    </KEYS>
+    <INDEXES>
+      <INDEX NAME="activityid" UNIQUE="false" FIELDS="activityid"/>
+    </INDEXES>
+  </TABLE>
 
-    <TABLE NAME="via_presence" COMMENT="Contains via info about participants' presence in activities" PREVIOUS="via_participants">
-      <FIELDS>
-        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="userid"/>
-        <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="activityid"/>
-        <FIELD NAME="activityid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="userid" NEXT="connection_duration"/>
-        <FIELD NAME="connection_duration" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="activityid" NEXT="playback_duration"/>
-        <FIELD NAME="playback_duration" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="connection_duration" NEXT="status"/>
-        <FIELD NAME="status" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="playback_duration" NEXT="timemodified"/>
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="status"/>
-      </FIELDS>
-      <KEYS>
-        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_id"/>
-      </KEYS>
-    </TABLE>
+  <TABLE NAME="via_presence" COMMENT="Contains via info about participants' presence in activities" PREVIOUS="via_participants">
+    <FIELDS>
+      <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="userid"/>
+      <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="activityid"/>
+      <FIELD NAME="activityid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="userid" NEXT="connection_duration"/>
+      <FIELD NAME="connection_duration" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="activityid" NEXT="playback_duration"/>
+      <FIELD NAME="playback_duration" TYPE="number" LENGTH="10" DECIMALS="2" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="connection_duration" NEXT="status"/>
+      <FIELD NAME="status" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="playback_duration" NEXT="timemodified"/>
+      <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="status"/>
+    </FIELDS>
+    <KEYS>
+      <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_id"/>
+    </KEYS>
+    <INDEXES>
+      <INDEX NAME="userid" UNIQUE="false" FIELDS="userid" NEXT="activityid"/>
+      <INDEX NAME="activityid" UNIQUE="false" FIELDS="activityid" PREVIOUS="userid"/>
+    </INDEXES>
+  </TABLE>
 
-  </TABLES>
+</TABLES>
 
 </XMLDB>

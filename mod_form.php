@@ -118,21 +118,22 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->addHelpButton('roomtype', 'roomtype', 'via');
 
         $qualityoptions = via_get_list_profils();
+        if ($qualityoptions) {
+            $mform->addElement('select', 'profilid', get_string('multimediaquality', 'via'), $qualityoptions);
+            $mform->setAdvanced('profilid', true);
 
-        $mform->addElement('select', 'profilid', get_string('multimediaquality', 'via'), $qualityoptions);
-        $mform->setAdvanced('profilid', true);
+            $qualitydefault = array_search(end($qualityoptions), $qualityoptions);
 
-        $qualitydefault = array_search(end($qualityoptions), $qualityoptions);
-
-        foreach ($qualityoptions as $key => $quality) {
-            if ($quality == "Qualité standard") {
-                $qualitydefault = $key;
+            foreach ($qualityoptions as $key => $quality) {
+                if ($quality == "Qualité standard") {
+                    $qualitydefault = $key;
+                }
             }
-        }
 
-        $mform->setDefault('profilid', $qualitydefault);
-        $mform->disabledif ('profilid', 'pastevent', 'eq', 1);
-        $mform->addHelpButton('profilid', 'multimediaquality', 'via');
+            $mform->setDefault('profilid', $qualitydefault);
+            $mform->disabledif ('profilid', 'pastevent', 'eq', 1);
+            $mform->addHelpButton('profilid', 'multimediaquality', 'via');
+        }
 
         // Session recordings!
         $recordoptions = array( 0 => get_string('notactivated', 'via'),

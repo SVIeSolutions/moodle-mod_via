@@ -269,10 +269,48 @@ function xmldb_via_upgrade($oldversion = 0) {
         upgrade_mod_savepoint($result, 2014120101, 'via');
     }
 
-    if ($oldversion < 2015012002) {
+    if ($oldversion < 2015012004) {
 
-        // Via savepoint reached.
-        upgrade_mod_savepoint($result, 2015012002, 'via');
+        $table = new xmldb_table('via');
+        $index = new xmldb_index('course', XMLDB_INDEX_NOTUNIQUE, array('course'));
+        // Conditionally launch add index.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        $table = new xmldb_table('via_users');
+        $index = new xmldb_index('userid', XMLDB_INDEX_NOTUNIQUE, array('userid'));
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        $table = new xmldb_table('via_participants');
+        $index = new xmldb_index('activityid', XMLDB_INDEX_NOTUNIQUE, array('activityid'));
+        // Conditionally launch add index.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        $table = new xmldb_table('via_presence');
+        $index = new xmldb_index('userid', XMLDB_INDEX_NOTUNIQUE, array('userid'));
+        // Conditionally launch add index.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+        $index = new xmldb_index('activityid', XMLDB_INDEX_NOTUNIQUE, array('activityid'));
+        // Conditionally launch add index.
+        if (!$dbman->index_exists($table, $index)) {
+            $dbman->add_index($table, $index);
+        }
+
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2015012004, 'via');
+    }
+    
+    if ($oldversion < 2015012006) {
+
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2015012006, 'via');
     }
 
 }

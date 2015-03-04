@@ -16,6 +16,8 @@
 
 /**
  *
+ * French language strings for the Via module
+ * 
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
@@ -74,7 +76,7 @@ $string['existinganimators'] = 'Animateurs actuels';
 $string['existingpresentator'] = 'Pr&eacute;sentateur actuel';
 $string['potentialparticipants'] = 'Participants potentiels';
 $string['potentialanimators'] = 'Animateurs potentiels';
-$string['potentialpresentator'] = 'Pr&eacute;sentateur potentiel';
+$string['potentialpresentator'] = 'Pr&eacute;sentateurs potentiels';
 $string['permanent'] = 'Activit&eacute; permanente';
 $string['permanent_help'] = 'Cocher l\'option &laquo; Permanente &raquo; afin de rendre votre activit&eacute; toujours accessible, sans date pr&eacute;cise. Vous serez alors dans l\'obligation d\'utiliser la salle d\'attente afin d\'en limiter l\'acc&egrave;s aux utilisateurs inscrits ayant le statut &laquo; participant &raquo;. ';
 $string['startdate'] = 'D&eacute;bute le ';
@@ -209,7 +211,7 @@ $string['participantsynchronizationdesc'] = 'Cette option permet de synchroniser
 $string['permanentactivities'] = 'Activit&eacute;s permanents';
 $string['permanentactivitiesdesc'] = 'Cochez cette case si vous d&eacute;sirez que vos utilisateurs puissent cr&eacute;er des activit&eacute;s permanentes (qui n\'ont pas de date de d&eacute;but et de fin).';
 $string['technicalassist_url'] = 'Sp&eacute;cifier une page d\'assistance technique';
-$string['technicalassist_urldesc'] = 'Par d&eacute;faut, la page d\'assistance technique affichera les informations fournies dans Via. Vous pouvez sp&eacute;cifier une page personnalis&eacute;e d’assistance en appelant directement l\'URL. Cela peut  &ecirc;tre une page cr&eacute;&eacute;e dans Moodle ou un autre site. ';
+$string['technicalassist_urldesc'] = 'Par d&eacute;faut, la page d\'assistance technique affichera les informations fournies dans Via. Vous pouvez sp&eacute;cifier une page personnalis&eacute;e d\'assistance en appelant directement l\'URL. Cela peut  &ecirc;tre une page cr&eacute;&eacute;e dans Moodle ou un autre site. ';
 $string['activitydeletion'] = 'Limiter la suppression d\'activit&eacute;';
 $string['activitydeletiondesc'] = 'Si cette case est coch&eacute;e, les activiti&eacute;s seront supprim&eacute;es dans Moodle, mais pas dans Via.';
 $string['versionscompatible'] = 'Les versions du module et de VIA sont compatible.';
@@ -348,7 +350,7 @@ $string['activity_deleted'] = 'L\'activit&eacute; Via a &eacute;t&eacute; suppri
 $string['noparticipantscheckbox'] = 'Ajouter les &eacute;tudiants comme animateurs.';
 $string['noparticipants_help'] = 'Cette option est disponible seulement en mode d\'inscription automatique et fait en sorte que les utilisateurs ayant le statut d\'&eacute;tudiant sont tous inscrits avec les droits d\'animateurs dans via.';
 $string['userispresentor'] = 'Cet utilisateur est le pr&eacute;sentateur. Veuillez d&eacute;signer un nouveau pr&eacute;sentateur afin de modifier le r&ocirc;le de cet utilisateur.';
-$string['choosepresentor'] = 'Un seul pr&eacute;sentateur peut &ecirc;tre associ&eacute; &agrave; l\'activit&eacute;. Pour choisir un nouveau pr&eacute;sentateur, simplement ajouter un utilisateur comme pr&eacute;sentateur. Il sera automatique substitu&eacute;.';
+$string['choosepresentor'] = 'Un seul pr&eacute;sentateur peut &ecirc;tre associ&eacute; &agrave; l\'activit&eacute;. Pour choisir un nouveau pr&eacute;sentateur, simplement ajouter un utilisateur comme pr&eacute;sentateur. Il sera automatiquement substitu&eacute;.';
 $string['mask'] = 'Cach&eacute;';
 $string['show'] = 'Affich&eacute;';
 $string['availabledate'] = 'Disponible d&egrave;s le';
@@ -358,7 +360,7 @@ $string['connectsuccess'] = 'Connexion &agrave; l\'API r&eacute;ussie avec succ&
 $string['conntest'] = 'Test de connexion';
 $string['oldapiversion'] = 'Vous utilisez une version anterieur &agrave; {$a} de l\'API';
 $string['activitywaserased'] = 'Impossible de trouver cette activit&eacute; sur le serveur SVI. Elle semble avoir &eacute;t&eacute; supprim&eacute;e.';
-$string['groupusers'] = 'Les utilisateurs du groupement associ&eacute; : {$a} ne peuvent pas &ecirc;tre dissocier de l\'activit&eacute;, mais vous pouvez en ajouter.';
+$string['groupusers'] = 'Les utilisateurs du groupement associ&eacute; : {$a} ne peuvent pas &ecirc;tre dissoci&eacute;s de l\'activit&eacute;, mais vous pouvez en ajouter.';
 $string['presencetable'] = 'Statut de pr&eacute;sence : ';
 $string['presenceheader'] = 'Pr&eacute;sence en direct (h:m:s)';
 $string['presenceheaderreport'] = 'Pr&eacute;sence en direct';

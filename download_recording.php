@@ -30,6 +30,7 @@ require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/via/lib.php');
 
 $id = required_param('id', PARAM_INT);
+$fa = optional_param('fa', null, PARAM_INT);
 $recordtype = required_param('type', PARAM_INT);
 $playbackid = required_param('playbackid', PARAM_TEXT);// Edit via recording.
 
@@ -46,7 +47,12 @@ require_login($course, false, $cm);
 $context = context_module::instance($cm->id);
 $PAGE->set_url('/mod/via/view.php', array('id' => $id));
 
-$viauser = $DB->get_record('via_users', array('userid' => $USER->id));
+if ($fa) {
+    $vuserid = get_config('via', 'via_adminid');
+} else {
+    $viauser = $DB->get_record('via_users', array('userid' => $USER->id));
+    $vuserid = $viauser->viauserid;
+}
 
 $api = new mod_via_api();
 

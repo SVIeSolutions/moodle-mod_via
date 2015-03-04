@@ -468,23 +468,22 @@ function via_get_confirmationstatus($status) {
  * @return obejct list of profiles
  */
 function via_get_list_profils() {
-    $result = true;
 
     $api = new mod_via_api();
 
     try {
-        $response = $api->list_profils();
-    } catch (Exception $e) {
-        $result = false;
-        notify(get_string("error:".$e->getMessage(), "via"));
-    }
-    $profil = array();
-    foreach ($response['Profil'] as $info) {
-        if (isset($info['ProfilID'])) {
-            $profil[$info['ProfilID']] = $info['ProfilName'];
+            $response = $api->list_profils();
+        } catch (Exception $e) {
+            $result = false;
+            notify(get_string("error:".$e->getMessage(), "via"));
         }
+        $profil = array();
+        foreach ($response['Profil'] as $info) {
+            if (isset($info['ProfilID'])) {
+                $profil[$info['ProfilID']] = $info['ProfilName'];
+            }
 
-    }
+        }
     return $profil;
 }
 
@@ -956,41 +955,43 @@ function via_get_playbacks_table($playbacks, $via, $context) {
             }
 
             if (get_config('via', 'via_downloadplaybacks')) {
-                if ($playback->isdownloadable) {
-                    $privaterecord = "";
-                } else {
-                    if (has_capability('mod/via:manage', $context)) {
-                        $privaterecord = "dimmed_text";
+                    if ($playback->isdownloadable) {
+                        $privaterecord = "";
                     } else {
-                        $privaterecord = "hide";
+                        if (has_capability('mod/via:manage', $context)) {
+                            $privaterecord = "dimmed_text";
+                            $fa = '&fa=1';
+                        } else {
+                            $privaterecord = "hide";
+                            $fa = '';
+                        }
                     }
-                }
 
-                $table .= "<td class='download nowrap $private $privaterecord'>";
+                    $table .=  "<td class='download nowrap $private $privaterecord'>";
 
-                if ($playback->hasfullvideo == 1) {
-                    $table .= '<a class="download" href="download_recording.php?id='.$cmid.'&type=1&playbackid='.
+                    if ($playback->hasfullvideo == 1) {
+                        $table .=  '<a class="download" href="download_recording.php?id='.$cmid.$fa.'&type=1&playbackid='.
                         urlencode($key).'" title="'. get_string('fullvideoinfo', 'via') .'">'.
                         get_string('fullvideo', 'via') .'</a><br/>';
-                } else {
-                    $table .= '<span class="dimmed_text">'.get_string('fullvideo', 'via').'</span><br/>';
-                }
-                if ($playback->hasmobilevideo == 1) {
-                    $table .= '<a class="download" href="download_recording.php?id='.$cmid.'&type=2&playbackid='.
+                    } else {
+                        $table .= '<span class="dimmed_text">'.get_string('fullvideo', 'via').'</span><br/>';
+                    }
+                    if ($playback->hasmobilevideo == 1) {
+                        $table .=  '<a class="download" href="download_recording.php?id='.$cmid.$fa.'&type=2&playbackid='.
                         urlencode($key).'" title="'. get_string('mobilevideoinfo', 'via') .'">'.
                         get_string('mobilevideo', 'via') .'</a><br/>';
-                } else {
-                    $table .= '<span class="dimmed_text">'. get_string('mobilevideo', 'via').'</span><br/>';
-                }
-                if ($playback->hasaudiorecord == 1) {
-                    $table .= '<a class="download" href="download_recording.php?id='.$cmid.'&type=3&playbackid='.
+                    } else {
+                        $table .= '<span class="dimmed_text">'. get_string('mobilevideo', 'via').'</span><br/>';
+                    }
+                    if ($playback->hasaudiorecord == 1) {
+                        $table .=  '<a class="download" href="download_recording.php?id='.$cmid.$fa.'&type=3&playbackid='.
                         urlencode($key).'" title="'. get_string('audiorecordinfo', 'via') .'">'.
                         get_string('audiorecord', 'via') .'</a>';
-                } else {
-                    $table .= '<span class="dimmed_text">'.get_string('audiorecord', 'via').'</span><br/>';
-                }
+                    } else {
+                        $table .= '<span class="dimmed_text">'.get_string('audiorecord', 'via').'</span><br/>';
+                    }
 
-                $table .= "</td>";
+                $table .=  "</td>";
             }
 
             $table .= "<td class='review $private'>";
@@ -1284,7 +1285,7 @@ function via_add_button($recordingmode, $active = null, $cmid = null, $preperati
             $class = "active hide";
             $url = '/mod/via/view.via.php?id='. $cmid . $fa;
             $script = 'target="viaaccess" onclick="this.target=\'viaaccess\';
-            return openpopup(null, {url:\''.$url.'\', name:\'viaaccess\', options:\'menubar=0,location=0,scrollbars\'});"';
+            return openpopup(null, {url:\''.$url.'\', name:\'viaaccess\', options:\'menubar=0,location=0,,resizable=1,scrollbars\'});"';
         } else {
             $id = 'id="inactive"';
             $class = "inactive";
@@ -1296,7 +1297,7 @@ function via_add_button($recordingmode, $active = null, $cmid = null, $preperati
         $class = '';
         $url = '/mod/via/view.via.php?id='. $cmid . $fa;
         $script = 'target="viaaccess" onclick="this.target=\'viaaccess\';
-        return openpopup(null, {url:\''.$url.'\', name:\'viaaccess\', options:\'menubar=0,location=0,scrollbars\'});"';
+        return openpopup(null, {url:\''.$url.'\', name:\'viaaccess\', options:\'menubar=0,location=0,,resizable=1,scrollbars\'});"';
     }
     if ($preperation) {
         $text = get_string("prepareactivity", "via");

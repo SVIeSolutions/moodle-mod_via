@@ -27,7 +27,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015012002;// Needs API version 6.5 or greater!
+$plugin->version = 2015012006;// Needs API version 6.5 or greater!
 
 $plugin->component = 'mod_via';
 $plugin->requires = 2014050800; // Moodle2.7!

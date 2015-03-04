@@ -548,25 +548,28 @@ function via_access_activity($via) {
     $participant = $DB->get_record('via_participants', array('userid' => $USER->id, 'activityid' => $via->id));
 
     if ($participant || $via->enroltype == 0) {// If automatic enrol!
-        if ((time() >= ($via->datebegin - (30 * 60))
-                && time() <= ($via->datebegin + ($via->duration * 60) + 60))
-            || $via->activitytype == 2) {
-            // If activity is hapening right now, show link to the activity.
-            return 1;
-
-        } else if (time() < $via->datebegin) {
-            // Activity hasn't started yet.
-            if ($participant->participanttype > 1) {
-                // If participant, user can't access activity.
-                return 2;
-            } else {
-                // If participant is animator or presentator, show link to prepare activity.
-                return 3;
-            }
-
+         if (!$participant && has_capability('moodle/site:approvecourse',  context_system::instance() )) {
+                return 7;
         } else {
-            // Activity is done. Must verify if there are any recordings of if.
-            return 5;
+            if ((time() >= ($via->datebegin - (30 * 60))
+                    && time() <= ($via->datebegin + ($via->duration * 60) + 60))
+                || $via->activitytype == 2) {
+                // If activity is hapening right now, show link to the activity.
+                return 1;
+            } else if (time() < $via->datebegin) {
+                // Activity hasn't started yet.
+                if ($participant->participanttype > 1) {
+                    // If participant, user can't access activity.
+                    return 2;
+                } else {
+                    // If participant is animator or presentator, show link to prepare activity.
+                    return 3;
+                }
+
+            } else {
+                // Activity is done. Must verify if there are any recordings of if.
+                return 5;
+            }
         }
     } else {
         if (has_capability('moodle/site:approvecourse',  context_system::instance() )) {
