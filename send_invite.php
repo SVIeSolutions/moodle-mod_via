@@ -27,6 +27,8 @@
 
 require_once("../../config.php");
 require_once("lib.php");
+require_once(get_vialib());
+
 global $DB;
 
 $id    = required_param('id', PARAM_INT);// VIA!
@@ -45,7 +47,7 @@ if (! $cm = get_coursemodule_from_instance("via", $via->id, $course->id)) {
 
 require_login($course->id, false, $cm);
 
-$context = context_module::instance($cm->id);
+$context = via_get_module_instance($cm->id);
 
 if (!has_capability('mod/via:manage', $context)) {
     print_error('You do not have the permission to send invites');

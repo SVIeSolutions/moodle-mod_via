@@ -30,6 +30,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot .'/mod/via/locallib.php');
 require_once($CFG->dirroot .'/mod/via/api.class.php');
 require_once($CFG->dirroot .'/calendar/lib.php');
+require_once(get_vialib());
 
 /**
  * Return the list if Moodle features this module supports
@@ -111,7 +112,7 @@ function via_add_instance($via) {
             }
         }
 
-        $context = context_course::instance($via->course);
+        $context = via_get_course_instance($via->course);
         $query = null;
 
         if ($via->enroltype == 0 && $via->groupingid == 0) {// If automatic enrol.
@@ -213,26 +214,26 @@ function via_update_instance($via) {
 
     // Update enrollements.
     // We add users!
-    $context = context_course::instance($via->course);
+    $context = via_get_course_instance($via->course);
     $query = null;
     $queryoldusers = null;
 
     if ($viaactivity->enroltype != $via->enroltype ||
         $viaactivity->noparticipants != $via->noparticipants &&
         $via->enroltype == 0 && $via->groupingid == 0) {
-        // If automatic enrol.
-        $query = 'select a.id as rowid, a.*, u.* from {role_assignments} a, {user} u
+            // If automatic enrol.
+            $query = 'select a.id as rowid, a.*, u.* from {role_assignments} a, {user} u
                   where contextid=' . $context->id . ' and a.userid=u.id';
 
     } else if ($via->groupingid != 0) {
         if ($viaactivity->groupingid != $via->groupingid) {
 
-            $query = 'SELECT u.* FROM {groupings_groups} gg
+                $query = 'SELECT u.* FROM {groupings_groups} gg
                     LEFT JOIN {groups_members} gm ON gm.groupid = gg.groupid
                     LEFT JOIN {user} u ON u.id = gm.userid
                     WHERE gg.groupingid = '.$via->groupingid.'';
 
-            $queryoldusers = 'SELECT u.* FROM {groupings_groups} gg
+                $queryoldusers = 'SELECT u.* FROM {groupings_groups} gg
                             LEFT JOIN {groups_members} gm ON gm.groupid = gg.groupid
                             LEFT JOIN {user} u ON u.id = gm.userid
                             WHERE gg.groupingid = '.$viaactivity->groupingid.'';
@@ -447,8 +448,12 @@ function via_add_participant($userid, $viaid, $type, $callvia = null, $confirmat
         if ($callvia) {
             try {
                 $response = $api->add_user_activity($sub);
-                $sub->synchvia = 1;
-                $sub->timesynched = time();
+                if ($response != false) {
+                    $sub->synchvia = 1;
+                    $sub->timesynched = time();
+                } else {
+                    return false;
+                }
             } catch (Exception $e) {
                 return false;
             }
@@ -524,8 +529,8 @@ function via_remove_participant($userid, $viaid, $synched = null) {
 function via_get_is_user_presentator($userid, $activityid) {
     global $DB;
 
-        $presentator = $DB->count_records('via_participants',
-                                          array('userid' => $userid, 'activityid' => $activityid, 'participanttype' => 2));
+    $presentator = $DB->count_records('via_participants',
+        array('userid' => $userid, 'activityid' => $activityid, 'participanttype' => 2));
     if ($presentator >= 1) {
         return true;
     }
@@ -548,8 +553,8 @@ function via_access_activity($via) {
     $participant = $DB->get_record('via_participants', array('userid' => $USER->id, 'activityid' => $via->id));
 
     if ($participant || $via->enroltype == 0) {// If automatic enrol!
-         if (!$participant && has_capability('moodle/site:approvecourse',  context_system::instance() )) {
-                return 7;
+        if (!$participant && has_capability('moodle/site:approvecourse', via_get_system_instance())) {
+            return 7;
         } else {
             if ((time() >= ($via->datebegin - (30 * 60))
                     && time() <= ($via->datebegin + ($via->duration * 60) + 60))
@@ -558,12 +563,12 @@ function via_access_activity($via) {
                 return 1;
             } else if (time() < $via->datebegin) {
                 // Activity hasn't started yet.
-                if ($participant->participanttype > 1) {
+                if ($participant->participanttype == 1) {
                     // If participant, user can't access activity.
-                    return 2;
+                    return 3;
                 } else {
                     // If participant is animator or presentator, show link to prepare activity.
-                    return 3;
+                    return 2;
                 }
 
             } else {
@@ -572,7 +577,7 @@ function via_access_activity($via) {
             }
         }
     } else {
-        if (has_capability('moodle/site:approvecourse',  context_system::instance() )) {
+        if (has_capability('moodle/site:approvecourse', via_get_system_instance())) {
             return 7;
         } else {
             return 6;
@@ -607,7 +612,7 @@ function via_print_overview($courses, &$htmlarray) {
         if (($via->datebegin + ($via->duration * 60) >= $now && ($via->datebegin - (30 * 60)) < $now) || $via->activitytype == 2) {
             // Give a link to via.
             $str = '<div class="via overview"><div class="name"><img src="'.$CFG->wwwroot.'/mod/via/pix/icon.gif"
-            "class="icon" alt="'.$strvia.'">';
+        "class="icon" alt="'.$strvia.'">';
 
             $str .= '<a ' . ($via->visible ? '' : ' class="dimmed"') .
             ' href="' . $CFG->wwwroot . '/mod/via/view.php?id=' . $via->coursemodule . '">' .
@@ -664,28 +669,124 @@ function via_grade_item_delete($via) {
  * @return bool $result sucess/fail
  */
 function via_cron() {
-    global $CFG;
+    global $CFG, $DB;
     $result = true;
-    echo 'via';
 
-    echo "\n";
-    $result = via_send_reminders() && $result;
+    $viacron = $DB->get_records('via_cron');
+    $update = '';
 
-    echo "\n";
-    $result = via_send_invitations() && $result;
+    foreach ($viacron as $function) {
+        $lastcron = $function->lastcron;
 
-    echo "\n";
-    $result = via_add_enrolids() && $result;
+        if (($function->cron + $lastcron) < time()) {
+            if ($function->name == 'via_send_reminders') {
+                echo "\n";
+                $result = via_send_reminders() && $result;
+                if ($result) {
+                    $update .= 'id=' . $function->id;
+                }
 
-    echo "synching users \n";
-    $result = via_synch_users() && $result;
+            } else if ($function->name == 'via_send_invitations') {
+                echo "\n";
+                $result = via_send_invitations() && $result;
+                if ($result) {
+                    if ($update == '') {
+                        $update .= 'id=' . $function->id;
+                    } else {
+                        $update .= ' OR id=' . $function->id;
+                    }
+                }
 
-    echo "synching participants \n";
-        $result = via_synch_participants() && $result;
+            } else if ($function->name == 'via_add_enrolids') {
+                echo "add enrolids \n";
+                $result = via_add_enrolids() && $result;
+                if ($result) {
+                    if ($update == '') {
+                        $update .= 'id=' . $function->id;
+                    } else {
+                        $update .= ' OR id=' . $function->id;
+                    }
+                }
 
-    if (get_config('via', 'via_categories')) {
-        echo "check categories \n";
-            $result = via_check_categories() && $result;
+            } else if ($function->name == 'via_synch_users') {
+                echo "synching users \n";
+                $result = via_synch_users() && $result;
+                if ($result) {
+                    if ($update == '') {
+                        $update .= 'id=' . $function->id;
+                    } else {
+                        $update .= ' OR id=' . $function->id;
+                    }
+                }
+
+            } else if ($function->name == 'via_synch_participants') {
+                echo "synching participants \n";
+                $result = via_synch_participants() && $result;
+                if ($result) {
+                    if ($update == '') {
+                        $update .= 'id=' . $function->id;
+                    } else {
+                        $update .= ' OR id=' . $function->id;
+                    }
+                }
+
+            } else if ($function->name == 'via_check_categories') {
+                if (get_config('via', 'via_categories')) {
+                    echo "check categories \n";
+                    $result = via_check_categories() && $result;
+                    if ($result) {
+                        if ($update == '') {
+                            $update .= 'id=' . $function->id;
+                        } else {
+                            $update .= ' OR id=' . $function->id;
+                        }
+                    }
+                }
+
+            } else if ($function->name == 'via_send_export_notice') {
+                echo "send export notice \n";
+                if ($lastcron == 0) {
+                    $lastcron = time();
+                }
+                $result = via_send_export_notice($lastcron) && $result;
+                if ($result) {
+                    if ($update == '') {
+                        $update .= 'id=' . $function->id;
+                    } else {
+                        $update .= ' OR id=' . $function->id;
+                    }
+                }
+
+            } else if ($function->name == 'via_get_list_profils') {
+                echo "update multi media quality profiles \n";
+                $result = via_get_list_profils() && $result;
+                if ($result) {
+                    if ($update == '') {
+                        $update .= 'id=' . $function->id;
+                    } else {
+                        $update .= ' OR id=' . $function->id;
+                    }
+                }
+            } else if ($function->name == 'via_get_cieinfo') {
+                echo "update via version options \n";
+                $result = via_get_cieinfo() && $result;
+                if ($result) {
+                    if ($update == '') {
+                        $update .= 'id=' . $function->id;
+                    } else {
+                        $update .= ' OR id=' . $function->id;
+                    }
+                }
+            }
+        }
+    }
+
+    try {
+        if ($update) {
+            $updated = $DB->execute('UPDATE {via_cron} SET lastcron='.time().' WHERE ' . $update);
+        }
+    } catch (Exception $e) {
+        echo $e->getMessage();
     }
 
     return $result;
@@ -705,11 +806,11 @@ function via_add_enrolids() {
     if ($participants) {
         foreach ($participants as $participant) {
             $enrolid = $DB->get_record_sql('SELECT e.id FROM {via_participants} vp
-                                left join {via} v ON vp.activityid = v.id
-                                left join {enrol} e ON v.course = e.courseid
-                                left join {user_enrolments} ue ON ue.enrolid = e.id AND ue.userid = vp.userid
-                                where vp.userid = '.$participant->userid.' and
-                                vp.activityid = '.$participant->activityid.' AND ue.id is not null');
+                            left join {via} v ON vp.activityid = v.id
+                            left join {enrol} e ON v.course = e.courseid
+                            left join {user_enrolments} ue ON ue.enrolid = e.id AND ue.userid = vp.userid
+                            where vp.userid = '.$participant->userid.' and
+                            vp.activityid = '.$participant->activityid.' AND ue.id is not null');
             try {
                 if ($enrolid) {
                     $DB->set_field('via_participants', 'enrolid', $enrolid->id, array('id' => $participant->id));
@@ -802,11 +903,11 @@ function via_send_reminders() {
     return $result;
 }
 
- /**
-  * Gets all activity that need reminders to ben sent
-  *
-  * @return object $reminders - which inclued the user's and activity's information.
-  */
+/**
+ * Gets all activity that need reminders to ben sent
+ *
+ * @return object $reminders - which inclued the user's and activity's information.
+ */
 function via_get_reminders() {
     global $CFG, $DB;
     $now = time();
@@ -821,13 +922,13 @@ function via_get_reminders() {
     return $reminders;
 }
 
-  /**
-   * Sends reminders with moodle
-   *
-   * @param object $r via object
-   * @param object $user user to send reminder
-   * @return bool $result sucess/fail
-   */
+/**
+ * Sends reminders with moodle
+ *
+ * @param object $r via object
+ * @param object $user user to send reminder
+ * @return bool $result sucess/fail
+ */
 function via_send_moodle_reminders($r, $muser, $from) {
     global $CFG, $DB;
 
@@ -863,7 +964,7 @@ function via_send_moodle_reminders($r, $muser, $from) {
 
     $bodyhtml = utf8_encode(get_string('reminderemailhtml', 'via', $a));
 
-        $bodyhtml = via_make_invitation_reminder_mail_html($r->course, $r, $muser, true);
+    $bodyhtml = via_make_invitation_reminder_mail_html($r->course, $r, $muser, true);
 
     if (!isset($user->emailstop) || !$user->emailstop) {
         if (true !== email_to_user($muser, $from, $subject, $body, $bodyhtml)) {
@@ -909,7 +1010,7 @@ function via_send_invitations() {
     foreach ($invitations as $i) {
 
         $muser = $DB->get_record('user', array('id' => $i->userid));
-            $from = via_get_presenter($i->activityid);
+        $from = via_get_presenter($i->activityid);
 
         if (!$muser) {
             echo "User with ID {$i->userid} doesn't exist?!\n";
@@ -925,6 +1026,57 @@ function via_send_invitations() {
             $result = false;
             continue;
         }
+    }
+
+    return $result;
+}
+
+/**
+ * Called by the cron job to send export notices
+ *
+ * @return bool $result sucess/fail
+ */
+function via_send_export_notice($lastcron) {
+    global $CFG, $DB;
+    // If anything fails, we'll keep going but we'll return false at the end.
+    $result = true;
+
+    $api = new mod_via_api();
+    $notices = $api->get_notices($lastcron);
+
+    if (!$notices['ExportList']) {
+            echo "    No export noticies need to be sent.\n";
+            return true;
+    } else {
+        $notices = $notices['ExportList']['Export'];
+    }
+
+    foreach ($notices as $i) {
+
+        if (isset($i['UserID'])) {
+                $muser = $DB->get_record_sql('SELECT u.* FROM {via_users} vu
+                                        LEFT JOIN {user} u ON vu.userid = u.id
+                                        WHERE vu.viauserid =\'' . $i['UserID'].'\'');
+
+            if (!$muser) {
+                echo "User with Via user ID {$i['UserID']} doesn't exist?!\n";
+                continue;
+            }
+            $activity = $DB->get_record('via', array('viaactivityid' => $i['ActivityID']));
+            if (!$activity) {
+                echo "Activity with Via activity ID {$i['ActivityID']} doesn't exist?!\n";
+                continue;
+            }
+
+            // Send notice.
+            try {
+                $result = via_send_notices($i, $muser, $activity);
+            } catch (Exception $e) {
+                notify(get_string("error:".$e->getMessage(), "via"));
+                continue;
+            }
+        }
+
     }
 
     return $result;
@@ -1012,6 +1164,62 @@ function via_send_moodle_invitations($i, $user, $from) {
 }
 
 /**
+ * Sends export notices
+ *
+ * @param object $i via object
+ * @param object $muser user to send reminder
+ * @return bool $result sucess/fail
+ */
+function via_send_notices($i, $muser, $activity) {
+    global $CFG, $DB, $SITE;
+
+    $course = $DB->get_record('course', array('id' => $activity->course));
+    if (! $cm = get_coursemodule_from_instance("via", $activity->id, $activity->course)) {
+        $cm->id = 0;
+    }
+    if ($i['RecordingType'] == 1) {
+        $type = get_string('fullvideo', 'via');
+    } else if ($i['RecordingType'] == 2) {
+        $type = get_string('mobilevideo', 'via');
+    } else {
+        $type = get_string('audiorecord', 'via');
+    }
+
+    $from = $SITE->fullname;
+
+    // Recipient is self!
+    $result = true;
+    $a = new stdClass();
+    $a->username = fullname($muser);
+    $a->playbacktitle = $i['PlaybackTitle'];
+    $a->date = userdate(strtotime($i['ExportEndDate']), '%d %B, %H:%M');
+    $a->type = $type;
+    $a->activitytitle = $activity->name;
+    $a->coursename = $course->shortname;
+    $a->modulename = get_string('modulename', 'via');
+    $a->activitylink = $CFG->wwwroot.'/mod/via/view.php?id='.$cm->id;
+    $a->cmid = $cm->id;
+    $a->courseid = $course->id;
+
+    // Fetch the subject and body from strings.
+    $subject = get_string('noticeemailsubject', 'via');
+
+    $body = get_string('noticeemail', 'via', $a);
+
+    $bodyhtml = via_make_notice_mail_html($a, $muser);
+
+    if (!isset($muser->emailstop) || !$muser->emailstop) {
+        if (true !== email_to_user($muser, $from, $subject, $body, $bodyhtml)) {
+            echo "    Could not send email to <{$muser->email}> (unknown error!)\n";
+        } else {
+            echo "    An export notice was sent to " . $muser->firstname ." " . $muser->lastname . " " .$muser->email. "\n";
+        }
+    }
+
+    return $result;
+}
+
+/**
  * gets all activity that need invitations to ben sent
  *
  * @return object $invitations - which inclues the user's and activity information
@@ -1021,16 +1229,15 @@ function via_get_invitations() {
     $now = time();
 
     $sql = "SELECT p.id, p.userid, p.activityid, v.name, v.course, v.datebegin,
-            v.duration, v.viaactivityid, v.invitemsg, v.activitytype
-            FROM {via_participants} p
-            INNER JOIN {via} v ON p.activityid = v.id
-            WHERE v.sendinvite = 1";
+        v.duration, v.viaactivityid, v.invitemsg, v.activitytype
+        FROM {via_participants} p
+        INNER JOIN {via} v ON p.activityid = v.id
+        WHERE v.sendinvite = 1";
 
     $invitations = $DB->get_records_sql($sql);
 
     return $invitations;
 }
-
 
 /**
  * Adds the necessary elements to the course reset form (called by course/reset.php)
@@ -1057,7 +1264,7 @@ function via_reset_course_form_definition(&$mform) {
 function via_reset_userdata($data) {
     global $COURSE, $CFG;
 
-    $context = context_course::instance($COURSE->id);
+    $context = via_get_course_instance($COURSE->id);
     $vias = get_all_instances_in_course('via', $COURSE);
 
     $status = array();
@@ -1146,7 +1353,7 @@ function via_remove_participants($vias) {
     foreach ($vias as $via) {
         // Unenrol all participants on VIA server only if we do not delete activity on VIA, since this activity was backuped.
         $participants = $DB->get_records_sql("SELECT * FROM {via_participants}
-                                              WHERE activityid=$via->id AND participanttype != 2");
+                                            WHERE activityid=$via->id AND participanttype != 2");
         foreach ($participants as $participant) {
             if (!via_remove_participant($participant->userid, $via->id)) {
                 $result = false;
@@ -1221,6 +1428,22 @@ function via_set_participant_confirmationstatus($viaid, $present) {
         }
     }
     return $result;
+}
+
+/**
+ * Inserts correct document for moodle version
+ * This document calls functions that have been changed depending on the moodle version.
+ * 
+ * @returns string of document name
+ */
+function get_vialib() {
+    global $CFG;
+
+    if ($CFG->version < 2014051200) {
+        return $CFG->dirroot.'/mod/via/vialib/version24.php';
+    } else {
+        return $CFG->dirroot.'/mod/via/vialib/version27.php';
+    }
 }
 
 require_once($CFG->dirroot.'/lib/formslib.php');

@@ -32,19 +32,21 @@ $PAGE->requires->js('/mod/via/javascript/list.js');
 
 global $CFG, $DB;
 
+$save = optional_param('save', null, PARAM_TEXT);
+$category = optional_param('category', array(), PARAM_RAW);
+$isdefault = optional_param('isdefault', null, PARAM_INT);
+
 require_login();
 
 if ($site = get_site()) {
     if (function_exists('require_capability')) {
-        require_capability('moodle/site:config', context_system::instance());
+        require_capability('moodle/site:config', via_get_system_instance());
     } else if (!isadmin()) {
         error("You need to be admin to use this page");
     }
 }
 
-$PAGE->set_context(context_system::instance());
-
-$site = get_site();
+$PAGE->set_context(via_get_system_instance());
 
 // Initialize $PAGE.
 $PAGE->set_url('/mod/via/choosecategories.php');
@@ -58,7 +60,7 @@ echo $OUTPUT->box_start('center', '100%');
 
 $viacatgeories = via_get_categories();
 
-if (empty($_POST)) {
+if (!$save) {
     $none = '';
     $i = 0;
     $existingcats = $DB->get_records('via_categories');
@@ -125,9 +127,9 @@ if (empty($_POST)) {
 } else {
     $message = '';
 
-    if (isset($_POST['save'])) {
-        if (isset($_POST['category'])) {
-            $chosencategories = $_POST['category'];
+    if ($save) {
+        if ($category) {
+            $chosencategories = $category;
         } else {
             $chosencategories = array('0');
         }
@@ -141,14 +143,14 @@ if (empty($_POST)) {
                 }
             }
         }
-        if (isset($_POST['category'])) {
-            foreach ($_POST['category'] as $value) {
+        if ($category) {
+            foreach ($category as $value) {
                 $value = explode('$', $value);
 
                 $category           = new stdclass();
                 $category->id_via   = $value[0];
                 $category->name     = $value[1];
-                if ($_POST['isdefault'] == $value[0]) {
+                if ($isdefault == $value[0]) {
                     $category->isdefault = '1';
                 } else {
                     $category->isdefault = '0';

@@ -1,9 +1,16 @@
 
 This file defines the changes made to Via - Virtual teaching
 
-last update 04/03/2015 (2015012005)
-- correction in via_get_list_profils() if no connexion information is provided.
-- correction in playback is downloadable, a modification was also made in via.
+last update 01/05/2015 (2015050100)
+- new tables were created for storing API information to call Via less often.
+- functions were added in the cron to call these new functions at varying intervals 
+and may be modified depending on the needs of the client.
+- a new option was added in the activity creation to chose the type of acivity that is to be created; 
+Via 6 or the most recent version of Via
+- a new option was added in the activity creation to chose whether or not to display the user list in a webinare.
+- an email will be sent automatically to the user who exported a recording once the export is ready to be downloaded.
+- certain moodle functions were taken out of the code in order to be called depending on the moodle version, 
+this will help have less plugin versions in the long term.
 
 last update 20/01/2015 (2015012004)
 - Indexes were corrected in the install page.

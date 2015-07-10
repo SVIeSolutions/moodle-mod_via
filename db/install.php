@@ -34,5 +34,20 @@ defined('MOODLE_INTERNAL') || die;
  *
  */
 function xmldb_via_install() {
-    global $CFG;
+    global $CFG, $DB;
+
+    $functions = array();
+    $functions[] = array('name' => 'via_send_reminders', 'cron' => '600', 'lastcron' => 0);
+    $functions[] = array('name' => 'via_send_invitations', 'cron' => '600', 'lastcron' => 0);
+    $functions[] = array('name' => 'via_add_enrolids', 'cron' => '2400', 'lastcron' => 0);
+    $functions[] = array('name' => 'via_synch_users', 'cron' => '1200', 'lastcron' => 0);
+    $functions[] = array('name' => 'via_synch_participants', 'cron' => '1200', 'lastcron' => 0);
+    $functions[] = array('name' => 'via_check_categories', 'cron' => '43200', 'lastcron' => 0); // Once every 12 hours!
+    $functions[] = array('name' => 'via_send_export_notice', 'cron' => '1200', 'lastcron' => 0);
+    $functions[] = array('name' => 'via_get_list_profils', 'cron' => '43200', 'lastcron' => 0); // Once every 12 hours!
+    $functions[] = array('name' => 'via_get_cieinfo', 'cron' => '43200', 'lastcron' => 0); // Once every 12 hours!
+
+    foreach ($functions as $function) {
+        $DB->insert_record('via_cron', $function);
+    }
 }

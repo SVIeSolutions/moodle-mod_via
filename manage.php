@@ -26,9 +26,9 @@
  */
 
 require_once("../../config.php");
-require_once($CFG->dirroot.'/mod/via/lib.php');
-
 global $CFG, $DB;
+require_once($CFG->dirroot.'/mod/via/lib.php');
+require_once(get_vialib());
 
 $id    = required_param('id', PARAM_INT);// Via!
 $group = optional_param('group', 0, PARAM_INT);// Change of group.
@@ -51,7 +51,7 @@ if ($via->noparticipants == "1" && $participanttype == "1") {
 
 require_login($course, false, $cm); // Check in other version of Moodle if this will work!
 
-$context = context_module::instance($cm->id);
+$context = via_get_module_instance($cm->id);
 $PAGE->set_context($context);
 
 // Show some info for guests!
@@ -200,10 +200,13 @@ if ($via->enroltype == 0 && $participanttype == 1) {
                     if ($added === 'presenter') {
                         echo "<div style='text-align:center; margin-top:0;' class='error'><h3>".
                             get_string('userispresentor', 'via') ."</h3></div>";
+                    } else if ($added == false) {
+                        echo '<div class="alert alert-block alert-info">'.
+                            get_string('error_user', 'via', '').'</div>';
                     }
                 } catch (Exception $e) {
                     echo '<div class="alert alert-block alert-info">'.
-                        get_string('error_user', 'via', $muser->firstname.' '.$muser->lastname).'</div>';
+                        get_string('error_user', 'via', '').'</div>';
                 }
                 $count ++;
             }
@@ -214,7 +217,7 @@ if ($via->enroltype == 0 && $participanttype == 1) {
                     try {
                         via_add_participant($removesubscriber, $via->id, 1, true);
                     } catch (Exception $e) {
-                        echo get_string('error:'.$e->getMessage(), 'via') . $muser->firstname.' '.$muser->lastname;
+                        echo get_string('error:'.$e->getMessage(), 'via');
                     }
                 } else {
                     try {

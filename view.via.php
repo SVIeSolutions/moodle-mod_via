@@ -27,6 +27,7 @@
 
 require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/via/lib.php');
+require_once(get_vialib());
 
 global $DB, $USER;
 
@@ -63,7 +64,7 @@ if (! $course = $DB->get_record('course', array('id' => $cm->course))) {
 
 require_login($course, false, $cm);
 
-$context = context_module::instance($cm->id);
+$context = via_get_module_instance($cm->id);
 $PAGE->set_url('/mod/via/view.php', array('id' => $id));
 $PAGE->set_context($context);
 
@@ -85,7 +86,7 @@ $api = new mod_via_api();
 // Otherwise we check if he is in the activity if he isn't we add him.
 
 $viaparticipant = $DB->get_record('via_participants', array('userid' => $USER->id, 'activityid' => $via->id));
-if (!has_capability('moodle/site:approvecourse', context_system::instance())) {
+if (!has_capability('moodle/site:approvecourse', via_get_system_instance())) {
     // Only users with a lower role are added.
     if (isset($viaparticipant->synchvia) && $viaparticipant->synchvia == 1) {
         $connexion = true;
@@ -128,15 +129,11 @@ try {
     }
 
     if ($response) {
-
-        $eventdata = array(
-            'objectid' => $via->id,
-            'context' => $context
-            );
-        $event = \mod_via\event\course_module_viewed::create($eventdata);
-        $event->add_record_snapshot('course_modules', $cm);
-        $event->add_record_snapshot('course', $course);
-        $event->trigger();
+        if (!$review) {
+            via_accessed_log($via, $context);
+        } else {
+            via_playback_viewed_log($via, $context, $course, $playbackid);
+        }
 
         redirect($response);
 

@@ -36,9 +36,7 @@ This tool allows you to manage sub-work-groups, annotations, screen sharing, imp
 
 The \'Participant enrolments\' options allow you to manually enroll participants or automatically synchronize them according to their Moodle rights by selecting the option \'Automatic enrolment\'.
 
-The \'Session parameters\' allow you to set the recording mode you wish and select the availability of these to your learners.
-
-Note: Editing and modifying recordings must be made in the Via environment.';
+The \'Session parameters\' allow you to set the recording mode you wish and select the availability of these to your learners.';
 $string['recentrecordings'] = 'Recent recordings';
 $string['audiomodelabel'] = 'Audio type for the conference';
 $string['portalaccess'] = 'Via portal access.';
@@ -50,6 +48,7 @@ $string['noparticipants'] = 'There are no participants yet for this activity.';
 $string['noanimators'] = 'There are no animators yet for this activity.';
 $string['subscribeparticipants'] = 'Participants subscription';
 $string['gotoactivity'] = 'Click here to access the activity';
+$string['gotorecording'] = 'Access the recording';
 $string['notstarted'] = 'This activity hasn\'t started yet.';
 $string['activitydone'] = 'This activity is finished.';
 $string['reviewactivity'] = 'Click here to review this activity';
@@ -89,6 +88,14 @@ $string['roomtype_help'] = 'The "Standard" type is an activity in which all part
  All participants associated with this activity can then access at any time. Please note that only the multiple recordings option is available for this type of activity';
 $string['standard'] = 'Standard';
 $string['seminar'] = 'Seminar';
+$string['showparticipants'] = 'Participants\' list';
+$string['showparticipants_help'] = 'Lets you choose to show or hide the list of participants in Via when in webinar mode.';
+$string['hidelist'] = 'Hide';
+$string['showlist'] = 'Display';
+$string['oldversion'] = 'Use Via version 6';
+$string['newversion'] = 'Use the most recent version of Via';
+$string['roomversion'] = 'Chose the Via version for this activity';
+$string['roomversion_help'] = 'Chose the Via version for this activity';
 $string['mode'] = 'Audio mode';
 $string['modewebphone'] = 'Web and voice over the phone';
 $string['modevoiceweb'] = 'Voice over the Web';
@@ -172,9 +179,14 @@ $string['cat_check'] = 'Add';
 $string['cat_default'] = 'Set as default';
 $string['enrolmentheader'] = 'Participant enrolments';
 $string['enrolmenttype'] = 'Participants enrolment management';
-$string['enrolmenttype_help'] = 'Automatic enrollment: all users enrolled in the course will be added to the Via activity. If a student is added after the creation of the Via activity, the student will be added during the next Cron synchronization. If the student accesses the activity before the cron has enrolled him/her, the student will be added and be displayed in the details page of the activity. Users with editing rights in the moodle course will be automatically synchronized as animators, but the list can still be edited.
-Manual Registration: Participants must be added from the list of participants choosing the participant from the list of "Potential participants" (right ) and added using the arrow into &quot;Existing participants&quot; (left) . Note: In both modes of entry, the user who creates the activity is automatically added as presenter, but remains editable. It is not possible to have more than one presenter.
-';
+$string['enrolmenttype_help'] = 'Automatic enrollment: all users enrolled in the course will be added to the Via activity.
+ If a student is added after the creation of the Via activity, the student will be added during the next Cron synchronization.
+ If the student accesses the activity before the cron has enrolled him/her, the student will be added and be displayed in the details
+ page of the activity. Users with editing rights in the moodle course will be automatically synchronized as animators, but the list can still be edited.
+ Manual Registration: Participants must be added from the list of participants choosing the participant from the list of
+ "Potential participants" (right ) and added using the arrow into &quot;Existing participants&quot; (left).
+ Note: In both modes of entry, the user who creates the activity is automatically added as presenter,
+ but remains editable. It is not possible to have more than one presenter.';
 $string['automaticenrol'] = 'Automatic enrolment';
 $string['manualenrol'] = 'Manual enrolment';
 $string['name'] = 'Name';
@@ -198,6 +210,10 @@ $string['participantsynchronization'] = 'Synchronize participants\' information'
 $string['participantsynchronizationdesc'] = 'If checked, the participants\' information will by synchronized with those saved in Moodle. The only information that will not be updated are : the login, the password and the user type in Via.';
 $string['downloadplaybacks'] = 'Download Recordings';
 $string['downloadplaybacksdesc'] = 'If checked, users with editing roles will be permitted to download Via recordings. Before checking this option, please contact SVIesolutions to validate that your server permits it.';
+$string['via_accessed'] = 'Via accessed';
+$string['via_details_viewed'] = 'Activity details displayed';
+$string['playback_downloaded'] = 'Playback downloaded';
+$string['playback_viewed'] = 'Playback viewed';
 $string['presencestatus'] = 'Display presence status';
 $string['presencestatusdesc'] = 'If checked, a new option will apear in the activitie\'s parameters to set a minimum amount of time that users need to be present to be concidered present for an activity. A printable version will also be available.';
 $string['permanentactivities'] = 'Permanent activities';
@@ -254,9 +270,9 @@ $string['reminderemailhtml'] = '<p>Hello {$a->username}reminderemailhtml,</p>
 <p><b>Title:</b> {$a->title} <br/>
 <b>Date and time</b>{$a->activitydate}<br/>
 <b>Duration:</b> {$a->duration minutes}</p>';
-$string['inviteemailsubject'] = 'INVITATION: {$a->title}';
 
 /* regular invites */
+$string['inviteemailsubject'] = 'INVITATION: {$a->title}';
 $string['inviteemail'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
 ---------------------------------------------------------------------
 {$a->datesend}
@@ -312,9 +328,35 @@ Attention : This activity can be recorded. Please do not access this activity if
 $string['inviteemailhtmlpermanent'] = '<p>Hello {$a->username},</p>
 <p>{$a->invitemsg}</p>';
 
+/* Export is ready notice */
+$string['noticeemailsubject'] = 'ALERT : export Via is ready';
+$string['noticeemail'] = '
+Hello {$a->username},
+
+This is an automated message.
+
+The export you asked for, for recording &quot;{$a->playbacktitle}&quot; in {$a->type} is ready since {$a->date}.
+You can download this export or make it available to the participants, by accessing the details\' page of your activity &quot;{$a->activitytitle}&quot;.
+
+
+Web access
+---------------------------------------------------------------------
+
+Click the following link for direct access : {$a->activitylink}
+
+---------------------------------------------------------------------
+';
+$string['noticeemailhtml'] = '<p>Hello {$a->username},</p>
+<p>This is an automated message.</p>
+<p>The export you asked for, for recording &quot;{$a->playbacktitle}&quot; in {$a->type} is complete since {$a->date}.<br/>
+You can download this export or make it available to the participants, by accessing the details page of your activity &quot;{$a->activitytitle}&quot;.</p>';
+$string['inviteemailhtml'] = '<p>Hello {$a->username},</p>
+<p>Moodle invites you to participate in the activity &laquo; {$a->title} &raquo; that will take place on <b>{$a->datebegin}</b> between <b>{$a->hourbegin}</b> and <b>{$a->hourend}</b>.</p><p>{$a->invitemsg}</p>';
+
 $string['invitewebaccesshtml'] = 'Web access';
 $string['invitepreparationhtml'] = 'Activity preparation';
 $string['inviteclicktoaccesshtml'] = 'To go to the activity, click this link below:';
+$string['noticeclicktoaccesshtml'] = 'Click the following link for direct access :';
 $string['invitewarninghtml'] = 'Attention : This activity can be recorded. Please do not access this activity if you do not want to be recorded. This email contains personnal connection informations. Those informations must not be shared.';
 $string['recordmodebehavior'] = 'Recording';
 $string['recordmodebehavior_help'] = 'You can also choose to automatically start recording at access using the "Automatic" option. Choose "Manual" if you do not want the recording to starts automatically, you will then start the recording yourself by clicking on the record icon in the synchronous interface.';
@@ -355,7 +397,7 @@ $string['playbackheader'] = 'Playback viewed (h:m:s)';
 $string['presenceheaderreport'] = 'Online presence';
 $string['present'] = 'Present';
 $string['absent'] = 'Absent';
-$string['presencewarning'] = 'Important: The online presence status is determined by the minimum time required to be considered present for thE activity. The status influences the participant\'s progress bar. It is possible to adjust the status by changing the &laquo; Minimum attendance required &raquo; value in the activity\'s parameters.';
+$string['presencewarning'] = 'Important: The online presence status is determined by the minimum time required to be considered present for the activity. The status influences the participant\'s progress bar. It is possible to adjust the status by changing the &laquo; Minimum attendance required &raquo; value in the activity\'s parameters.';
 $string['basedon'] = 'The presence status is based on {$a} minutes.';
 $string['report'] = 'Presence report';
 $string['createdby'] = 'Report created by: ';
@@ -376,17 +418,16 @@ $string['error:disablereviews'] = 'Disabling review mode has failed.';
 $string['error:allseatstaken'] = 'Sorry, all  available seats are taken on SVI server. You cannot conncet to this activity right now. A notice has already been sent to the administrators about this overflow. You can also send an email to <a href="mailto:$a->email?subject=Avis de debordement sur VIA">$a->email</a> to notify them.<br><br> Please try to reconnect later.';
 $string['error:CIEID_NOT_FOUND'] = 'CIEID_NOT_FOUND - CieID doesn\'t exists. Please verify your settings. Without a valid CieID you can not create activities!';
 $string['error:APIID_NOT_FOUND'] = 'APIID_NOT_FOUND - ApiID doesn\'t exists. Please verify your settings. Without a valid ApiID you can not create activities!';
-$string['error:URL_ERROR'] = 'URL_ERROR - The API\'s URL doesn\'t exist. Please verify your settings. Without an the API\'s URL you can not create activities!';
+$string['error:URL_ERROR'] = 'URL_ERROR - The API\'s url doesn\'t exist. Please verify your settings. Without an the API\'s URL you can not create activities!';
 $string['error:ACTIVITY_ACCESS_FAILED'] = 'ACTIVITY_ACCESS_FAILED - When the user is not associated to the activity or the activity is no longer available.';
 $string['error:ACTIVITY_DOES_NOT_EXIST'] = 'ACTIVITY_DOES_NOT_EXIST - Must represent a valid activity.';
 $string['error:ACTIVITYID_EMPTY'] = 'ACTIVITYID_EMPTY - The ActivityID value is empty.';
 $string['error:ACTIVITYID_INVALID'] = 'ACTIVITYID_INVALID - The value passed in the ActivityID is invalid.';
-$string['error:APIID_NOT_FOUND'] = 'APIID_NOT_FOUND - ApiID doesn\'t exists. Please verify your settings.';
 $string['error:APPLY_PERIODICITY_INVALID'] = 'APPLY_PERIODICITY_INVALID - The value passed must be 0 or 1.';
 $string['error:AUTH_FAILED_BAD_APIID'] = 'AUTH_FAILED_BAD_APIID - The APIID value is not authorised.';
 $string['error:AUTH_FAILED_BAD_CIEID'] = 'AUTH_FAILED_BAD_CIEID - The CieID value is not authorised.';
+$string['error:AUTH_FAILED_BAD_IP'] = 'AUTH_FAILED_BAD_IP - Contact SVIeSolutions to add this IP adresse to the permitted IP list.';
 $string['error:CANNOT_CHANGE_STATE'] = 'CANNOT_CHANGE_STATE - The activity has changed state.';
-$string['error:CIEID_NOT_FOUND'] = 'CIEID_NOT_FOUND - CIEID doesn\'t exists. Please verify your settings.';
 $string['error:COMPANYNAME_TOO_LONG'] = 'COMPANYNAME_TOO_LONG - Le CompanyName value is longer than the maximum of 50 characters.';
 $string['error:EMAIL_TOO_LONG'] = 'EMAIL_TOO_LONG - The Email value is longer than the maximum of 100 characters.';
 $string['error:ERROR_AUTH_BAD_CIEID'] = 'ERROR_AUTH_BAD_CIEID - The IP of the caller is invalid.';
@@ -459,4 +500,5 @@ $string['error:INVALID_RECORD_TYPE'] = 'INVALID_RECORD_TYPE - The recording type
 $string['error:RECORD_NOT_DOWNLOADABLE'] = 'RECORD_NOT_DOWNLOADABLE - The recording is not downloadable.';
 $string['error:USER_DOWNLOAD_NOT_ALLOWED'] = 'USER_DOWNLOAD_NOT_ALLOWED - The user is not allowed to download this recording.';
 $string['error:PLAYBACK_NOT_PUBLIC'] = 'PLAYBACK_NOT_PUBLIC - This playback is not public.';
+$string['error:_CANNOT_CHANGE_ISNEWVIA'] = 'CANNOT_CHANGE_ISNEWVIA - Once an activity has been accesed, it is no longer possible to modify the version.';
 

@@ -306,11 +306,64 @@ function xmldb_via_upgrade($oldversion = 0) {
         // Savepoint reached!
         upgrade_mod_savepoint($result, 2015012004, 'via');
     }
-    
-    if ($oldversion < 2015012006) {
+
+    if ($oldversion < 2015050101) {
+
+        $table = new xmldb_table('via_cron');
+
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '100', null, XMLDB_NOTNULL, null, null, 'id');
+        $table->add_field('cron', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'name');
+        $table->add_field('lastcron', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null, 'cron');
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Populate the table right away with default values.
+        // These can be changed by the company/school to meet their needs!
+        $functions = array();
+        $functions[] = array('name' => 'via_send_reminders', 'cron' => '600', 'lastcron' => 0);
+        $functions[] = array('name' => 'via_send_invitations', 'cron' => '600', 'lastcron' => 0);
+        $functions[] = array('name' => 'via_add_enrolids', 'cron' => '2400', 'lastcron' => 0);
+        $functions[] = array('name' => 'via_synch_users', 'cron' => '1200', 'lastcron' => 0);
+        $functions[] = array('name' => 'via_synch_participants', 'cron' => '1200', 'lastcron' => 0);
+        $functions[] = array('name' => 'via_check_categories', 'cron' => '43200', 'lastcron' => 0); // Once every 12 hours!
+        $functions[] = array('name' => 'via_send_export_notice', 'cron' => '1200', 'lastcron' => 0);
+        $functions[] = array('name' => 'via_get_list_profils', 'cron' => '43200', 'lastcron' => 0); // Once every 12 hours!
+        $functions[] = array('name' => 'via_get_cieinfo', 'cron' => '43200', 'lastcron' => 0); // Once every 12 hours!
+
+        foreach ($functions as $function) {
+            $DB->insert_record('via_cron', $function);
+        }
+
+        $table = new xmldb_table('via_params');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('param_type', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'id');
+        $table->add_field('param_name', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, null, null, null, 'param_type');
+        $table->add_field('value', XMLDB_TYPE_CHAR, '200', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'param_name');
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'value');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        $table = new xmldb_table('via');
+        $field = new xmldb_field('isnewvia', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'roomtype');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $field = new xmldb_field('showparticipants', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, null, null, null, 'activitytype');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
 
         // Savepoint reached!
-        upgrade_mod_savepoint($result, 2015012006, 'via');
+        upgrade_mod_savepoint($result, 2015050101, 'via');
     }
 
 }

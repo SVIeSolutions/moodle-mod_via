@@ -29,6 +29,7 @@ defined('MOODLE_INTERNAL') || die();
 require_once($CFG->libdir.'/filelib.php');
 require_once($CFG->dirroot.'/mod/via/lib.php');
 require_once($CFG->dirroot.'/mod/via/api.class.php');
+require_once(get_vialib());
 
 /**
  * Called by via_cron to remove users in table via_users 
@@ -468,23 +469,108 @@ function via_get_confirmationstatus($status) {
  * @return obejct list of profiles
  */
 function via_get_list_profils() {
+    global $DB;
+
+    $api = new mod_via_api();
+    $result = false;
+
+    try {
+        $names = array();
+
+        $response = $api->list_profils();
+
+        if ($response) {
+            foreach ($response['Profil'] as $info) {
+                if (isset($info['ProfilName'])) {
+                    // Create array to see if there are profiles to be deleted.
+
+                    $names[] = $info['ProfilName'];
+
+                    $param = new stdClass();
+                    $param->param_type = 'multimediaprofil';
+                    $param->param_name = $info['ProfilName'];
+                    $param->value = $info['ProfilID'];
+                    $param->timemodified = time();
+
+                    $exists = $DB->get_record('via_params',
+                    array('param_type' => 'multimediaprofil', 'param_name' => $info['ProfilName']));
+
+                    if ($exists) {
+                        if ($exists->value != $info['ProfilID']) {
+                            // If the profile has changed we need to update all vias using the old id.
+                            $vias = $DB->get_records_sql('SELECT * FROM {via}
+                                                        WHERE profilid = \''.$exists->value.'\'
+                                                        AND datebegin > ' . time() .' OR activitytype = 2');
+                            foreach ($vias as $via) {
+                                $via->profilid = $info['ProfilID'];
+                                $DB->update_record('via', $via);
+                            }
+                            // We only update if the value is different.
+                            // We do this after updating the activities otherwise we no longer have the correct value.
+                            $param->id = $exists->id;
+                            $DB->update_record('via_params', $param);
+
+                        }
+                    } else {
+                        $newparam = $DB->insert_record('via_params', $param);
+                    }
+                }
+            }
+
+            // All existing profiles!
+            $profiles = $DB->get_records('via_params', array('param_type' => 'multimediaprofil'));
+            foreach ($profiles as $profil) {
+                if (!in_array($profil->param_name, $names)) {
+                    // If not in new names array array created above we delete it!
+                    $DB->delete_records('via_params', array('param_type' => 'multimediaprofil', 'param_name' => $profil->name));
+                }
+            }
+
+            $result = true;
+        }
+
+    } catch (Exception $e) {
+        notify(get_string("error:".$e->getMessage(), "via"));
+    }
+
+    return $result;
+}
+
+/**
+ * Get the via version restriction available for the company on via
+ *
+ * @return integer
+ */
+function via_get_cieinfo() {
+    global $DB;
 
     $api = new mod_via_api();
 
     try {
-            $response = $api->list_profils();
-        } catch (Exception $e) {
-            $result = false;
-            notify(get_string("error:".$e->getMessage(), "via"));
-        }
-        $profil = array();
-        foreach ($response['Profil'] as $info) {
-            if (isset($info['ProfilID'])) {
-                $profil[$info['ProfilID']] = $info['ProfilName'];
-            }
+        $response = $api->cieinfo();
+        if ($response) {
+            $exists = $DB->get_record('via_params', array('param_type' => 'viaversion'));
 
+            $param = new stdClass();
+            $param->param_type = 'viaversion';
+            $param->param_name = null;
+            $param->value = $response["ViaVersionRestriction"];
+            $param->timemodified = time();
+
+            if ($exists) {
+                if ($exists->value != $response["ViaVersionRestriction"]) {
+                    $param->id = $exists->id;
+                    $DB->update_record('via_params', $param);
+                }
+            } else {
+                $newparam = $DB->insert_record('via_params', $param);
+            }
         }
-    return $profil;
+    } catch (Exception $e) {
+        $result = false;
+        notify(get_string("error:".$e->getMessage(), "via"));
+    }
+
 }
 
 /**
@@ -688,15 +774,15 @@ function via_get_participants_table($via, $context, $presence = null) {
     // Prepare the paged query.
     $where = 'WHERE activityid = ' . $via->id .' ORDER BY (participanttype+1)%3 , u.lastname ASC ';
     if ($presence) {
-        $sql = 'SELECT DISTINCT vpp.userid, v.id as activityid, vu.viauserid, u.lastname, u.firstname,
-                u.email, vpp.participanttype,vp.status, v.presence, v.recordingmode, v.viaactivityid,
+        $sql = 'SELECT vpp.userid, v.id as activityid, vu.viauserid, u.lastname, u.firstname,
+                u.email, vpp.participanttype, vp.status, v.presence, v.recordingmode, v.viaactivityid,
                 vp.connection_duration, vp.playback_duration
                 FROM {via_participants} vpp
                 LEFT JOIN {via_users} vu ON vu.userid = vpp.userid
                 LEFT JOIN {via} v ON v.id = vpp.activityid
                 LEFT JOIN {user} u ON u.id = vpp.userid
                 LEFT JOIN {via_presence} vp ON vpp.userid = vp.userid AND vpp.activityid = vp.activityid
-                WHERE vpp.activityid = '.$via->id.' ORDER BY (vpp.participanttype+1)%3 , u.lastname ASC ';
+                WHERE vpp.activityid = '.$via->id.' ORDER BY (vpp.participanttype+1)%3, u.lastname ASC ';
     } else {
         $sql = 'SELECT vp.*, u.firstname, u.lastname, u.email, vu.viauserid, vu.setupstatus
                 FROM {via_participants} vp
@@ -955,43 +1041,43 @@ function via_get_playbacks_table($playbacks, $via, $context) {
             }
 
             if (get_config('via', 'via_downloadplaybacks')) {
-                    if ($playback->isdownloadable) {
-                        $privaterecord = "";
+                if ($playback->isdownloadable) {
+                    $privaterecord = "";
+                } else {
+                    if (has_capability('mod/via:manage', $context)) {
+                        $privaterecord = "dimmed_text";
+                        $fa = '&fa=1';
                     } else {
-                        if (has_capability('mod/via:manage', $context)) {
-                            $privaterecord = "dimmed_text";
-                            $fa = '&fa=1';
-                        } else {
-                            $privaterecord = "hide";
-                            $fa = '';
-                        }
+                        $privaterecord = "hide";
+                        $fa = '';
                     }
+                }
 
-                    $table .=  "<td class='download nowrap $private $privaterecord'>";
+                $table .= "<td class='download nowrap $private $privaterecord'>";
 
-                    if ($playback->hasfullvideo == 1) {
-                        $table .=  '<a class="download" href="download_recording.php?id='.$cmid.$fa.'&type=1&playbackid='.
-                        urlencode($key).'" title="'. get_string('fullvideoinfo', 'via') .'">'.
-                        get_string('fullvideo', 'via') .'</a><br/>';
-                    } else {
-                        $table .= '<span class="dimmed_text">'.get_string('fullvideo', 'via').'</span><br/>';
-                    }
-                    if ($playback->hasmobilevideo == 1) {
-                        $table .=  '<a class="download" href="download_recording.php?id='.$cmid.$fa.'&type=2&playbackid='.
-                        urlencode($key).'" title="'. get_string('mobilevideoinfo', 'via') .'">'.
-                        get_string('mobilevideo', 'via') .'</a><br/>';
-                    } else {
-                        $table .= '<span class="dimmed_text">'. get_string('mobilevideo', 'via').'</span><br/>';
-                    }
-                    if ($playback->hasaudiorecord == 1) {
-                        $table .=  '<a class="download" href="download_recording.php?id='.$cmid.$fa.'&type=3&playbackid='.
-                        urlencode($key).'" title="'. get_string('audiorecordinfo', 'via') .'">'.
-                        get_string('audiorecord', 'via') .'</a>';
-                    } else {
-                        $table .= '<span class="dimmed_text">'.get_string('audiorecord', 'via').'</span><br/>';
-                    }
+                if ($playback->hasfullvideo == 1) {
+                    $table .= '<a class="download" href="download_recording.php?id='.$cmid.$fa.'&type=1&playbackid='.
+                    urlencode($key).'" title="'. get_string('fullvideoinfo', 'via') .'">'.
+                    get_string('fullvideo', 'via') .'</a><br/>';
+                } else {
+                    $table .= '<span class="dimmed_text">'.get_string('fullvideo', 'via').'</span><br/>';
+                }
+                if ($playback->hasmobilevideo == 1) {
+                    $table .= '<a class="download" href="download_recording.php?id='.$cmid.$fa.'&type=2&playbackid='.
+                    urlencode($key).'" title="'. get_string('mobilevideoinfo', 'via') .'">'.
+                    get_string('mobilevideo', 'via') .'</a><br/>';
+                } else {
+                    $table .= '<span class="dimmed_text">'. get_string('mobilevideo', 'via').'</span><br/>';
+                }
+                if ($playback->hasaudiorecord == 1) {
+                    $table .= '<a class="download" href="download_recording.php?id='.$cmid.$fa.'&type=3&playbackid='.
+                    urlencode($key).'" title="'. get_string('audiorecordinfo', 'via') .'">'.
+                    get_string('audiorecord', 'via') .'</a>';
+                } else {
+                    $table .= '<span class="dimmed_text">'.get_string('audiorecord', 'via').'</span><br/>';
+                }
 
-                $table .=  "</td>";
+                $table .= "</td>";
             }
 
             $table .= "<td class='review $private'>";
@@ -1076,7 +1162,7 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
     $strvia = get_string('modulename', 'via');
 
     $posthtml = '<head></head>';
-    $posthtml .= "\n<body id=\"email\">\n\n";
+    $posthtml .= "\n<body>\n\n";
 
     $coursename = $DB->get_record('course', array('id' => $courseid));
 
@@ -1096,37 +1182,32 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
         $a->invitemsg = "";
     }
 
-    $posthtml .= '<div class="navbar">';
+    $posthtml .= '<div style="font-family: Calibri,sans-serif;">';
     $posthtml .= '<a target="_blank" href="'.$CFG->wwwroot.'/course/view.php?id='.$courseid.'">'.$coursename->shortname.'</a>';
     $posthtml .= ' &raquo; <a target="_blank" href="'.$CFG->wwwroot.'/mod/via/index.php?id='.$courseid.'">'.$strvia.'</a> &raquo; ';
     $posthtml .= '<a target="_blank" href="'.$CFG->wwwroot.'/mod/via/view.php?id='.$cm->id.'">'.$via->name.'</a>';
     $posthtml .= '</div>';
-
-    $posthtml .= '<table border="0" cellpadding="3" cellspacing="0" class="forumpost">';
-
-    $posthtml .= '<tr class="header"><td width="35" valign="top" class="picture left">';
-
-    $posthtml .= '</td>';
-
-    $posthtml .= '<td class="topic starter">';
+    $posthtml .= '<table border="0" cellpadding="3" cellspacing="0">';
+    $posthtml .= '<tr><td></td>';
+    $posthtml .= '<td>';
 
     $b = new stdClass();
     $b->title = $a->title;
 
     if (!$reminder) {
-        $posthtml .= '<div class="subject">'.get_string("inviteemailsubject", "via", $b).'</div>';
+        $posthtml .= '<div>'.get_string("inviteemailsubject", "via", $b).'</div>';
     } else {
-        $posthtml .= '<div class="subject">'.get_string("reminderemailsubject", "via", $b).'</div>';
+        $posthtml .= '<div>'.get_string("reminderemailsubject", "via", $b).'</div>';
     }
 
-    $posthtml .= '<div class="author">'.userdate(time()).'</div>';
+    $posthtml .= '<div>'.userdate(time()).'</div>';
 
     $posthtml .= '</td></tr>';
 
-    $posthtml .= '<tr><td class="left side" valign="top">';
+    $posthtml .= '<tr><td valign="top">';
     $posthtml .= '&nbsp;';
 
-    $posthtml .= '</td><td class="content">';
+    $posthtml .= '</td><td>';
 
     if ($via->activitytype == 2) {
         $posthtml .= get_string("inviteemailhtmlpermanent", "via", $a);
@@ -1201,6 +1282,52 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
 }
 
 /**
+ * Build the invitation mail html that will be sent be the cron
+ *
+ * @param integer $courseid
+ * @param object $via
+ * @param object $muser
+ * @param boolean is reminder or invite message
+ * @return html mail
+ */
+function via_make_notice_mail_html($a, $muser) {
+    global $CFG, $DB;
+
+    if ($muser->mailformat != 1) {// Needs to be HTML.
+        return '';
+    }
+
+    $posthtml = '<head></head>';
+    $posthtml .= "\n<body>\n\n";
+
+    $posthtml .= '<div style="font-family: Calibri,sans-serif;">';
+    $posthtml .= '<a target="_blank" href="'.$CFG->wwwroot.'/course/view.php?id='.$a->courseid.'">'.$a->coursename.'</a>';
+    $posthtml .= ' &raquo; <a target="_blank"
+                   href="'.$CFG->wwwroot.'/mod/via/index.php?id='.$a->courseid.'">'.$a->activitytitle.'</a> &raquo; ';
+    $posthtml .= '<a target="_blank" href="'.$CFG->wwwroot.'/mod/via/view.php?id='.$a->cmid.'">'.$a->activitytitle.'</a>';
+    $posthtml .= '</div>';
+    $posthtml .= '<table border="0" cellpadding="3" cellspacing="0" style="font-family: Calibri,sans-serif; color:#505050">';
+    $posthtml .= '<tr><td>'. get_string("noticeemailsubject", "via") .'</td></tr>';
+    $posthtml .= '<tr><td>'. get_string("noticeemailhtml", "via", $a) .'</td></tr>';
+    $posthtml .= '<tr><td><br/>'. get_string("noticeclicktoaccesshtml", "via") .'</td></tr>';
+    $posthtml .= '<tr><td>';
+    $posthtml .= "<a style='color:#fff; text-decoration:none; background:#6ab605; padding:8px;'
+                  href='".$CFG->wwwroot."/mod/via/view.php?id=".$a->cmid."' >
+                  <img style='vertical-align:middle'
+                  src='" . $CFG->wwwroot ."/mod/via/pix/access_small.png' hspace='5' height='14px' width='15px'>".
+                  get_string("gotorecording", "via")."</a>";
+    $posthtml .= '</td></tr>';
+
+    $posthtml .= '<tr><td>'.$CFG->wwwroot."/mod/via/view.php?id=".$a->cmid .'</td></tr>';
+
+    $posthtml .= '</table>'."\n\n";
+
+    $posthtml .= '</body>';
+
+    return $posthtml;
+}
+
+/**
  * Gets user type for automatic enrollement
  *
  * @param integer $userid
@@ -1217,7 +1344,7 @@ function via_user_type($userid, $courseid, $noparticipants = null) {
         $noparticipants = "0";
     }
 
-    $context = context_course::instance($courseid);
+    $context = via_get_course_instance($courseid);
     if (has_capability('moodle/course:viewhiddenactivities', $context, $userid) || $noparticipants == "1") {
         $type = '3';// Animator!
     } else {
@@ -1285,7 +1412,8 @@ function via_add_button($recordingmode, $active = null, $cmid = null, $preperati
             $class = "active hide";
             $url = '/mod/via/view.via.php?id='. $cmid . $fa;
             $script = 'target="viaaccess" onclick="this.target=\'viaaccess\';
-            return openpopup(null, {url:\''.$url.'\', name:\'viaaccess\', options:\'menubar=0,location=0,,resizable=1,scrollbars\'});"';
+            return openpopup(null, {url:\''.$url.'\',
+            name:\'viaaccess\', options:\'menubar=0,location=0,,resizable=1,scrollbars\'});"';
         } else {
             $id = 'id="inactive"';
             $class = "inactive";

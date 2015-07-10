@@ -28,6 +28,7 @@ global $DB, $USER;
 
 require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/via/lib.php');
+require_once(get_vialib());
 
 $id = required_param('id', PARAM_INT);
 $fa = optional_param('fa', null, PARAM_INT);
@@ -44,7 +45,7 @@ if (! $course = $DB->get_record('course', array('id' => $cm->course))) {
 
 require_login($course, false, $cm);
 
-$context = context_module::instance($cm->id);
+$context = via_get_module_instance($cm->id);
 $PAGE->set_url('/mod/via/view.php', array('id' => $id));
 
 if ($fa) {
@@ -58,9 +59,12 @@ $api = new mod_via_api();
 
 try {
 
-    $response = $api->via_download_record($viauser->viauserid, $playbackid, $recordtype);
+    $response = $api->via_download_record($vuserid, $playbackid, $recordtype);
 
     if ($response) {
+
+        via_playback_downloaded_log($id, $context, $course, $recordtype);
+
         redirect($response['DownloadToken']);
     }
 

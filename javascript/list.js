@@ -10,17 +10,18 @@ function change(id) {
     }
 }
 
-var checkboxes = document.getElementsByName('category[]');
-var radioButtons = document.getElementsByName('isdefault');
+window.onload = function () {
 
-for (var i = 0; i < checkboxes.length; i++) {
+    var checkboxes = document.getElementsByName('category[]');
+    var radioButtons = document.getElementsByName('isdefault');
 
-    if (checkboxes[i].checked === false) {
-        var checboxValue = checkboxes[i].value;
-        var checkboxVal = checboxValue.split("$", 1);
-
-       if (radioButtons[i].value === checkboxVal) {
-           radioButtons[i].disabled = true;
-       }
+    for (var i = 0; i < checkboxes.length; i++) {
+        if (checkboxes[i].checked === false) {
+            var checboxValue = checkboxes[i].value;
+            if (radioButtons[i].value == checboxValue.split("$", 1)) {
+                radioButtons[i].disabled = true;
+            }
+        }
     }
+
 }

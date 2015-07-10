@@ -32,6 +32,7 @@ global $PAGE;
 if ($ADMIN->fulltree) {
 
     require_once($CFG->dirroot.'/mod/via/lib.php');
+    require_once(get_vialib());
 
     $PAGE->requires->js('/mod/via/javascript/conntest.js');
 
@@ -40,8 +41,7 @@ if ($ADMIN->fulltree) {
     /****
     API infos
     ****/
-    $settings->add(new admin_setting_heading('pluginversion', get_string('pluginversion', 'via') .
-    get_config('mod_via', 'version'), ''));
+    $settings->add(new admin_setting_heading('pluginversion', via_get_version(), ''));
 
     $settings->add(new admin_setting_heading('via_apiconfig',
     '<strong>'.get_string('apiconfig', 'via').'</strong>', ''));
@@ -101,15 +101,17 @@ if ($ADMIN->fulltree) {
     get_string('options', 'via').'</strong>', ''));
 
     /****
+    Audio type settings
+    ****/
+    $settings->add(new admin_setting_configmultiselect('via/via_audio_types',
+    get_string('audiomodelabel', 'via'), '',
+    array(1), array(1 => get_string('modevoiceweb', 'via') )));
+
+    /****
     Portal access settings
     ****/
     $settings->add(new admin_setting_configcheckbox('via/via_portalaccess',
     get_string('portalaccess', 'via'), get_string('portalaccessdesc', 'via'), 0));
-
-
-    $settings->add(new admin_setting_configmultiselect('via/via_audio_types',
-            get_string('audiomodelabel', 'via'),
-    '', array(1), array(1 => get_string('modevoiceweb', 'via') )));
 
     /****
     Participant confirmations
@@ -127,13 +129,13 @@ if ($ADMIN->fulltree) {
     Permit playback download
     ****/
     $settings->add(new admin_setting_configcheckbox('via/via_downloadplaybacks',
-        get_string('downloadplaybacks', 'via'), get_string('downloadplaybacksdesc', 'via'), 0));
+    get_string('downloadplaybacks', 'via'), get_string('downloadplaybacksdesc', 'via'), 0));
 
     /****
     Display user presence status
     ****/
     $settings->add(new admin_setting_configcheckbox('via/via_presencestatus',
-        get_string('presencestatus', 'via'), get_string('presencestatusdesc', 'via'), 1));
+    get_string('presencestatus', 'via'), get_string('presencestatusdesc', 'via'), 1));
 
     /****
     Permit permanent activities

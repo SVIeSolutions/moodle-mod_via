@@ -26,7 +26,9 @@
  */
 
 require_once('../../config.php');
+global $CFG;
 require_once($CFG->dirroot.'/mod/via/lib.php');
+require_once(get_vialib());
 
 global $DB, $CFG, $USER;
 
@@ -44,14 +46,14 @@ if (!($course = $DB->get_record('course', array('id' => $cm->course)))) {
 if (!($via = $DB->get_record('via', array('id' => $cm->instance)))) {
     error("Via ID is incorrect");
 }
-if (!($context = context_module::instance($cm->id))) {
+
+if (!($context = via_get_module_instance($cm->id))) {
     error("Module context is incorrect");
 }
 
 require_login($course->id, false, $cm);
 
 require_capability('mod/via:view', $context);
-
 
 // Initialize $PAGE.
 $PAGE->set_url('/mod/via/view.php', array('id' => $cm->id));
@@ -84,7 +86,12 @@ if ($frm = data_submitted()) {
 
 // We validate if the activity was deleted in Via + if the user has editing rights we update Via with the information in moodle.
 try {
-    $previous = $_SERVER['HTTP_REFERER'];
+    if (isset($_SERVER['HTTP_REFERER'])) {
+        $previous = $_SERVER['HTTP_REFERER'];
+    } else {
+        $previous = '';
+    }
+
     $connectedusers = 0;
     if (strpos($previous, 'modedit') == false && strpos($previous, 'via/view') == false ) {
         // We only check or update if we are not coming directly from the editing page.
@@ -99,6 +106,9 @@ try {
             $connectedusers = $sviinfos["NbConnectedUsers"];
         }
     }
+
+    via_viewed_log($via, $context, $cm);
+
 } catch (Exception $e) {
     notify(get_string("error:".$e->getMessage(), "via"));
 }
@@ -237,7 +247,6 @@ if (isset($deleted)) {
         }
 
     }
-
 
     // Get the type of access user can view.
     $access = via_access_activity($via);

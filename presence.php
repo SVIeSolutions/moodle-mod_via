@@ -30,6 +30,7 @@ header('Content-type: text/html; charset=utf-8;');
 
 require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/via/lib.php');
+require_once(get_vialib());
 
 $id    = required_param('id', PARAM_INT);// Via!
 $cm = get_coursemodule_from_id('via', $id);
@@ -38,7 +39,7 @@ global $CFG, $DB;
 
 $via = $DB->get_record('via', array('id' => $id));
 
-$sitecontext = context_system::instance();
+$sitecontext = via_get_system_instance();
 $PAGE->set_context($sitecontext);
 $PAGE->set_url('/via/presence.php');
 

@@ -269,8 +269,10 @@ class mod_via_api {
         $data .= "<IsReplayAllowed>".$via->isreplayallowed."</IsReplayAllowed>";
         $data .= "<ActivityState>1</ActivityState>";
         $data .= "<RoomType>".$via->roomtype."</RoomType>";
+        $data .= "<IsNewVia>".$via->isnewvia."</IsNewVia>";
         $data .= "<AudioType>".$via->audiotype."</AudioType>";
         $data .= "<ActivityType>".$via->activitytype."</ActivityType>";
+        $data .= "<ShowParticipants>".$via->showparticipants."</ShowParticipants>";
         $data .= "<NeedConfirmation>".$via->needconfirmation."</NeedConfirmation>";
         $data .= "<RecordingMode>".$via->recordingmode."</RecordingMode>";
         $data .= "<RecordModeBehavior>".$via->recordmodebehavior."</RecordModeBehavior>";
@@ -290,7 +292,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe($via, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivity"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem creating VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -336,7 +338,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe($via, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivityDuplicate"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem duplicating VIA activity id");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -376,8 +378,10 @@ class mod_via_api {
         $data .= "<IsReplayAllowed>".$via->isreplayallowed."</IsReplayAllowed>";
         $data .= "<ActivityState>".$activitystate."</ActivityState>";
         $data .= "<RoomType>".$via->roomtype."</RoomType>";
+        $data .= "<IsNewVia>".$via->isnewvia."</IsNewVia>";
         $data .= "<AudioType>".$via->audiotype."</AudioType>";
         $data .= "<ActivityType>".$via->activitytype."</ActivityType>";
+        $data .= "<ShowParticipants>".$via->showparticipants."</ShowParticipants>";
         $data .= "<NeedConfirmation>".$via->needconfirmation."</NeedConfirmation>";
         $data .= "<RecordingMode>".$via->recordingmode."</RecordingMode>";
         $data .= "<RecordModeBehavior>".$via->recordmodebehavior."</RecordModeBehavior>";
@@ -394,7 +398,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe($via, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivity"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem editing VIA activity id");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -505,7 +509,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe($viaactivityid, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiUserLogs"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem getting user logs for VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -540,7 +544,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe(null, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiListProfils"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem getting list of profils for VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -548,6 +552,40 @@ class mod_via_api {
         }
 
         return $resultdata["ProfilList"];
+
+    }
+
+    /**
+     * Gets all profiles available for a given company
+     *
+     * @return Array containing response from Via
+     */
+    public function cieinfo() {
+        global $CFG;
+
+        $url = 'GetCieInfo';
+
+        $data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ';
+        $data .= 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        $data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        $data .= '<soap:Body>';
+        $data .= "<cApiCieInfo>";
+        $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
+        $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
+        $data .= "</cApiCieInfo>";
+        $data .= "</soap:Body>";
+        $data .= "</soap:Envelope>";
+        $response = $this->send_saop_enveloppe(null, $data, $url);
+
+        if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiCieInfo"]) {
+            throw new Exception("Problem getting cie info for via version restrictions");
+        }
+
+        if ($resultdata['Result']['ResultState'] == "ERROR") {
+            throw new Exception($resultdata['Result']['ResultDetail']);
+        }
+
+        return $resultdata;
 
     }
 
@@ -648,7 +686,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe($via, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiUserActivity_AddUser"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem adding user to VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -695,7 +733,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe($via, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiUserActivity_AddUser"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem editing user in VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -737,7 +775,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe($via, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiUserActivityGet"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem getting user VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -786,7 +824,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe($viaid, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiUserActivity_RemoveUser"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem removing user from VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -822,7 +860,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe(null, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiListPlayback"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem getting list of playbacks for VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -866,7 +904,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe(null, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiListPlayback"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem editing playback for VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -906,7 +944,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe(null, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiPlaybackDelete"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem deleteing playback for VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -946,7 +984,7 @@ class mod_via_api {
         $response = $this->send_saop_enveloppe(null, $data, $url);
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiRecordDownload"]) {
-            throw new Exception("Problem reading getting VIA activity id");
+            throw new Exception("Problem downloading playback for VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -956,6 +994,40 @@ class mod_via_api {
         return $resultdata;
     }
 
+    /**
+     * Get downloaded notices, an email is sent when a recording download is ready
+     *
+     * @param timestamp ($lastcron)
+     * @return list of playbacks with recordings ready for download
+     */
+    public function get_notices($lastcron) {
+        global $CFG;
+
+        $url = 'GetLatestExports';
+
+        $data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ';
+        $data .= 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        $data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        $data .= '<soap:Body>';
+        $data .= "<cApiGetLatestExports>";
+        $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
+        $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
+        $data .= "<DateFrom>".$this->change_date_format($lastcron)."</DateFrom>";
+        $data .= "</cApiGetLatestExports>";
+        $data .= "</soap:Body>";
+        $data .= "</soap:Envelope>";
+        $response = $this->send_saop_enveloppe(null, $data, $url);
+
+        if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiGetLatestExports"]) {
+            throw new Exception("Problem getting download notices for VIA activity");
+        }
+
+        if ($resultdata['Result']['ResultState'] == "ERROR") {
+            throw new Exception($resultdata['Result']['ResultDetail']);
+        }
+
+        return $resultdata;
+    }
 
     /**
      * Sends invitation to a user for an activity
@@ -1271,7 +1343,8 @@ class mod_via_api {
                             foreach ($viaparticipant as $participant) {
                                 // We update all activities in which the user was enrolled, synched or not.
                                 try {
-                                    via_add_participant($muser->id, $participant->activityid, $participant->participanttype, true);
+                                    $this->via_add_participant($muser->id, $participant->activityid,
+                                    $participant->participanttype, true);
                                 } catch (Exception $e) {
                                     return false;
                                 }

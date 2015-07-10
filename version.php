@@ -27,11 +27,19 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version = 2015012006;// Needs API version 6.5 or greater!
+global $CFG;
 
-$plugin->component = 'mod_via';
-$plugin->requires = 2014050800; // Moodle2.7!
-$plugin->cron     = 300;
+if ($CFG->version >= 2013111800) {
+    /* For moodle version 2.6 or greater */
+    $plugin->component = 'mod_via';
+    $plugin->version = 2015050101; // Needs API version 6.5 or greater!
+    $plugin->requires = 2011033010; // Moodle2.0!
+    $plugin->cron     = 300;
+} else {
+    /* For moodle version 2.5 or lower */
+    $module->component = 'mod_via';
+    $module->version   = 2015050101; // Needs API version 6.5 or greater!
+    $module->requires  = 2011033010;    // Moodle2.0!
+    $module->cron      = 300;
+}
 
-$plugin->maturity  = MATURITY_STABLE;
-$plugin->release   = "Stable";

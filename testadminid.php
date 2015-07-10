@@ -32,13 +32,13 @@ require_login();
 
 if ($site = get_site()) {
     if (function_exists('require_capability')) {
-        require_capability('moodle/site:config', context_system::instance());
+        require_capability('moodle/site:config', via_get_system_instance());
     } else if (!isadmin()) {
         error("You need to be admin to use this page");
     }
 }
 
-$PAGE->set_context(context_system::instance());
+$PAGE->set_context(via_get_system_instance());
 
 $site = get_site();
 

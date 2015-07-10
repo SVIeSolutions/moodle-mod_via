@@ -29,13 +29,14 @@ global $DB;
 
 require_once('../../config.php');
 require_once($CFG->dirroot.'/mod/via/lib.php');
+require_once(get_vialib());
 
 $id = optional_param('id', null, PARAM_INT);    // Course ID.
 if (!($course = $DB->get_record('course', array('id' => $id)))) {
     print_error('course ID is incorrect');
 }
 
-$context = context_course::instance($course->id);
+$context = via_get_course_instance($course->id);
 $vias = get_all_instances_in_course('via', $course);
 
 require_login($course->id);

@@ -28,6 +28,7 @@
 global $DB;
 require_once("../../config.php");
 require_once("lib.php");
+require_once(get_vialib());
 
 $id    = required_param('id', PARAM_INT);// Via!
 $edit  = optional_param('edit', false, PARAM_TEXT);// Edit via recording.
@@ -47,7 +48,7 @@ if (! $cm = get_coursemodule_from_instance("via", $via->id, $course->id)) {
 }
 
 require_login($course->id, false, $cm);
-$context = context_module::instance($cm->id);
+$context = via_get_module_instance($cm->id);
 
 if (!has_capability('mod/via:manage', $context)) {
     print_error('You do not have the permission to edit via playbacks');

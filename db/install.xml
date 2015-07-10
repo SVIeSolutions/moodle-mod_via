@@ -22,11 +22,13 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
       <FIELD NAME="private" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="isreplayallowed" NEXT="profilid"/>
       <FIELD NAME="profilid" TYPE="char" LENGTH="200" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="private" NEXT="category"/>
       <FIELD NAME="category" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="profilid" NEXT="activitytype"/>
-      <FIELD NAME="activitytype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="category" NEXT="remindertime"/>
-      <FIELD NAME="remindertime" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false"  PREVIOUS="activitytype" NEXT="needconfirmation"/>
+      <FIELD NAME="activitytype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="category" NEXT="showparticipants"/>
+      <FIELD NAME="showparticipants" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="activitytype" NEXT="remindertime"/>
+      <FIELD NAME="remindertime" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false"  PREVIOUS="showparticipants" NEXT="needconfirmation"/>
       <FIELD NAME="needconfirmation" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="remindertime" NEXT="roomtype"/>
-      <FIELD NAME="roomtype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="needconfirmation" NEXT="waitingroomaccessmode"/>
-      <FIELD NAME="waitingroomaccessmode" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="1" SEQUENCE="false" PREVIOUS="roomtype" NEXT="activitystate"/>
+      <FIELD NAME="roomtype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="needconfirmation" NEXT="isnewvia"/>
+      <FIELD NAME="isnewvia" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="roomtype" NEXT="waitingroomaccessmode"/>
+      <FIELD NAME="waitingroomaccessmode" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="1" SEQUENCE="false" PREVIOUS="isnewvia" NEXT="activitystate"/>
       <FIELD NAME="activitystate" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="waitingroomaccessmode" NEXT="enroltype"/>
       <FIELD NAME="enroltype" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="activitystate" NEXT="mailed"/>
       <FIELD NAME="mailed" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="enroltype" NEXT="sendinvite"/>
@@ -97,7 +99,7 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
     </INDEXES>
   </TABLE>
 
-  <TABLE NAME="via_presence" COMMENT="Contains via info about participants' presence in activities" PREVIOUS="via_participants">
+  <TABLE NAME="via_presence" COMMENT="Contains via info about participants' presence in activities" PREVIOUS="via_participants" NEXT="via_cron">
     <FIELDS>
       <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="userid"/>
       <FIELD NAME="userid" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="activityid"/>
@@ -114,6 +116,31 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
       <INDEX NAME="userid" UNIQUE="false" FIELDS="userid" NEXT="activityid"/>
       <INDEX NAME="activityid" UNIQUE="false" FIELDS="activityid" PREVIOUS="userid"/>
     </INDEXES>
+  </TABLE>
+
+  <TABLE NAME="via_cron" COMMENT="Contains via cron functions to avoid unnecessary calls to the API" PREVIOUS="via_presence" NEXT="via_params">
+    <FIELDS>
+      <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="name"/>
+      <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="cron"/>
+      <FIELD NAME="cron" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="name" NEXT="lastcron"/>
+      <FIELD NAME="lastcron" TYPE="number" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="cron"/>
+    </FIELDS>
+    <KEYS>
+      <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_id"/>
+    </KEYS>
+  </TABLE>
+
+  <TABLE NAME="via_params" COMMENT="Contains locally stored via paramters to avoid unnecessary calls to the API" PREVIOUS="via_cron">
+    <FIELDS>
+      <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="param_type"/>
+      <FIELD NAME="param_type" TYPE="char" LENGTH="50" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="id" NEXT="param_name"/>
+      <FIELD NAME="param_name" TYPE="char" LENGTH="50" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="param_type" NEXT="value"/>
+      <FIELD NAME="value" TYPE="char" LENGTH="200" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="param_name" NEXT="timemodified"/>
+      <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="value"/>
+    </FIELDS>
+    <KEYS>
+      <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_id"/>
+    </KEYS>
   </TABLE>
 
 </TABLES>

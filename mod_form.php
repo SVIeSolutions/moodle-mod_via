@@ -46,10 +46,14 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
 
         // Description!
-        $this->add_intro_editor(true);
+                // Description!
+        if ($CFG->version >= 2015051100) {
+            $this->standard_intro_elements();
+        } else {
+            $this->add_intro_editor(true);
+        }
 
         // DURATION!
-
         $mform->addElement('header', 'activityduration', get_string('headerduration', 'via'));
 
         // Permanent activity!
@@ -117,20 +121,48 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->disabledif ('roomtype', 'pastevent', 'eq', 1);
         $mform->addHelpButton('roomtype', 'roomtype', 'via');
 
-        $qualityoptions = via_get_list_profils();
+        // Show Participants!
+        $showoptions = array( 0 => get_string('hidelist', 'via'),
+                              1 => get_string('showlist', 'via'));
+        $mform->addElement('select', 'showparticipants', get_string('showparticipants', 'via'), $showoptions);
+        $mform->setAdvanced('showparticipants', true);
+        $mform->setDefault('showparticipants', 1);
+        $mform->disabledif ('showparticipants', 'roomtype', 'eq', 1);
+        $mform->addHelpButton('showparticipants', 'showparticipants', 'via');
+
+        // Activity version!
+        $versions = $DB->get_record('via_params', array('param_type' => 'viaversion'));
+        if (!$versions) {
+            via_get_cieinfo();
+            $versions = $DB->get_record('via_params', array('param_type' => 'viaversion'));
+        }
+        if ($versions->value == 0) {
+            $versionoptions = array( 0 => get_string('oldversion', 'via'), 1 => get_string('newversion', 'via'));
+            $mform->setDefault('isnewvia', 0);
+        } else if ($versions->value == 1) {
+            $versionoptions = array( 0 => get_string('oldversion', 'via'));
+        } else {
+            $versionoptions = array(1 => get_string('newversion', 'via'));
+        }
+
+        $mform->addElement('select', 'isnewvia', get_string('roomversion', 'via'), $versionoptions);
+        $mform->setAdvanced('isnewvia', true);
+        $mform->disabledif ('isnewvia', 'wassaved', 'eq', 1);
+        $mform->addHelpButton('isnewvia', 'roomversion', 'via');
+
+        $qualityoptions = $DB->get_records('via_params', array('param_type' => 'multimediaprofil'));
+        if (!$qualityoptions) {
+            via_get_list_profils();
+            $qualityoptions = $DB->get_records('via_params', array('param_type' => 'multimediaprofil'));
+        }
         if ($qualityoptions) {
-            $mform->addElement('select', 'profilid', get_string('multimediaquality', 'via'), $qualityoptions);
-            $mform->setAdvanced('profilid', true);
-
-            $qualitydefault = array_search(end($qualityoptions), $qualityoptions);
-
-            foreach ($qualityoptions as $key => $quality) {
-                if ($quality == "Qualité standard") {
-                    $qualitydefault = $key;
-                }
+            $options = array();
+            foreach ($qualityoptions as $option) {
+                $options[$option->value] = $option->param_name;
             }
-
-            $mform->setDefault('profilid', $qualitydefault);
+            $mform->addElement('select', 'profilid', get_string('multimediaquality', 'via'), $options);
+            $mform->setAdvanced('profilid', true);
+            $mform->setDefault('profilid', 1);
             $mform->disabledif ('profilid', 'pastevent', 'eq', 1);
             $mform->addHelpButton('profilid', 'multimediaquality', 'via');
         }
@@ -139,7 +171,6 @@ class mod_via_mod_form extends moodleform_mod {
         $recordoptions = array( 0 => get_string('notactivated', 'via'),
                                 1 => get_string('unified', 'via'),
                                 2 => get_string('multiple', 'via'));
-
         $mform->addElement('select', 'recordingmode', get_string('recordingmode', 'via'), $recordoptions);
         $mform->setDefault('recordingmode', 0);
         $mform->disabledif ('recordingmode', 'pastevent', 'eq', 1);
@@ -228,6 +259,9 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->addElement('hidden', 'pastevent', 0);
         $mform->setType('pastevent', PARAM_BOOL);
 
+        $mform->addElement('hidden', 'wassaved', 0);
+        $mform->setType('wassaved', PARAM_BOOL);
+
         $mform->addElement('hidden', 'nowevent', 0);
         $mform->setType('nowevent', PARAM_BOOL);
 
@@ -262,11 +296,14 @@ class mod_via_mod_form extends moodleform_mod {
      * @param mixed $default_values object or array of default values
      */
     public function data_preprocessing(&$defaultvalues) {
+        global $DB;
+
         if (isset($defaultvalues['viaactivityid']) && $defaultvalues['viaactivityid']) {
-            if ($sviinfos = via_update_info_database($defaultvalues)) {
+            if ($sviinfos = $DB->get_record('via', array('viaactivityid' => $defaultvalues['viaactivityid']))) {
                 foreach ($sviinfos as $key => $svi) {
                     $defaultvalues[$key] = $svi;
                 }
+                $defaultvalues['wassaved'] = 1;
             }
             if (($defaultvalues['datebegin'] + ($defaultvalues['duration'] * 60)) < time() &&
                 $defaultvalues['activitytype'] != 2) {
@@ -275,12 +312,13 @@ class mod_via_mod_form extends moodleform_mod {
                 $defaultvalues['pastevent'] = 0;
             }
             if (time() > $defaultvalues['datebegin'] &&
-                time() < ($defaultvalues['datebegin'] + ($defaultvalues['duration'] * 60)) &&
-                $defaultvalues['nbConnectedUsers'] >= 1) {
+                time() < ($defaultvalues['datebegin'] + ($defaultvalues['duration'] * 60))) {
                 $defaultvalues['nowevent'] = 1;
             } else {
                 $defaultvalues['nowevent'] = 0;
             }
+        } else {
+            $defaultvalues['wassaved'] = 0;
         }
         if (isset($defaultvalues['activitytype'])) {
             switch($defaultvalues['activitytype']) {

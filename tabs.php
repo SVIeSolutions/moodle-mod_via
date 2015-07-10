@@ -29,7 +29,7 @@ if (empty($currenttab) or empty($course)) {
     print_error('You cannot call this script in that way');
 }
 
-$context = context_module::instance($cm->id);
+$context = via_get_module_instance($cm->id);
 
 $inactive = null;
 $activetwo = null;
