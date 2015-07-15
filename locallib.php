@@ -906,8 +906,8 @@ function via_userlogs($participant) {
 
                 // Insert OR update via_presence table!
                 $presence = new stdClass();
-                $presence->connection_duration = $userlog['ConnectionDuration'];
-                $presence->playback_duration = $userlog['PlaybackDuration'];
+				$presence->connection_duration = str_replace(',', '.', $userlog['ConnectionDuration']);
+				$presence->playback_duration = str_replace(',', '.', $userlog['PlaybackDuration']);
                 $presence->status = $status;
                 $presence->timemodified = time();
 

@@ -1,6 +1,9 @@
 
 This file defines the changes made to Via - Virtual teaching
 
+last update 01/05/2015 (2015050102)
+- validations were added to replace commas and replace them with dots for the presence tables. Commas were returned by french servers.
+
 last update 01/05/2015 (2015050100)
 - new tables were created for storing API information to call Via less often.
 - functions were added in the cron to call these new functions at varying intervals 
