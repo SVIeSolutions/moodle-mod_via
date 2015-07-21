@@ -1,6 +1,9 @@
 
 This file defines the changes made to Via - Virtual teaching
 
+last update 01/05/2015 (2015050103)
+- corrections were made to the activity duplication function which was not passing on the isnewvia value.
+
 last update 01/05/2015 (2015050102)
 - validations were added to replace commas and replace them with dots for the presence tables. Commas were returned by french servers.
 

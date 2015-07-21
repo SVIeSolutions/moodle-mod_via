@@ -245,6 +245,10 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->addElement('select', 'enroltype', get_string('enrolmenttype', 'via'), $enrolmentoptions);
         $mform->setDefault('enroltype', 0);
         $mform->addHelpButton('enroltype', 'enrolmenttype', 'via');
+		
+		//$mform->addElement('select', 'users', 'users', array(0=>'user1', 1=> 'user2', 2=> 'user3'));
+		//$mform->setDefault('enroltype', 0);
+		//$mform->addHelpButton('enroltype', 'enrolmenttype', 'via');
 
         $mform->addElement('checkbox', 'noparticipants',  get_string('noparticipantscheckbox', 'via'));
         $mform->setDefault('noparticipants', 0);
