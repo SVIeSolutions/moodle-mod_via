@@ -1,5 +1,7 @@
 
 This file defines the changes made to Via - Virtual teaching
+last update 08/09/2015 (2015050104)
+- corrections were made to the list of recordings; Via 8 recordings can be viewed on mobiles.
 
 last update 01/05/2015 (2015050103)
 - corrections were made to the activity duplication function which was not passing on the isnewvia value.

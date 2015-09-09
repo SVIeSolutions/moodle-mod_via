@@ -322,7 +322,7 @@ if (isset($deleted)) {
         echo $OUTPUT->box_end();
 
         // Print recordings list.
-        if ($viewinfo && has_capability('mod/via:view', $context) && is_mobile_phone() == false) {
+        if ($viewinfo && has_capability('mod/via:view', $context)  && (is_mobile_phone() == false || $via->isnewvia == 1)) {
             if (isset($error)) {
                 echo  'this title aready exists';
             }
