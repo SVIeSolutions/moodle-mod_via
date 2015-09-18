@@ -1400,11 +1400,11 @@ class mod_via_api {
         curl_setopt($soap, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($soap, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($soap, CURLOPT_POST,           true );
-        if (isset($CFG->proxyhost[0])) {
+        if (!empty($CFG->proxyhost) && !is_proxybypass($CFG->proxyhost)) {
             if ($CFG->proxyport === '0') {
                 curl_setopt($soap, CURLOPT_PROXY, $CFG->proxyhost);
             } else {
-                curl_setopt($ch, CURLOPT_PROXY, $CFG->proxyhost.':'.$CFG->proxyport);
+                curl_setopt($soap, CURLOPT_PROXY, $CFG->proxyhost.':'.$CFG->proxyport);
             }
         }
 
