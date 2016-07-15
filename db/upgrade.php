@@ -39,7 +39,6 @@ function xmldb_via_upgrade($oldversion = 0) {
 
     // Define field introformat to be added to via.
     if ($oldversion < 2009042701) {
-
         $table = new xmldb_table('via');
         $field = new xmldb_field('introformat', XMLDB_TYPE_INTEGER, '4', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0', 'intro');
 
@@ -63,7 +62,6 @@ function xmldb_via_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2013092002) {
-
         $table = new xmldb_table('via');
         $field = new xmldb_field('invitemsg', XMLDB_TYPE_TEXT, 'big', null, null, null, null, null);
         if ($dbman->field_exists($table, $field)) {
@@ -114,7 +112,6 @@ function xmldb_via_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2014040100) {
-
         $table = new xmldb_table('via');
         $field = new xmldb_field('noparticipants', XMLDB_TYPE_INTEGER, '2', null, null, null, null);
         if (!$dbman->field_exists($table, $field)) {
@@ -138,7 +135,6 @@ function xmldb_via_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2014080162) {
-
         $table = new xmldb_table('via');
         $field = new xmldb_field('backupvia');
         if ($dbman->field_exists($table, $field)) {
@@ -165,10 +161,8 @@ function xmldb_via_upgrade($oldversion = 0) {
 
         // Via savepoint reached.
         upgrade_mod_savepoint($result, 2014080162, 'via');
-
     }
     if ($oldversion < 2014080163) {
-
         $table = new xmldb_table('via');
         $field = new xmldb_field('description', XMLDB_TYPE_TEXT, null, null, null, null, null, 'name');
         // Launch rename field intro!
@@ -183,7 +177,6 @@ function xmldb_via_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2014080167) {
-
         $table = new xmldb_table('via_users');
 
         $field = new xmldb_field('username', XMLDB_TYPE_TEXT, '200', XMLDB_UNSIGNED, null, null, null, 'viauserid');
@@ -212,7 +205,6 @@ function xmldb_via_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2014110100) {
-
         $table = new xmldb_table('via');
 
         $field = new xmldb_field('presence', XMLDB_TYPE_INTEGER, '4', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '30', 'duration');
@@ -241,7 +233,6 @@ function xmldb_via_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2014120101) {
-
         unset_config('via_sendinvitation', 'via');
         unset_config('via_moodleemailnotification', 'via');
 
@@ -270,7 +261,6 @@ function xmldb_via_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2015012004) {
-
         $table = new xmldb_table('via');
         $index = new xmldb_index('course', XMLDB_INDEX_NOTUNIQUE, array('course'));
         // Conditionally launch add index.
@@ -308,7 +298,6 @@ function xmldb_via_upgrade($oldversion = 0) {
     }
 
     if ($oldversion < 2015050101) {
-
         $table = new xmldb_table('via_cron');
 
         $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
@@ -325,7 +314,6 @@ function xmldb_via_upgrade($oldversion = 0) {
         // These can be changed by the company/school to meet their needs!
         $functions = array();
         $functions[] = array('name' => 'via_send_reminders', 'cron' => '600', 'lastcron' => 0);
-        $functions[] = array('name' => 'via_send_invitations', 'cron' => '600', 'lastcron' => 0);
         $functions[] = array('name' => 'via_add_enrolids', 'cron' => '2400', 'lastcron' => 0);
         $functions[] = array('name' => 'via_synch_users', 'cron' => '1200', 'lastcron' => 0);
         $functions[] = array('name' => 'via_synch_participants', 'cron' => '1200', 'lastcron' => 0);
@@ -365,11 +353,93 @@ function xmldb_via_upgrade($oldversion = 0) {
         // Savepoint reached!
         upgrade_mod_savepoint($result, 2015050101, 'via');
     }
-	
-	if ($oldversion < 2015050104) {
-		
-		// Savepoint reached!
-		upgrade_mod_savepoint($result, 2015050104, 'via');
-	}
 
+    if ($oldversion < 2016010101) {
+        $table = new xmldb_table('via');
+        $field = new xmldb_field('ish264', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, null, null, null, 'noparticipants');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2016010102, 'via');
+    }
+
+    if ($oldversion < 2016010112) {
+        $table = new xmldb_table('via_cron');
+        if ($dbman->table_exists($table)) {
+            $dbman->drop_table($table);
+        }
+
+        $table = new xmldb_table('via');
+        $field = new xmldb_field('usersynchronization', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null);
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->change_field_precision($table, $field);
+        }
+
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2016010112, 'via');
+    }
+
+    if ($oldversion < 2016010116) {
+        $table = new xmldb_table('via');
+        $field = new xmldb_field('playbacksync', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null, 'ish264');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $field = new xmldb_field('groupid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, null, null, null, 'groupingid');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+        $field = new xmldb_field('private');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->drop_field($table, $field);
+        }
+
+        $table = new xmldb_table('via_playbacks');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('playbackid', XMLDB_TYPE_CHAR, '100', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 'id');
+        $table->add_field('playbackidref', XMLDB_TYPE_CHAR, '100', XMLDB_UNSIGNED, null, null, 'playbackid');
+        $table->add_field('activityid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'playbackidref');
+        $table->add_field('title', XMLDB_TYPE_CHAR, '100', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'activityid');
+        $table->add_field('creationdate', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'title');
+        $table->add_field('duration', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'creationdate');
+        $table->add_field('accesstype', XMLDB_TYPE_INTEGER, '2', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'duration');
+        $table->add_field('isdownloadable', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'accesstype');
+        $table->add_field('hasfullvideorecord', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null,
+        'isdownloadable');
+        $table->add_field('hasmobilevideorecord', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null,
+        'hasfullvideorecord');
+        $table->add_field('hasaudiorecord', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null,
+        'hasmobilevideorecord');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+        $index = new xmldb_index('playbackid', XMLDB_INDEX_NOTUNIQUE, array('playbackid'));
+        $dbman->add_index($table, $index);
+        $index = new xmldb_index('activityid', XMLDB_INDEX_NOTUNIQUE, array('activityid'));
+        $dbman->add_index($table, $index);
+
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2016010116, 'via');
+    }
+
+    if ($oldversion < 2016042003) {
+
+        $table = new xmldb_table('via_playbacks');
+        $field = new xmldb_field('duration', XMLDB_TYPE_INTEGER, '4', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'creationdate');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->change_field_precision($table, $field);
+        }
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2016042003, 'via');
+    }
+
+    if ($oldversion < 2016042006) {
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2016042006, 'via');
+    }
 }

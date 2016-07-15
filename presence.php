@@ -17,12 +17,12 @@
 /**
  *
  * Creates printable presence status page.
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 ?><link href="styles.css" rel="stylesheet" type="text/css" /><?php
@@ -33,6 +33,8 @@ require_once($CFG->dirroot.'/mod/via/lib.php');
 require_once(get_vialib());
 
 $id    = required_param('id', PARAM_INT);// Via!
+$showemail = optional_param('e', 0, PARAM_INT);
+
 $cm = get_coursemodule_from_id('via', $id);
 
 global $CFG, $DB;
@@ -73,10 +75,8 @@ $participants = $DB->get_records_sql("SELECT v.id, v.userid, v.activityid, vu.vi
                                       WHERE v.activityid = " . $via->id . ' ORDER BY (v.participanttype+1)%3 , u.lastname ASC');
 
 foreach ($participants as $participant) {
-
     if (!isset($participant->connection_duration)) {
         if (isset($participant->viauserid)) {
-
             $userlogs = via_userlogs($participant);
             $completestring = explode('(', $userlogs['0']);
             $string = $completestring['0'];
@@ -91,9 +91,7 @@ foreach ($participants as $participant) {
             $presence->activityid = $participant->activityid;
 
             $DB->insert_record('via_presence', $presence);
-
         }
-
     } else if ($participant->connection_duration >= $via->presence) {
         $string = get_string('present', 'via');
         $status = 1;
@@ -106,9 +104,13 @@ foreach ($participants as $participant) {
     }
 
     $role = via_get_role($participant->participanttype);
+    if ($showemail == 1) {
+        $email = $participant->email;
+    } else {
+        $email = '--';
+    }
 
-    $table->data[] = array ($role, $participant->lastname.', '. $participant->firstname, $participant->email, $string);
-
+    $table->data[] = array ($role, $participant->lastname.', '. $participant->firstname, $email, $string);
 }
 
 // Add information to table that will be displayed.

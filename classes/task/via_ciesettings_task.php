@@ -16,22 +16,38 @@
 
 /**
  *
- * Code fragment to define the version of the via module
+ * via task
  *
- * @package    mod
- * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @package    mod_via
+ * @subpackage task
+ * @copyright  SVIeSolutions <jasmin.giroux@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
 
-defined('MOODLE_INTERNAL') || die();
+namespace mod_via\task;
 
-global $CFG;
+class via_ciesettings_task extends \core\task\scheduled_task {
 
-$plugin->component = 'mod_via';
-$plugin->version = 2016042006;
-$plugin->requires = 2011033010;
-$plugin->cron     = 300;
-$plugin->maturity = MATURITY_STABLE; // This is considered as ready for production sites.
-$plugin->release = 'v2.7-r6';
+    public function get_name() {
+        return get_string('via_ciesettings_task', 'via');
+    }
+
+    public function execute() {
+        global $CFG, $DB;
+
+        require_once($CFG->dirroot.'/mod/via/lib.php');
+        require_once($CFG->dirroot.'/config.php');
+
+        // Categories.
+        if (get_config('via', 'via_categories')) {
+            via_check_categories();
+        }
+
+        // Profils.
+        via_get_list_profils();
+
+        // Version restriction.
+        via_get_cieinfo();
+    }
+}

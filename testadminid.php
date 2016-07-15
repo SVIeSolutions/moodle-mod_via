@@ -16,12 +16,12 @@
 
 /**
  * Permits the moodle admin to test the moodle admin key provided
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 require_once('../../config.php');

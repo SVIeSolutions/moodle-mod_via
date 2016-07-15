@@ -16,13 +16,13 @@
 
 /**
  *
- * Creates tabs (participant, animator, presentor) for the manage page.
- * 
+ * Creates tabs (participant, animator, host) for the manage page.
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 if (empty($currenttab) or empty($course)) {
@@ -43,7 +43,7 @@ if ($via->noparticipants != 1) {
 
 $row[] = new tabobject('animators', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=3', get_string("animators", "via"));
 
-$row[] = new tabobject('presentator', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=2', get_string("presentator", "via"));
+$row[] = new tabobject('host', $CFG->wwwroot.'/mod/via/manage.php?id='.$via->id.'&t=2', get_string("host", "via"));
 
 $tabs[] = $row;
 

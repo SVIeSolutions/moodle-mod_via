@@ -32,3 +32,11 @@ if (link) {
         document.getElementById("error").className = "error";
     };
 }
+
+var btnsynch = document.getElementById("btnsynch");
+if (btnsynch) {
+    btnsynch.onclick = function () {
+        document.getElementById("btnsynch").className = "hide";
+        document.getElementById("wait").className = "wait";
+    };
+}

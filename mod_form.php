@@ -17,25 +17,37 @@
 /**
  *
  * Instance add/edit form
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 
+require_once(get_vialib());
 
 /** Inherited class used when editing via instances. */
 class mod_via_mod_form extends moodleform_mod {
 
     /** Defines the form contents. */
     public function definition() {
-        global $CFG, $DB;
+        global $CFG, $DB, $USER, $PAGE;
+
+        $PAGE->requires->jquery();
+        $PAGE->requires->js('/mod/via/javascript/mod_form.js', true);
 
         $mform =& $this->_form;
+
+        $groupingid = optional_param('groupingid', null, PARAM_INT);
+
+        if (isset($_SESSION['ErrMaxSimActMessage'])) {
+            $mform->addElement('html', '<div class="mform" style="text-align:center;">
+            <span class="error" sty;e="text-align:left;">' . $_SESSION['ErrMaxSimActMessage'] . '</span></div>');
+            unset($_SESSION['ErrMaxSimActMessage']);
+        }
 
         // General info.
         $mform->addElement('header', 'general', get_string('general', 'form'));
@@ -46,7 +58,6 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->addRule('name', null, 'required', null, 'client');
 
         // Description!
-                // Description!
         if ($CFG->version >= 2015051100) {
             $this->standard_intro_elements();
         } else {
@@ -54,7 +65,7 @@ class mod_via_mod_form extends moodleform_mod {
         }
 
         // DURATION!
-        $mform->addElement('header', 'activityduration', get_string('headerduration', 'via'));
+        $mform->addElement('header', 'activityduration', get_string('durationheader', 'via'));
 
         // Permanent activity!
         if (get_config('via', 'via_permanentactivities') == 1) {
@@ -65,27 +76,30 @@ class mod_via_mod_form extends moodleform_mod {
 
         // Start Date!
         $mform->addElement('date_time_selector', 'datebegin', get_string('availabledate', 'via'), array('optional' => false));
-        $mform->setDefault('datebegin', time());
+        $mform->setDefault('datebegin', (time() + (60 * 10)));
         $mform->disabledif ('datebegin', 'activitytype', 'checked');
         $mform->disabledif ('datebegin', 'nowevent', 'eq', 1);
         $mform->disabledif ('datebegin', 'pastevent', 'eq', 1);
 
         // Duration!
-        $mform->addElement('text', 'duration', get_string('duration', 'via'), array('size' => '4'));
+        $mform->addElement('text', 'duration', get_string('duration', 'via'), array('size' => 4, 'maxlength' => 4));
         $mform->setType('duration', PARAM_INT);
         $mform->setDefault('duration', '60');
         $mform->disabledif ('duration', 'activitytype', 'checked');
         $mform->disabledif ('duration', 'pastevent', 'eq', 1);
 
-        $mform->addElement('html', '<script type="text/javascript"
-                            src="'.$CFG->wwwroot.'/mod/via/javascript/presence.js"></script>');
-
-        // Presence!
-        $mform->addElement('text', 'presence', get_string('presence', 'via'), array('size' => '4'));
-        $mform->addHelpButton('presence', 'presence', 'via');
-        $mform->setType('presence', PARAM_INT);
-        $mform->setDefault('presence', '30');
-        $mform->disabledif ('presence', 'activitytype', 'checked');
+        if (get_config('via', 'via_presencestatus')) {
+            // Presence!
+            $mform->addElement('text', 'presence', get_string('presence', 'via'), array('size' => 4, 'maxlength' => 4));
+            $mform->addHelpButton('presence', 'presence', 'via');
+            $mform->setType('presence', PARAM_INT);
+            $mform->setDefault('presence', '30');
+            $mform->disabledif ('presence', 'activitytype', 'checked');
+        } else {
+            $mform->addElement('hidden', 'presence', get_string('presence', 'via'), array('size' => 4, 'maxlength' => 4));
+            $mform->setType('presence', PARAM_INT);
+            $mform->setDefault('presence', '0');
+        }
 
         // Automatic reminders!
         $onehour = 60 * 60;
@@ -101,7 +115,6 @@ class mod_via_mod_form extends moodleform_mod {
                                 $oneweek => get_string('recalloneweek', 'via'));
 
         $mform->addElement('select', 'remindertime', get_string('sendrecall', 'via'), $roptions);
-        $mform->setAdvanced('remindertime', true);
         $mform->setDefault('remindertime', 0);
         $mform->disabledif ('remindertime', 'activitytype', 'checked');// Cannot send reminder if permanent activity!
         $mform->disabledif ('remindertime', 'nowevent', 'eq', 1);
@@ -115,7 +128,6 @@ class mod_via_mod_form extends moodleform_mod {
         $roomoptions = array( 1 => get_string('standard', 'via'), 2 => get_string('seminar', 'via'));
 
         $mform->addElement('select', 'roomtype', get_string('roomtype', 'via'), $roomoptions);
-        $mform->setAdvanced('roomtype', true);
         $mform->setDefault('roomtype', 1);
         $mform->disabledif ('roomtype', 'nowevent', 'eq', 1);
         $mform->disabledif ('roomtype', 'pastevent', 'eq', 1);
@@ -125,7 +137,6 @@ class mod_via_mod_form extends moodleform_mod {
         $showoptions = array( 0 => get_string('hidelist', 'via'),
                               1 => get_string('showlist', 'via'));
         $mform->addElement('select', 'showparticipants', get_string('showparticipants', 'via'), $showoptions);
-        $mform->setAdvanced('showparticipants', true);
         $mform->setDefault('showparticipants', 1);
         $mform->disabledif ('showparticipants', 'roomtype', 'eq', 1);
         $mform->addHelpButton('showparticipants', 'showparticipants', 'via');
@@ -137,16 +148,14 @@ class mod_via_mod_form extends moodleform_mod {
             $versions = $DB->get_record('via_params', array('param_type' => 'viaversion'));
         }
         if ($versions->value == 0) {
-            $versionoptions = array( 0 => get_string('oldversion', 'via'), 1 => get_string('newversion', 'via'));
-            $mform->setDefault('isnewvia', 0);
+            $versionoptions = array( 0 => get_string('versionold', 'via'), 1 => get_string('versionnew', 'via'));
         } else if ($versions->value == 1) {
-            $versionoptions = array( 0 => get_string('oldversion', 'via'));
+            $versionoptions = array( 0 => get_string('versionold', 'via'));
         } else {
-            $versionoptions = array(1 => get_string('newversion', 'via'));
+            $versionoptions = array(1 => get_string('versionnew', 'via'));
         }
 
         $mform->addElement('select', 'isnewvia', get_string('roomversion', 'via'), $versionoptions);
-        $mform->setAdvanced('isnewvia', true);
         $mform->disabledif ('isnewvia', 'wassaved', 'eq', 1);
         $mform->addHelpButton('isnewvia', 'roomversion', 'via');
 
@@ -158,11 +167,9 @@ class mod_via_mod_form extends moodleform_mod {
         if ($qualityoptions) {
             $options = array();
             foreach ($qualityoptions as $option) {
-                $options[$option->value] = $option->param_name;
+                $options[$option->value] = via_get_profilname($option->param_name);
             }
             $mform->addElement('select', 'profilid', get_string('multimediaquality', 'via'), $options);
-            $mform->setAdvanced('profilid', true);
-            $mform->setDefault('profilid', 1);
             $mform->disabledif ('profilid', 'pastevent', 'eq', 1);
             $mform->addHelpButton('profilid', 'multimediaquality', 'via');
         }
@@ -190,11 +197,10 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->addHelpButton('isreplayallowed', 'reviewacitvity', 'via');
 
         $waitingroomoptions = array(0 => get_string('donousewaitingroom', 'via'),
-                                    1 => get_string('inpresentatorabsence', 'via'),
+                                    1 => get_string('inhostabsence', 'via'),
                                     2 => get_string('awaitingauthorization', 'via'));
         $mform->addElement('select', 'waitingroomaccessmode', get_string('waitingroomaccessmode', 'via'), $waitingroomoptions);
         $mform->setDefault('waitingroomaccessmode', 0);
-        $mform->setAdvanced('waitingroomaccessmode', true);
         $mform->disabledif ('waitingroomaccessmode', 'pastevent', 'eq', 1);
         $mform->addHelpButton('waitingroomaccessmode', 'waitingroomaccessmode', 'via');
 
@@ -202,13 +208,18 @@ class mod_via_mod_form extends moodleform_mod {
             $mform->addElement('selectyesno', 'needconfirmation', get_string('needconfirmation', 'via'));
             $mform->setType('needconfirmation', PARAM_BOOL);
             $mform->setDefault('needconfirmation', 0);
-            $mform->setAdvanced('needconfirmation', true);
             $mform->disabledif ('needconfirmation', 'pastevent', 'eq', 1);
             $mform->addHelpButton('needconfirmation', 'needconfirmation', 'via');
         } else {
             $mform->addElement('hidden', 'needconfirmation', 0);
             $mform->setType('needconfirmation', PARAM_BOOL);
         }
+
+        $mform->addElement('checkbox', 'ish264', get_string("ish264", "via"));
+        $mform->setDefault('ish264', 0);
+        $mform->setType('ish264', PARAM_INT);
+        $mform->disabledif ('ish264', 'pastevent', 'eq', 1);
+        $mform->addHelpButton('ish264', 'ish264', 'via');
 
         // Categories!
         if (get_config('via', 'via_categories')) {
@@ -241,19 +252,132 @@ class mod_via_mod_form extends moodleform_mod {
         } else {
             $enrolmentoptions = array( 0 => get_string('automaticenrol', 'via'), 1 => get_string('manualenrol', 'via'));
         }
-
         $mform->addElement('select', 'enroltype', get_string('enrolmenttype', 'via'), $enrolmentoptions);
         $mform->setDefault('enroltype', 0);
         $mform->addHelpButton('enroltype', 'enrolmenttype', 'via');
-		
-		//$mform->addElement('select', 'users', 'users', array(0=>'user1', 1=> 'user2', 2=> 'user3'));
-		//$mform->setDefault('enroltype', 0);
-		//$mform->addHelpButton('enroltype', 'enrolmenttype', 'via');
 
         $mform->addElement('checkbox', 'noparticipants',  get_string('noparticipantscheckbox', 'via'));
         $mform->setDefault('noparticipants', 0);
         $mform->disabledif ('noparticipants', 'enroltype', 'eq', 1);
         $mform->addHelpButton('noparticipants', 'noparticipants', 'via');
+
+        // Enrolled users lists.
+        $ctx = context_course::instance($this->current->course);
+        if (!isset($groupingid) || $groupingid == 0) {
+            $users = get_enrolled_users($ctx);
+
+            $pusers = array();
+            foreach ($users as $key => $value) {
+                $pusers[$key] = $value->lastname . ' ' . $value->firstname . ' (' . $value->username .')';
+            }
+        } else {
+            $groups = groups_get_all_groups($this->current->course, 0, $groupingid);
+
+            $i = 1;
+            foreach ($groups as $g) {
+                $groupusers = get_enrolled_users($ctx, null, $g->id);
+                if ($i == 1) {
+                    $users = $groupusers;
+                } else {
+                    $users = array_unique(array_merge($users, $groupusers), SORT_REGULAR);
+                }
+                $i++;
+            }
+            $pusers = array();
+            foreach ($users as $key => $value) {
+                $pusers[$value->id] = $value->lastname . ' ' . $value->firstname . ' (' . $value->username .')';
+            }
+        }
+
+        // If we are editing, we have a participants list.
+        if ($this->current->instance != '') {
+            $editing = true;
+            $vusers = $DB->get_records_sql('SELECT vp.*, u.firstname, u.lastname, u.username
+                                            FROM {via_participants} vp
+                                            LEFT JOIN {user} u ON vp.userid = u.id
+                                            WHERE activityid = ' . $this->current->instance .'
+                                            ORDER BY u.lastname ASC');
+            if ($vusers) {
+                foreach ($vusers as $u) {
+                    if ($u->participanttype == 1) {
+                        $participants[$u->userid] = $u->lastname . ' ' . $u->firstname . ' (' . $u->username .')';
+                    } else if ($u->participanttype == 3) {
+                        $animators[$u->userid]  = $u->lastname . ' ' . $u->firstname . ' (' . $u->username .')';
+                    } else {
+                        $host[$u->userid] = $u->lastname . ' ' . $u->firstname . ' (' . $u->username .')';
+                    }
+                    // Unset users from potential users list!
+                    unset($pusers[$u->userid]);
+                }
+
+                // If there are no users we set to empty rather than null, to avoid php errors.
+                if (!isset($participants)) {
+                    $participants = '';
+                }
+                if (!isset($animators)) {
+                    $animators = '';
+                }
+            }
+        } else {
+            $editing = false;
+            $host = array();
+            $host[$USER->id] = $USER->lastname . ' ' . $USER->firstname . ' (' . $USER->username .')';
+            $participants = '';
+            $animators = '';
+        }
+
+        $group = array();
+        $group[] =& $mform->createElement('select', 'host',
+                    get_string('host', 'via'), $host, array('class' => 'viahost'));
+        $group[] =& $mform->createElement('button', 'add_host',
+                    get_string('host_replace', 'via'), 'onclick="replace_host()"');
+        $mform->addGroup($group, 'add_hostgroup', get_string('host', 'via'), array(' '), false);
+        if (!$editing) {
+            $mform->disabledif ('host', 'enroltype', 'eq', 0);
+            $mform->disabledif ('add_host', 'enroltype', 'eq', 0);
+        }
+
+        $mform->addElement('html', '<div class="fitem viausers">
+                            <i class="fa fa-spinner fa-spin fa-1x fa-fw margin-bottom"></i>
+                            <p class="element three potentialusers">'.get_string('potentialusers', 'via').'</p>
+                           <p class="three participants">'.get_string('participants', 'via').'</p>
+                           <p class="three animators">'.get_string('animators', 'via').'</p></div>');
+
+        $group = array();
+
+        $select1 = $mform->createElement('select', 'potentialusers', '', $pusers, array('class' => 'viauserlists'));
+        $select1->setMultiple(true);
+        $group[] =& $select1;
+        $mform->setType('potentialusers', PARAM_TEXT);
+
+        $group[] =& $mform->createElement('button', 'participants_remove_btn', '<', 'onclick="remove_participants()"');
+        $group[] =& $mform->createElement('button', 'participants_add_btn', '>', 'onclick="add_participants()"');
+
+        $select2 = $mform->createElement('select', 'participants', get_string('participants', 'via'),
+                    $participants, array('class' => 'viauserlists'));
+        $select2->setMultiple(true);
+        $group[] =& $select2;
+        $mform->setType('participants', PARAM_TEXT);
+
+        $group[] =& $mform->createElement('button', 'animators_remove_btn', '<', 'onclick="remove_animators()"');
+        $group[] =& $mform->createElement('button', 'animators_add_btn', '>', 'onclick="add_animators()"');
+
+        $select3 = $mform->createElement('select', 'animators', get_string('animators', 'via'),
+                    $animators, array('class' => 'viauserlists'));
+        $select3->setMultiple(true);
+        $group[] =& $select3;
+        $mform->setType('animators', PARAM_TEXT);
+
+        $mform->addGroup($group, 'add_users', get_string('manageparticipants', 'via'), array(' '), false);
+        if (!$editing) {
+            $mform->disabledif ('add_users', 'enroltype', 'eq', 0);
+        }
+
+        $mform->addElement('text', 'searchpotentialusers', get_string('users_search', 'via'), array('class' => 'search'));
+        $mform->setType('searchpotentialusers', PARAM_TEXT);
+
+        $mform->addElement('text', 'searchparticipants', get_string('participants_search', 'via'), array('class' => 'search'));
+        $mform->setType('searchparticipants', PARAM_TEXT);
 
         // HIDDEN INFO!
         global $USER;
@@ -281,10 +405,24 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->addElement('hidden', 'sendinvite', 0);
         $mform->setType('sendinvite', PARAM_INT);
 
+        // Temporary!
+        $mform->addElement('hidden', 'groupid', 0);
+        $mform->setType('groupid', PARAM_INT);
+
+        // We add the user id using jquery! To be saved in add_instance.
+        $mform->addElement('text', 'save_participants', '');
+        $mform->setType('save_participants', PARAM_TEXT);
+
+        $mform->addElement('text', 'save_animators', '');
+        $mform->setType('save_animators', PARAM_TEXT);
+
+        $mform->addElement('text', 'save_host', '');
+        $mform->setType('save_host', PARAM_TEXT);
+
         // GROUPS AND VISIBILITY!
         // Standard grouping features.
         $features = new stdClass();
-        $features->groups = true;
+        $features->groups = false;
         $features->groupings = true;
         $features->groupmembersonly = true;
         $this->standard_coursemodule_elements($features);
@@ -322,8 +460,72 @@ class mod_via_mod_form extends moodleform_mod {
                 $defaultvalues['nowevent'] = 0;
             }
         } else {
+            // TEMPLATE VALUES.
+            if ($sviinfos = $DB->get_records('via_params', array('param_type' => 'ActivityTemplate'))) {
+                foreach ($sviinfos as $key => $svi) {
+                    switch($svi->param_name) {
+                        case 'RecordingMode' :
+                            $defaultvalues['recordingmode'] = $svi->value;
+                            break;
+
+                        case 'SessionPresence' :
+                            $defaultvalues['presence'] = $svi->value;
+
+                        case 'RecordModeBehavior' :
+                            $defaultvalues['recordmodebehavior'] = $svi->value;
+                            break;
+
+                        case 'ReminderTime' :
+                            $defaultvalues['remindertime'] = $svi->value;
+                            break;
+
+                        case 'IsReplayAllowed' :
+                            $defaultvalues['isreplayallowed'] = $svi->value;
+                            break;
+
+                        case 'ProfilID' :
+                            $defaultvalues['profilid'] = $svi->value;
+                            break;
+
+                        case 'ActivityType' :
+                            $defaultvalues['activitytype'] = $svi->value;
+                            break;
+
+                        case 'NeedConfirmation' :
+                            $defaultvalues['needconfirmation'] = $svi->value;
+                            break;
+
+                        case 'RoomType' :
+                            $defaultvalues['roomtype'] = $svi->value;
+                            break;
+
+                        case 'IsNewVia' :
+                            $defaultvalues['isnewvia'] = $svi->value;
+                            break;
+
+                        case 'WaitingRoomAccessMode' :
+                            $defaultvalues['waitingroomaccessmode'] = $svi->value;
+                            break;
+
+                        case 'IsH264' :
+                            $defaultvalues['ish264'] = $svi->value;
+                            break;
+                    }
+                }
+            }
+
             $defaultvalues['wassaved'] = 0;
         }
+
+        if (isset($_SESSION['ErrMaxSimActMessageVia'])) {
+            foreach ($_SESSION['ErrMaxSimActMessageVia'] as $key => $svi) {
+                if ((isset($defaultvalues[$key]) || $key == 'name' || $key == 'duration') && $key != 'coursemodule') {
+                    $defaultvalues[$key] = $svi;
+                }
+            }
+            unset($_SESSION['ErrMaxSimActMessageVia']);
+        }
+
         if (isset($defaultvalues['activitytype'])) {
             switch($defaultvalues['activitytype']) {
                 case 1:
@@ -334,6 +536,20 @@ class mod_via_mod_form extends moodleform_mod {
                     break;
                 default:
                     $defaultvalues['activitytype'] = 0;
+                    break;
+            }
+        }
+
+        if (isset($defaultvalues['ish264'])) {
+            switch($defaultvalues['ish264']) {
+                case 0:
+                    $defaultvalues['ish264'] = 1;
+                    break;
+                case 1:
+                    $defaultvalues['ish264'] = 0;
+                    break;
+                default:
+                    $defaultvalues['ish264'] = 0;
                     break;
             }
         }
@@ -365,5 +581,4 @@ class mod_via_mod_form extends moodleform_mod {
 
         return $errors;
     }
-
 }

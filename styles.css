@@ -2,6 +2,10 @@ table#via_activity.generaltable,
 table.via_recordings {
     border: 1px solid #c5c5c5;
 }
+.path-mod-via .generaltable,
+#viaparticipants .generaltable {
+    width:100%;
+}
 table#via_activity TD {
     border-top: 1px solid #c5c5c5;
     border-bottom: 1px solid #c5c5c5;
@@ -42,12 +46,13 @@ A.viaaccessbutton {
 }
 .viaaccessbutton {
     vertical-align: middle;
+    margin-bottom: 0px !important;
 }
 
-A.viaaccessbutton.inactive {
-    background-color: #CCC;
+A.inactive.viaaccessbutton {
     pointer-events: none;
     cursor: default;
+    background-color: #CCC;
     color: #fff;
 }
 
@@ -55,7 +60,7 @@ TABLE#via_recordings .dimmed_text .deleteplayback A {
     color: #999;
 }
 
-TABLE#via_recordings A.modify {
+/*TABLE#via_recordings A.modify {
     background: url([[pix:moodle|i/edit]]) left center no-repeat;
     padding-left: 20px;
 }
@@ -76,7 +81,7 @@ TABLE#via_recordings A.showvia {
 TABLE#via_recordings A.download {
     background: url([[pix:moodle|a/download_all]]) left center no-repeat;
     padding-left: 20px;
-}
+}*/
 
 .viaaccessbutton IMG,
 .viabutton IMG {
@@ -86,7 +91,6 @@ TABLE#via_recordings A.download {
 }
 
 table#via_recordings {
-    width: 90%;
     background-color: #fff;
     margin:0 auto;
 }
@@ -118,13 +122,12 @@ table#via_recordings td.title {
 }
 
 table#via_recordings td.atelier {
-    padding-left: 4em;
-    font-size: 0.8em;
+    padding-left: 1em;
     width: 30%;
 }
 
 table#via_recordings td.duration {
-    width: 25%;
+    width: 30%;
 }
 
 table#via_recordings td.modify {
@@ -197,6 +200,11 @@ INPUT#choosecategories.hide {
 TABLE#via_recordings TD.nowrap,
 TABLE.viausers TD.nowrap {
     white-space:nowrap;
+}
+#page-mod-viaassign-view .felement.fgroup,
+#page-mod-via-mod .felement.fgroup{
+    min-width:750px
+
 }
 
 A.returnvia {
@@ -277,7 +285,94 @@ A.reportbtn:visited {
     margin-bottom: 0;
 }
 .viapaging {
-    width:90%;
-    margin:auto;
-    font-size:120%
+    width:50%;
+}
+
+.usersynch {
+    padding: 10px;
+    width: 35%;
+    border: #c4c4c4 1px solid;
+    display: inline-block;
+    float: right;
+}
+.usersynch P{
+    margin-bottom:0;
+}
+.wait {
+    color:#8d9ca3;
+    text-align:center;
+}
+.wait IMG {
+    vertical-align:top;
+}
+/* New user lists in mod_form */
+#fitem_id_save_host,
+#fitem_id_save_animators,
+#fitem_id_save_participants {
+    display:none;
+    margin:0;
+    height:0px;
+}
+DIV.btns {
+    display:inline-block;
+}
+DIV.btns .btn_animators,
+DIV.btns .btn_participants {
+    display:block !important;
+}
+DIV.btns .btn_animators.hide,
+DIV.btns .btn_participants.hide {
+    display:none !important;
+    margin:0 0 2px 0;
+}
+SELECT.viauserlists {
+    min-height:170px;
+    max-height:250px;
+    width:28%;
+}
+.viausers {
+    font-weight:bold;
+    margin-bottom:0;
+    display: block;
+    margin-left: 265px;
+}
+.viausers .three{
+    display:inline-block;
+    width:32%;
+    margin-bottom:0px;
+}
+.fa-spinner.fa-spin {
+    display:none;
+}
+.path-mod-via .hide {
+    display:none;
+}
+.viabtnlink {
+    line-height: initial;
+    font-weight:600;
+    white-space: nowrap;
+}
+
+.viabtnlink svg {
+    height:24px;
+    width:24px;
+    float:left;
+    padding-right: 5px;
+}
+
+.viabtnlink span {
+    line-height: 25px;
+    padding-left: 5px;
+}
+
+.tdcenter {
+    text-align :center !important;
+}
+.fa.via {
+    padding-right:4px
+}
+
+.notifysuccess {
+    width:100%;
+    margin:0;
 }

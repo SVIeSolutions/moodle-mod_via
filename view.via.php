@@ -17,12 +17,12 @@
 /**
  *
  * Redirects user with token to the via activity or playback after validating him/her.
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 require_once("../../config.php");
@@ -31,7 +31,8 @@ require_once(get_vialib());
 
 global $DB, $USER;
 
-$id = required_param('id', PARAM_INT);
+$id = optional_param('id', null, PARAM_INT);
+$viaid = optional_param('viaid', null, PARAM_INT);
 $review = optional_param('review', null, PARAM_INT);
 $fa = optional_param('fa', null, PARAM_INT);
 $playbackid = optional_param('playbackid', null, PARAM_PATH);
@@ -50,12 +51,24 @@ if ($fa) {
     $connexion = true;
 }
 
-if (! $cm = get_coursemodule_from_id('via', $id)) {
-    error('Course Module ID was incorrect');
-}
-
-if (! $via = $DB->get_record('via', array('id' => $cm->instance))) {
-    error('Activity ID was incorrect');
+// Modified to access via from a normal via activity or a delegated via activity!
+if ($id) {
+    if (!($cm = get_coursemodule_from_id('via', $id))) {
+        error("Course module ID is incorrect");
+    }
+    if (!($via = $DB->get_record('via', array('id' => $cm->instance)))) {
+        error("Via ID is incorrect");
+    }
+    $PAGE->set_url('/mod/via/view.php', array('id' => $id));
+} else if ($viaid) {
+    $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $viaid));
+    if (!($cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST))) {
+        error("Course module ID is incorrect");
+    }
+    if (!($via = $DB->get_record('via', array('id' => $viaid)))) {
+        error("Via ID is incorrect");
+    }
+    $PAGE->set_url('/mod/via/view.php', array('viaid' => $viaid));
 }
 
 if (! $course = $DB->get_record('course', array('id' => $cm->course))) {
@@ -65,7 +78,6 @@ if (! $course = $DB->get_record('course', array('id' => $cm->course))) {
 require_login($course, false, $cm);
 
 $context = via_get_module_instance($cm->id);
-$PAGE->set_url('/mod/via/view.php', array('id' => $id));
 $PAGE->set_context($context);
 
 // Show some info for guests.
@@ -94,11 +106,9 @@ if (!has_capability('moodle/site:approvecourse', via_get_system_instance())) {
         $viauser = $DB->get_record('via_users', array('userid' => $USER->id));
         // The user doesn't exists yet. We need to create it.
         if (!$viauser) {
-
             try {
                 $uservalidated = $api->validate_via_user($USER);
                 $viauser = $DB->get_record('via_users', array('viauserid' => $uservalidated));
-
             } catch (Exception $e) {
                 print_error('error:'.$e->getMessage(), 'via'). $muser->firstname.' '.$muser->lastname;
             }
@@ -108,7 +118,6 @@ if (!has_capability('moodle/site:approvecourse', via_get_system_instance())) {
 
             $added = via_add_participant($viauser->userid, $via->id, $type, true);
             $connexion = true;
-
         } catch (Exception $e) {
             print_error('error:'.$e->getMessage(), 'via'). $muser->firstname.' '.$muser->lastname;
         }
@@ -136,7 +145,6 @@ try {
         }
 
         redirect($response);
-
     } else {
         // User is not enrolled and is not allowed to access the recordings; example an admin user.
         $PAGE->set_title($course->shortname . ': ' . format_string($via->name));
@@ -148,7 +156,6 @@ try {
         echo $OUTPUT->box_end();
         echo $OUTPUT->footer($course);
     }
-
 } catch (Exception $e) {
     if ($e->getMessage() == 'INVALID_USER_ID' && !isset($reload)) {
         // Changes were made very recently in Via and the userinformation in Moodle has not yet been updated.
@@ -159,7 +166,6 @@ try {
         } else {
             $error = get_string('error:'.$e->getMessage(), 'via');
         }
-
     } else {
         $error = get_string('error:'.$e->getMessage(), 'via');
     }

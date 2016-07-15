@@ -17,12 +17,12 @@
 /**
  *
  * Send html invitation with link to the activity.
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 require_once("../../config.php");
@@ -31,25 +31,52 @@ require_once(get_vialib());
 
 global $DB;
 
-$id    = required_param('id', PARAM_INT);// VIA!
+$id = optional_param('id', null, PARAM_INT);
+$viaid = optional_param('viaid', null, PARAM_INT);
 
-if (!$via = $DB->get_record('via', array('id' => $id))) {
-    print_error("Via ID is incorrect");
+if ($id) {
+    if (!$via = $DB->get_record('via', array('id' => $id))) {
+        print_error("Via ID is incorrect");
+    }
+
+    if (! $cm = get_coursemodule_from_instance("via", $via->id, null)) {
+        $cm->id = 0;
+    }
+
+    $viaurlparam = 'id';
+    $viaurlparamvalue = $cm->id;
+} else if ($viaid) {
+    $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $viaid));
+    if (!($cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST))) {
+        error("Course module ID is incorrect");
+    }
+    if (!($via = $DB->get_record('via', array('id' => $viaid)))) {
+        error("Via ID is incorrect");
+    }
+
+    $viaurlparam = 'viaid';
+    $viaurlparamvalue = $viaid;
 }
 
 if (!$course = $DB->get_record('course', array('id' => $via->course))) {
     print_error("Could not find this course!");
 }
-
-if (! $cm = get_coursemodule_from_instance("via", $via->id, $course->id)) {
-    $cm->id = 0;
-}
-
 require_login($course->id, false, $cm);
 
 $context = via_get_module_instance($cm->id);
 
-if (!has_capability('mod/via:manage', $context)) {
+
+$cancreatevia = has_capability('mod/via:manage', $context);
+
+if ($viaid) {
+    require_once($CFG->dirroot.'/mod/viaassign/locallib.php');
+    $viaassign = new viaassign($context,  $cm, $course);
+    if ($viaassign->can_create_via($USER->id, $viaassign->get_instance()->userrole)) {
+        $cancreatevia = true;
+    }
+}
+
+if (!$cancreatevia) {
     print_error('You do not have the permission to send invites');
 }
 
@@ -57,10 +84,14 @@ if (!has_capability('mod/via:manage', $context)) {
 $PAGE->set_url('/mod/via/send_invite.php', array('id' => $cm->id));
 $PAGE->set_title($course->shortname . ': ' . format_string($via->name));
 $PAGE->set_heading($course->fullname);
-$button = $OUTPUT->update_module_button($cm->id, 'via');
-$PAGE->set_button($button);
+if ($viaid) {
+    $PAGE->navbar->add(format_string($via->name), '/mod/via/view.php?viaid='.$viaid);
+}
 
 if ($frm = data_submitted()) {
+    if (!empty($frm->cancel)) {
+        redirect($CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue, '', 0);
+    }
 
     // A form was submitted so process the input.
     if (!empty($frm->msg)) {
@@ -68,7 +99,22 @@ if ($frm = data_submitted()) {
     }
     $via->sendinvite = 1;
     $DB->update_record("via", $via);
-    redirect($CFG->wwwroot."/mod/via/view.php?id=".$cm->id, get_string("invitessend", "via"), 0);
+
+    $sql = "SELECT count(p.id) cnt
+        FROM {via_participants} p";
+    $sql .= " WHERE p.activityid = " . $via->id;
+
+    $count = $DB->get_record_sql($sql);
+
+    if ($count->cnt <= 50) {
+        // Send invites now.
+        via_send_invitations($via->id);
+
+        redirect($CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue, get_string("invitessent", "via"), 5);
+    } else {
+        // Send invites later by task.
+        redirect($CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue, get_string("invitessend", "via"), 5);
+    }
 }
 
 if (isset($via->invitemsg)) {
@@ -80,9 +126,9 @@ if (isset($via->invitemsg)) {
 // Print the page header.
 echo $OUTPUT->header();
 
-echo $OUTPUT->box_start('center');
+echo $OUTPUT->box_start();
 
-$mform = new via_send_invite_form('', array('message' => $msg, 'id' => $id));
+$mform = new via_send_invite_form('', array('message' => $msg, $viaurlparam => $via->id));
 
 $mform->display();
 

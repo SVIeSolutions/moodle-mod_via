@@ -2,11 +2,11 @@ function change(id) {
     // Theses functions will be called in the choose categories page.
     // This will grab the input element.
     var button = document.getElementById(id);
-    // check whether the submit button is enabled.
+    // Check whether the submit button is enabled.
     if (button.disabled === true) {
-        button.disabled = false; // if it is then disable it.
+        button.disabled = false; // If it is then disable it.
     } else {
-        button.disabled = true; // otherwise enable it.
+        button.disabled = true; // Otherwise enable it.
     }
 }
 

@@ -17,12 +17,12 @@
 /**
  *
  * Redirects user with token to the via activity or playback after validating him/her.
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 global $CFG;
@@ -31,7 +31,7 @@ require_once($CFG->dirroot.'/mod/via/lib.php');
 /**
  * This is function via_get_module_instance will call the correct fucntion
  * depending on the moodle version.
- * 
+ *
  * Get the context instance as an object. This function will create the
  * context instance if it does not exist yet.
  * @deprecated since 2.2
@@ -45,7 +45,7 @@ function via_get_module_instance($cmid) {
 /**
  * This is function via_get_course_instance will call the correct fucntion
  * depending on the moodle version.
- * 
+ *
  * Get the context instance as an object. This function will create the
  * context instance if it does not exist yet.
  * @deprecated since 2.2
@@ -59,7 +59,7 @@ function via_get_course_instance($courseid) {
 /**
  * This is function via_get_system_instance will call the correct fucntion
  * depending on the moodle version.
- * 
+ *
  * Get the context instance as an object. This function will create the
  * context instance if it does not exist yet.
  * @deprecated since 2.2
@@ -73,7 +73,7 @@ function via_get_system_instance() {
 /**
  * This is following functions will call the correct fucntions
  * depending on the moodle version.
- * 
+ *
  * @deprecated since 2.7 use new events instead
  *
  * @param    int     $courseid  The course id
@@ -87,7 +87,7 @@ function via_get_system_instance() {
  *
  */
 function via_accessed_log($via, $context) {
-    add_to_log($via->course, "via", get_string('via_accessed', 'via'), "view.php?id=$context->id", $via->id, $context->id);
+    add_to_log($via->course, "via", get_string('viaaccessed', 'via'), "view.php?id=$context->id", $via->id, $context->id);
 }
 
 function via_playback_viewed_log($via, $context, $course, $playbackid) {

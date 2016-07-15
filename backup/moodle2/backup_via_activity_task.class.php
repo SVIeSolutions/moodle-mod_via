@@ -20,7 +20,7 @@
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 require_once($CFG->dirroot . '/mod/via/backup/moodle2/backup_via_stepslib.php');

@@ -18,12 +18,12 @@
  *
  * via restore task that provides all the settings and steps to perform one
  * complete restore of the activity
- * 
+ *
  * @package    mod_via
  * @subpackage backup-moodle2
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 defined('MOODLE_INTERNAL') || die();
@@ -60,10 +60,10 @@ class restore_via_activity_task extends restore_activity_task {
         $contents = array();
 
         $contents[] = new restore_decode_content('via', array('name', 'intro', 'introformat', 'creator', 'viaactivityid',
-            'datebegin', 'duration', 'presence', 'audiotype', 'recordingmode', 'recordmodebehavior', 'isreplayallowed', 'private',
+            'datebegin', 'duration', 'presence', 'audiotype', 'recordingmode', 'recordmodebehavior', 'isreplayallowed',
             'profilid', 'activitytype', 'remindertime', 'needconfirmation', 'roomtype', 'waitingroomaccessmode',
-			'activitystate', 'isnewvia', 'showparticipants', 'enroltype', 'mailed', 'sendinvite', 'invitemsg', 'timecreated',
-            'timemodified', 'category', 'groupingid'), 'via');
+            'activitystate', 'isnewvia', 'showparticipants', 'enroltype', 'mailed', 'sendinvite', 'invitemsg', 'timecreated',
+            'timemodified', 'category', 'groupingid', 'groupid', 'ish264', 'playbacksync'), 'via');
 
         return $contents;
     }

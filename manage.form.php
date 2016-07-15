@@ -17,12 +17,12 @@
 /**
  *
  * Add/Remove users in activity
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 ?>
@@ -32,18 +32,18 @@
   <table align="center" border="0" cellpadding="5" cellspacing="0" class="participantsmanagementtable" >
     <tr>
       <td valign="top">
-          <?php echo count($subscribers) . " ". $strexistingparticipants ?>
+        <?php echo count($subscribers) . " ". $strexistingparticipants ?>
       </td>
       <td></td>
       <td valign="top">
-          <?php echo count($users) . " " . $strpotentialparticipants;  ?>
+        <?php echo count($users) . " " . $strpotentialparticipants;  ?>
       </td>
     </tr>
     <tr>
       <td valign="top">
           <select name="removeselect[]" size="20" id="removeselect" multiple="multiple"
                   onFocus=<?php if ($participanttype == 2) {?>
-                                    "getElementById('subscriberform').remove.disabled=true;<?php 
+                                    "getElementById('subscriberform').remove.disabled=true;<?php
 } ?>
                             getElementById('subscriberform').add.disabled=false;
                             getElementById('subscriberform').addselect.selectedIndex=-1;">
@@ -64,7 +64,7 @@ foreach ($subscribers as $subscriber) {
         <input name="add" type="submit" id="add" value="&larr;"/>
         <br />
         <input name="remove" type="submit" id="remove" value="&rarr;"  <?php if ($participanttype == 2) {?>
-                                                                                disabled <?php 
+                                                                                disabled <?php
 } ?> />
         <br />
       </td>
@@ -74,7 +74,7 @@ foreach ($subscribers as $subscriber) {
 }?>
                   onFocus=<?php if ((count($subscribers) < 1 && $participanttype == 2) ||
                                     $participanttype != 2) {?>
-                                    "getElementById('subscriberform').add.disabled=false; <?php 
+                                    "getElementById('subscriberform').add.disabled=false; <?php
 } ?>
                            getElementById('subscriberform').remove.disabled=true;
                            getElementById('subscriberform').removeselect.selectedIndex=-1;">

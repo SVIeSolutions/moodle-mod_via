@@ -22,7 +22,7 @@
  * @subpackage backup-moodle2
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 require_once($CFG->dirroot . '/mod/via/lib.php');

@@ -17,12 +17,12 @@
 /**
  *
  * Permits user to manage Via categories available when creating activities
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 require_once('../../config.php');
@@ -72,7 +72,7 @@ if (!$save) {
     $form = '<p>'.get_string('cat_intro', 'via').'</p>';
     $form .= '<table>';
     $form .= '<tr><td>'.get_string('cat_name', 'via').'</td>
-              <td>'.get_string('cat_check', 'via').'</td><td>'.get_string('cat_default', 'via').'</td></tr>';
+              <td>'.get_string('add', 'via').'</td><td>'.get_string('cat_default', 'via').'</td></tr>';
 
     $form .= '<form name="category" method="post" action="" id="form" >';
     if (isset($viacatgeories["Category"]["CategoryID"])) {

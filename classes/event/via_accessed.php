@@ -52,7 +52,7 @@ class via_accessed extends \core\event\base {
      * @return string
      */
     public static function get_name() {
-        return get_string('via_accessed', 'via');
+        return get_string('viaaccessed', 'via');
     }
 
     /**

@@ -17,12 +17,12 @@
 /**
  *
  * Redirects user with token to the via activity or playback after validating him/her.
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 global $CFG;
@@ -31,7 +31,7 @@ require_once($CFG->dirroot.'/mod/via/lib.php');
 /**
  * This is function via_get_module_instance will call the correct fucntion
  * depending on the moodle version.
- * 
+ *
  * Get the context instance as an object. This function will create the
  * context instance if it does not exist yet.
  * @param int $instanceid
@@ -44,7 +44,7 @@ function via_get_module_instance($cmid) {
 /**
  * This is function via_get_module_instance will call the correct fucntion
  * depending on the moodle version.
- * 
+ *
  * Get the context instance as an object. This function will create the
  * context instance if it does not exist yet.
  * @param int $instanceid
@@ -57,7 +57,7 @@ function via_get_course_instance($courseid) {
 /**
  * This is function via_get_module_instance will call the correct fucntion
  * depending on the moodle version.
- * 
+ *
  * Get the context instance as an object. This function will create the
  * context instance if it does not exist yet.
  * @param int $instanceid

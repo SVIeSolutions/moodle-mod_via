@@ -17,17 +17,17 @@
 /**
  *
  * Provides some custom settings for the via module
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 defined('MOODLE_INTERNAL') || die;
 
-global $PAGE;
+global $PAGE, $CFG;
 
 if ($ADMIN->fulltree) {
 
@@ -83,7 +83,7 @@ if ($ADMIN->fulltree) {
     get_string('categoriesheader', 'via').'</strong>', ''));
 
     $settings->add(new admin_setting_configcheckbox('via/via_categories',
-    get_string('categoriesheader', 'via'), get_string('via_categoriesdesc', 'via'), 0));
+    get_string('categoriesheader', 'via'), get_string('viacategoriesdesc', 'via'), 0));
 
     if (isset($config->via_categories) && $config->via_categories == 0) {
         $hide = 'hide';
@@ -93,6 +93,17 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_heading('choosecategories', '<input id="choosecategories" type="button" class="'.$hide.'"
     onclick="return openpopup(null, { url: \'/mod/via/choosecategories.php\', name: \'choosecategories\',
     options: \'scrollbars=yes,resizable=no,width=760,height=400\' });" value="'.get_string('choosecategories', 'via').'" />', ''));
+
+    /****
+    Activity Template
+    ****/
+
+    $settings->add(new admin_setting_heading('activitytemplatebutton', get_string('activitytemplateheader', 'via'),
+    get_string('activitytemplatedesc', 'via'). '<br /><br /><input
+    id="activitytemplatebutton" type="button"
+    onclick="return openpopup(null, { url: \'/mod/via/synctemplate.php\', name: \'activitytemplatebutton\',
+    options: \'scrollbars=yes,resizable=no,width=760,height=400\' });" value="'.
+    get_string('activitytemplatebutton', 'via').'" />'));
 
     /****
     Audio mode settings
@@ -112,6 +123,12 @@ if ($ADMIN->fulltree) {
     ****/
     $settings->add(new admin_setting_configcheckbox('via/via_portalaccess',
     get_string('portalaccess', 'via'), get_string('portalaccessdesc', 'via'), 0));
+
+    /****
+    Associated users list
+    ****/
+    $settings->add(new admin_setting_configcheckbox('via/via_displayuserlist',
+    get_string('displayuserlist', 'via'), get_string('displayuserlistdesc', 'via'), 0));
 
     /****
     Participant confirmations

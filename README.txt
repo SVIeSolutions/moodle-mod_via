@@ -1,8 +1,8 @@
-Version 2015050101
+Version 2016042006
 
 
 /* for more information on the version please see mod/via/version.php */
-/* This plugin requires Via 7 */
+/* This plugin requires Via 8.6 or greater */
 
 
 Procedure for a NEW installation of this plugin :
@@ -22,6 +22,6 @@ Procedure for a NEW installation of this plugin :
 
 
 3 - For invoicing and statistics purposes you may create categories in Via and make them available in Moodle. Note these need to be created in Via to be available.  
-    For these to be available, the moodle administrator must check the ckeckbox in the settings page, it is them possible to chose which categories will be avaiable and set one as default.
+For these to be available, the moodle administrator must check the ckeckbox in the settings page, it is them possible to chose which categories will be avaiable and set one as default.
 
    

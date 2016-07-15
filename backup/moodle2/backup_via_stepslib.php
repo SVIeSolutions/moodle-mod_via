@@ -15,10 +15,10 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * 
+ *
  * Define all the backup steps that will be used by the backup_via_activity_task
  * Define the complete via structure for backup, with file and id annotations
- * 
+ *
  * @package    mod_via
  * @subpackage backup-moodle2
  * @copyright  2009 Petr Skoda  {@link http://skodak.org}
@@ -49,9 +49,9 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
         // Define each element separated.
         $via = new backup_nested_element('via', array('id'), array('course', 'name', 'intro', 'introformat', 'creator',
             'viaactivityid', 'datebegin', 'duration', 'presence', 'audiotype', 'recordingmode', 'recordmodebehavior',
-            'isreplayallowed', 'private', 'profilid', 'activitytype', 'remindertime', 'needconfirmation', 'roomtype',
-            'waitingroomaccessmode', 'activitystate', 'enroltype', 'isnewvia', 'showparticipants', 'mailed', 'sendinvite', 'invitemsg',
-            'timecreated', 'timemodified', 'category', 'groupingid'));
+            'isreplayallowed', 'profilid', 'activitytype', 'remindertime', 'needconfirmation', 'roomtype',
+            'waitingroomaccessmode', 'activitystate', 'enroltype', 'isnewvia', 'showparticipants', 'mailed', 'sendinvite',
+            'invitemsg', 'timecreated', 'timemodified', 'category', 'groupingid', 'groupid', 'ish264', 'playbacksync'));
 
         // Define sources.
         $via->set_source_table('via', array('id' => backup::VAR_ACTIVITYID));

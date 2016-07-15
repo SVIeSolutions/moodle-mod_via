@@ -17,12 +17,12 @@
 /**
  *
  * Authenticates user in Moodle coming from the Via mobile app.
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 global $CFG, $DB;

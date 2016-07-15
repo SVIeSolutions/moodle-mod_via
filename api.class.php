@@ -21,12 +21,11 @@
   * @subpackage via
   * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
   * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
-  * 
+  *
   */
 
 /** Data access class for the via module. **/
 class mod_via_api {
-
     /**
      * Creates a user on VIA
      *
@@ -128,7 +127,7 @@ class mod_via_api {
     /**
      * gets a user on Via
      *
-     * @param integer $viauserid 
+     * @param integer $viauserid
      * @return Array containing response from Via
      */
     public function via_user_get($viauserid) {
@@ -196,7 +195,6 @@ class mod_via_api {
         if ($resultdata["nbrResults"] == 0) {
             // The username is already in use. We need to create the user with a new username.
             return false;
-            // Throw new Exception("Problem searching user in Via");.
         }
 
         if (isset($response['dataxml']["soap:Envelope"]["soap:Body"]["cApiUserSearch"]["Search"]["Match attr"])) {
@@ -207,7 +205,6 @@ class mod_via_api {
             } else {
                 return false;
             }
-
         } else {
             $searchedusers = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiUserSearch"]["Search"]["Match"];
             if ($searchedusers) {
@@ -239,7 +236,6 @@ class mod_via_api {
         }
 
         return false;
-
     }
 
     /**
@@ -285,6 +281,7 @@ class mod_via_api {
             $data .= "<DateBegin>".'0'."</DateBegin>";
             $data .= "<Duration>".'0'."</Duration>";
         }
+        $data .= "<IsH264>".$via->ish264."</IsH264>";
         $data .= "</cApiActivity>";
         $data .= "</soap:Body>";
         $data .= "</soap:Envelope>";
@@ -300,11 +297,10 @@ class mod_via_api {
         }
 
         return $resultdata['ActivityID'];
-
     }
 
     /**
-     * Dulpicates an existing acitivity on Via 
+     * Duplicates an existing activity on Via
      *
      * @param object $via the via object
      * @return Array containing response from Via
@@ -346,7 +342,6 @@ class mod_via_api {
         }
 
         return $resultdata["ActivityIDDuplicate"];
-
     }
 
     /**
@@ -391,6 +386,7 @@ class mod_via_api {
             $data .= "<DateBegin>".$this->change_date_format($via->datebegin)."</DateBegin>";
             $data .= "<Duration>".$via->duration."</Duration>";
         }
+        $data .= "<IsH264>".$via->ish264."</IsH264>";
         $data .= "</cApiActivity>";
         $data .= "</soap:Body>";
         $data .= "</soap:Envelope>";
@@ -406,7 +402,6 @@ class mod_via_api {
         }
 
         return $resultdata;
-
     }
 
     /**
@@ -443,7 +438,41 @@ class mod_via_api {
         }
 
         return $resultdata;
+    }
 
+    /**
+     * gets an acitivity on Via
+     *
+     * @param object $via the via object
+     * @return Array containing response from Via
+     */
+    public function activitytemplate_get() {
+        global $CFG;
+
+        $url = 'GetCieActivityTemplate';
+
+        $data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ';
+        $data .= 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        $data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        $data .= '<soap:Body>';
+        $data .= "<cApiActivityGet>";
+        $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
+        $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
+        $data .= "<UserID>".get_config('via', 'via_adminid')."</UserID>";
+        $data .= "</cApiActivityGet>";
+        $data .= "</soap:Body>";
+        $data .= "</soap:Envelope>";
+        $response = $this->send_saop_enveloppe(null, $data, $url);
+
+        if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivity"]) {
+            throw new Exception("Problem reading getting VIA activity id");
+        }
+
+        if ($resultdata['Result']['ResultState'] == "ERROR") {
+            return $resultdata['Result']['ResultDetail'];
+        }
+
+        return $resultdata;
     }
 
     /**
@@ -478,9 +507,7 @@ class mod_via_api {
         }
 
         return $resultdata["CategoriesList"];
-
     }
-
 
     /**
      * gets user logs for one user at a time
@@ -517,9 +544,7 @@ class mod_via_api {
         }
 
         return $resultdata;
-
     }
-
 
     /**
      * Gets all profiles available for a given company
@@ -552,7 +577,6 @@ class mod_via_api {
         }
 
         return $resultdata["ProfilList"];
-
     }
 
     /**
@@ -586,9 +610,7 @@ class mod_via_api {
         }
 
         return $resultdata;
-
     }
-
 
     /**
      * Gets a token to redirect a user to VIA
@@ -694,14 +716,13 @@ class mod_via_api {
         }
 
         return $resultdata;
-
     }
 
     /**
      * Edits a user enrolment in an activity
      *
      * @param object $via the via
-     * @param integer $participanttype; 1=pariticipant, 2=presentor , 3=animator
+     * @param integer $participanttype; 1=pariticipant, 2=host , 3=animator
      * @return Array containing response from Via
      */
     public function edituser_activity($via, $participanttype = null) {
@@ -741,7 +762,6 @@ class mod_via_api {
         }
 
         return $resultdata;
-
     }
 
     /**
@@ -783,9 +803,7 @@ class mod_via_api {
         }
 
         return $resultdata;
-
     }
-
 
     /**
      * Remove a user in an activity
@@ -832,7 +850,47 @@ class mod_via_api {
         }
 
         return $resultdata;
+    }
 
+    /**
+     * Gets a list of downloadable files available for a given activity
+     *
+     * @param object $via the via object
+     * @return Array containing response from Via
+     */
+    public function list_downloadablefiles($via) {
+        global $CFG, $USER;
+
+        if (!$userid = $this->get_user_via_id($USER->id, true)) {
+            return false;
+        }
+
+        $url = 'GetDocumentList';
+
+        $data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ';
+        $data .= 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        $data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        $data .= '<soap:Body>';
+        $data .= "<cApiDocumentList>";
+        $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
+        $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
+        $data .= "<ActivityID>".$via->viaactivityid."</ActivityID>";
+        $data .= "<UserID>".$userid."</UserID>";
+        $data .= "<OnlyDownloadableDocument>1</OnlyDownloadableDocument>";
+        $data .= "</cApiDocumentList>";
+        $data .= "</soap:Body>";
+        $data .= "</soap:Envelope>";
+        $response = $this->send_saop_enveloppe(null, $data, $url);
+
+        if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiDocumentList"]) {
+            throw new Exception("Problem getting list of playbacks for VIA activity");
+        }
+
+        if ($resultdata['Result']['ResultState'] == "ERROR") {
+            throw new Exception($resultdata['Result']['ResultDetail']);
+        }
+
+        return $resultdata["DocumentList"];
     }
 
     /**
@@ -854,6 +912,10 @@ class mod_via_api {
         $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
         $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
         $data .= "<ActivityID>".$via->viaactivityid."</ActivityID>";
+        if ($via->playbacksync) {
+            // Minus 1 hour as we kept missing some!
+            $data .= "<DateFrom>".$this->change_date_format($via->playbacksync - 3660)."</DateFrom>";
+        }
         $data .= "</cApiListPlayback>";
         $data .= "</soap:Body>";
         $data .= "</soap:Envelope>";
@@ -868,15 +930,14 @@ class mod_via_api {
         }
 
         return $resultdata["PlaybackList"];
-
     }
 
     /**
      * Edit a given playback for a given activity
      *
      * @param object $via the via object
-     * @param string $playbackid the id of the playback 
-     * @param object $playback the playback object 
+     * @param string $playbackid the id of the playback
+     * @param object $playback the playback object
      * @return Array containing response from Via
      */
     public function edit_playback($via, $playbackid, $playback) {
@@ -895,7 +956,7 @@ class mod_via_api {
         $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
         $data .= "<PlaybackList>";
         $data .= "<Playback PlaybackID='".$playbackid."' Title='".$title."'
-                            IsPublic='".$playback->ispublic."'
+                            IsPublic='".$playback->accesstype."'
                             IsDownloadable='".$playback->isdownloadable."'/>";
         $data .= "</PlaybackList>";
         $data .= "</cApiListPlayback>";
@@ -914,12 +975,11 @@ class mod_via_api {
         return $resultdata["PlaybackList"];
     }
 
-
     /**
      * delete a given playback for a given activity
      *
      * @param string $viaactivityid the id of the via activity
-     * @param string $playbackid the id of the playback 
+     * @param string $playbackid the id of the playback
      * @return Array containing response from Via
      */
     public function delete_playback($viaactivityid, $playbackid) {
@@ -954,12 +1014,11 @@ class mod_via_api {
         return $resultdata;
     }
 
-
     /**
-     *download playback for a given activity
+     * download playback for a given activity
      *
      * @param string $viauserid the via userid
-     * @param string $playbackid the id of the playback 
+     * @param string $playbackid the id of the playback
      * @param integer $recordtype; 1=fullvideo, 2=mobile video, 3=audio only.
      * @return string with download token for redirect
      */
@@ -985,6 +1044,45 @@ class mod_via_api {
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiRecordDownload"]) {
             throw new Exception("Problem downloading playback for VIA activity");
+        }
+
+        if ($resultdata['Result']['ResultState'] == "ERROR") {
+            throw new Exception($resultdata['Result']['ResultDetail']);
+        }
+
+        return $resultdata;
+    }
+
+    /**
+     * download document for a given activity
+     *
+     * @param string $viauserid the via userid
+     * @param string $playbackid the id of the playback
+     * @param integer $recordtype; 1=fullvideo, 2=mobile video, 3=audio only.
+     * @return string with download token for redirect
+     */
+    public function via_download_document($via, $viauserid, $fileid) {
+        global $CFG;
+
+        $url = 'DocumentDownload';
+
+        $data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ';
+        $data .= 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        $data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        $data .= '<soap:Body>';
+        $data .= "<cApiDocumentDownload>";
+        $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
+        $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
+        $data .= "<UserID>".$viauserid."</UserID>";
+        $data .= "<FileID>".$fileid."</FileID>";
+        $data .= "<ActivityID>".$via->viaactivityid."</ActivityID>";
+        $data .= "</cApiDocumentDownload>";
+        $data .= "</soap:Body>";
+        $data .= "</soap:Envelope>";
+        $response = $this->send_saop_enveloppe(null, $data, $url);
+
+        if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiDocumentDownload"]) {
+            throw new Exception("Problem downloading document for VIA activity");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -1030,10 +1128,81 @@ class mod_via_api {
     }
 
     /**
+     * Get activity notification when a user enteres an activity with a waiting room
+     *
+     * @param timestamp ($lastcron)
+     * @return list of notifications
+     */
+    public function get_activity_notifications($lastcron) {
+        global $CFG;
+
+        $url = 'GetLatestSessionNotifications';
+
+        $data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ';
+        $data .= 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        $data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        $data .= '<soap:Body>';
+        $data .= "<cApiGetLatestSessionNotification>";
+        $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
+        $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
+        $data .= "<DateFrom>".$this->change_date_format($lastcron)."</DateFrom>";
+        $data .= "</cApiGetLatestSessionNotification>";
+        $data .= "</soap:Body>";
+        $data .= "</soap:Envelope>";
+        $response = $this->send_saop_enveloppe(null, $data, $url);
+
+        if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiGetLatestSessionNotification"]) {
+            throw new Exception("Problem getting activity notifications for VIA activity");
+        }
+
+        if ($resultdata['Result']['ResultState'] == "ERROR") {
+            throw new Exception($resultdata['Result']['ResultDetail']);
+        }
+
+        return $resultdata;
+    }
+
+    /**
+     * Get a list of the playbacks added after a certain date.
+     *
+     * @param timestamp ($lastcron)
+     * @return list of notifications
+     */
+    public function get_latest_added_playbacks($fromdate) {
+        global $CFG;
+
+        $url = 'PlaybackSearch';
+
+        $data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ';
+        $data .= 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        $data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        $data .= '<soap:Body>';
+        $data .= "<cApiPlaybackSearch>";
+        $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
+        $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
+        $data .= "<DateFrom>".$this->change_date_format($fromdate)."</DateFrom>";
+        $data .= "<DateTo>".$this->change_date_format(time())."</DateTo>";
+        $data .= "</cApiPlaybackSearch>";
+        $data .= "</soap:Body>";
+        $data .= "</soap:Envelope>";
+        $response = $this->send_saop_enveloppe(null, $data, $url);
+
+        if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiPlaybackSearch"]) {
+            throw new Exception("Problem getting new playbacks for VIA assign");
+        }
+
+        if ($resultdata['Result']['ResultState'] == "ERROR") {
+            throw new Exception($resultdata['Result']['ResultDetail']);
+        }
+
+        return $resultdata;
+    }
+
+    /**
      * Sends invitation to a user for an activity
      *
      * @param integer $userid the id of the user to invite
-     * @param string $activityid the VIA id of the activity 
+     * @param string $activityid the VIA id of the activity
      * @param string $msg the message to write in the invitation
      * @return Array containing response from Via
      */
@@ -1069,7 +1238,6 @@ class mod_via_api {
 
         return $resultdata;
     }
-
 
     /**
      * Changes the date format for Via
@@ -1151,14 +1319,13 @@ class mod_via_api {
             throw new Exception($resultdata['Result']['ResultDetail']);
         }
         return $resultdata;
-
     }
 
     /**
      * validates user to see if the uesr already exists on Via
      * If the user exists we associate him/her
      * If the user does not exist we create him/her
-     * 
+     *
      * @param object $muser moodle user
      * @return string via user id
      */
@@ -1171,7 +1338,8 @@ class mod_via_api {
             if (!$viauser) {
                 // False = create new user!
                 $info["UserType"] = 2;// Usertype is always 2!
-                $info["CompanyName"] = $SITE->shortname;
+                $companyname = str_replace('<,>', '', $SITE->shortname);
+                $info["CompanyName"] = str_replace('&', get_string('and', 'via'), $companyname);
                 $info["PhoneHome"] = $muser->phone1;
                 $usericon = $this->via_get_user_picture($muser->id);
                 $info["ImageData"] = base64_encode($usericon);
@@ -1227,18 +1395,15 @@ class mod_via_api {
             $participant->id = $exists->id;
 
             $DB->update_record("via_users", $participant);
-
         } else {
             $participant->timecreated = time();
             $participant->usertype = 2;// We only create participants.
             $participant->username = $login;
 
             $DB->insert_record("via_users", $participant, true, true);
-
         }
         return $participant->viauserid;
     }
-
 
     /**
      * Gets the moodle usericon to be added on Via;
@@ -1266,7 +1431,6 @@ class mod_via_api {
         }
 
         return $usericon;
-
     }
 
     /**
@@ -1291,12 +1455,10 @@ class mod_via_api {
                 // No  - we create a user!
                 $uservalidated = $this->validate_via_user($muser);
                 return $uservalidated;
-
             } catch (Exception $e) {
                 return false;
             }
         } else {
-
             $muser->viauserid = $viauser->viauserid;
 
             if ($connection == true && $viauser->timemodified < (time() - (30 * 60)) || $forceupdate) {
@@ -1328,7 +1490,6 @@ class mod_via_api {
 
                     $DB->set_field('via_users', 'setupstatus', $response['SetupState'],
                                     array('userid' => $muser->id, 'viauserid' => $muser->viauserid));
-
                 } else {
                     // Deleted - we go throught the whole process of creating a user
                     // we try to reassosiate him or create a new user and update his viauserid
@@ -1400,11 +1561,11 @@ class mod_via_api {
         curl_setopt($soap, CURLOPT_SSL_VERIFYPEER, false);
         curl_setopt($soap, CURLOPT_SSL_VERIFYHOST, false);
         curl_setopt($soap, CURLOPT_POST,           true );
-        if (isset($CFG->proxyhost[0])) {
+        if (!empty($CFG->proxyhost) && !is_proxybypass($CFG->proxyhost)) {
             if ($CFG->proxyport === '0') {
                 curl_setopt($soap, CURLOPT_PROXY, $CFG->proxyhost);
             } else {
-                curl_setopt($ch, CURLOPT_PROXY, $CFG->proxyhost.':'.$CFG->proxyport);
+                curl_setopt($soap, CURLOPT_PROXY, $CFG->proxyhost.':'.$CFG->proxyport);
             }
         }
 
@@ -1424,6 +1585,5 @@ class mod_via_api {
         $response['dataxml'] = $dataxml;
 
         return $response;
-
     }
 }

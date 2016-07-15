@@ -17,12 +17,12 @@
 /**
  *
  * Provides tables to manage users within an activity
- * 
+ *
  * @package    mod
  * @subpackage via
  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * 
+ *
  */
 
 require_once("../../config.php");
@@ -30,9 +30,9 @@ global $CFG, $DB;
 require_once($CFG->dirroot.'/mod/via/lib.php');
 require_once(get_vialib());
 
-$id    = required_param('id', PARAM_INT);// Via!
-$group = optional_param('group', 0, PARAM_INT);// Change of group.
-$participanttype  = optional_param('t', 1, PARAM_INT);// Participant type we are editing (participants, animators, presentator).
+$id = required_param('id', PARAM_INT); // Via!
+$group = optional_param('group', 0, PARAM_INT); // Change of group.
+$participanttype  = optional_param('t', 1, PARAM_INT); // Participant type we are editing (participants, animators, host).
 
 if (!$via = $DB->get_record('via', array('id' => $id))) {
     error("Via ID is incorrect");
@@ -44,9 +44,8 @@ if (! $cm = get_coursemodule_from_instance("via", $via->id, $course->id)) {
     $cm->id = 0;
 }
 if ($via->noparticipants == "1" && $participanttype == "1") {
-    // There are no participants only animators and a presentor.
+    // There are no participants only animators and a host.
     $participanttype = "3";
-
 }
 
 require_login($course, false, $cm); // Check in other version of Moodle if this will work!
@@ -95,9 +94,9 @@ if ($participanttype === 1) {
     $strexistingparticipants   = get_string("existinganimators", 'via');
     $strpotentialparticipants  = get_string("potentialanimators", 'via');
 } else {
-    $currenttab = 'presentator';
-    $strexistingparticipants   = get_string("existingpresentator", 'via');
-    $strpotentialparticipants  = get_string("potentialpresentator", 'via');
+    $currenttab = 'host';
+    $strexistingparticipants   = get_string("existinghost", 'via');
+    $strpotentialparticipants  = get_string("potentialhost", 'via');
 }
 
 require('tabs.php');
@@ -125,7 +124,6 @@ if ($via->enroltype == 0 && $participanttype == 1) {
         echo $OUTPUT->footer();
         exit;
     } else {
-
         if ($participanttype == 1) {
             $title = get_string("enroledparticipants", "via",  $via);
         } else {
@@ -149,15 +147,13 @@ if ($via->enroltype == 0 && $participanttype == 1) {
         echo $OUTPUT->footer();
         exit;
     }
-
 } else {
-
     $strparticipants = get_string("participants", "via");
     $strsearch        = get_string("search");
     $strsearchresults  = get_string("searchresults");
     $strshowall = get_string("showall", "moodle", strtolower(get_string("participants", "via")));
     if ($participanttype == 2) {
-        echo "<div style='text-align:center; margin:0;'><p>".  get_string('choosepresentor', 'via') ."</p></div>";
+        echo "<div style='text-align:center; margin:0;'><p>".  get_string('choosehost', 'via') ."</p></div>";
     }
     if ($groupingid != 0 && $participanttype != 2) {
         echo  "<div style='text-align:center; margin:0;'><p>".  get_string('groupusers', 'via', $gname) ."</p></div>";;
@@ -169,14 +165,13 @@ if ($via->enroltype == 0 && $participanttype == 1) {
         if (!empty($frm->add) and !empty($frm->addselect)) {
             $count = 1;
             foreach ($frm->addselect as $addsubscriber) {
-                if ($participanttype == 2) {// Presentator!
-                    // Remove other presentors and add the new one selected.
-                    $presentators = $DB->get_records('via_participants', array('activityid' => $via->id, 'participanttype' => 2));
-                    foreach ($presentators as $p) {
+                if ($participanttype == 2) {// Host!
+                    // Remove other hosts and add the new one selected.
+                    $hosts = $DB->get_records('via_participants', array('activityid' => $via->id, 'participanttype' => 2));
+                    foreach ($hosts as $p) {
                         via_remove_participant($p->userid, $via->id);
 
                         if ($via->enroltype == 0 ) {// Automatic enrollment.
-
                             $type = via_user_type($p->userid, $via->course, $via->noparticipants);
 
                             try {
@@ -197,9 +192,9 @@ if ($via->enroltype == 0 && $participanttype == 1) {
                     }
 
                     $added = via_add_participant($addsubscriber, $id, $participanttype, $callvia);
-                    if ($added === 'presenter') {
+                    if ($added === 'host') {
                         echo "<div style='text-align:center; margin-top:0;' class='error'><h3>".
-                            get_string('userispresentor', 'via') ."</h3></div>";
+                            get_string('userishost', 'via') ."</h3></div>";
                     } else if ($added == false) {
                         echo '<div class="alert alert-block alert-info">'.
                             get_string('error_user', 'via', '').'</div>';
@@ -225,7 +220,6 @@ if ($via->enroltype == 0 && $participanttype == 1) {
                     } catch (Exception $e) {
                         print_error("Could not remove user with id $removesubscriber from this activity!");
                     }
-
                 }
             }
         } else if (!empty($frm->showall)) {
@@ -269,9 +263,7 @@ if ($via->enroltype == 0 && $participanttype == 1) {
             } else {
                 $subscriber->groupingid = 0;
             }
-
         }
-
     }
 
     // This is yucky, but do the search in PHP, becuase the list we are using comes from get_users_by_capability,

@@ -1,13 +1,27 @@
 
 This file defines the changes made to Via - Virtual teaching
-last update 08/09/2015 (2015050104)
-- corrections were made to the list of recordings; Via 8 recordings can be viewed on mobiles.
+last update 01/01/2016 (20160420)
+- new user association
+- new document upload
+- new cron tasks
+- new visual, using font awsome
+
+last update 01/01/2016 (2016010101)
+- config link is not visible on computer (NOT on mobiles)
+
+last update 08/09/2015 (2015050106)
+- correction to the list of recordings; if isnewvia(Via 8) recordings can be viewed on mobiles.
+
+last update 28/08/2015 (2015050105)
+- A new button was added for M@gistère to synchronise large groupes before the start of an activity.
+- M@gistère we be the only ones with this version.
 
 last update 01/05/2015 (2015050103)
 - corrections were made to the activity duplication function which was not passing on the isnewvia value.
 
 last update 01/05/2015 (2015050102)
-- validations were added to replace commas and replace them with dots for the presence tables. Commas were returned by french servers.
+- validations were added to replace commas and replace them with dots for the presence tables. 
+Commas were returned by french servers.
 
 last update 01/05/2015 (2015050100)
 - new tables were created for storing API information to call Via less often.
@@ -98,8 +112,8 @@ Last update 01/07/2014
 Last update 01/04/2014
 -Validations added in case a user is deleted or deactivated in Via after being associated in moodle
 -Validations added in order not to give more than one role to a user in one activity
--Validations added in order to always have one presenter and only one presenter. 
--If a presenter is replaced and the enrollment is set to automatic then we add the user in the standard role. 
+-Validations added in order to always have one host and only one host. 
+-If a host is replaced and the enrollment is set to automatic then we add the user in the standard role. 
 -A modification was made to the automatic enrolment method, animators remain modifiable.
 -If an animator is removed and the enrollment is set to automatic then we add the user as participant. 
 -A new feature was added in order to add all students as animators
@@ -167,7 +181,7 @@ it does we assume it is the same person.
 
 updated 27/11/2012
 -Corrections were made to the reminder email.
--Corrections were made in the automatic enrollment for the animators and presenters, these are now modifiable
+-Corrections were made in the automatic enrollment for the animators and hosts, these are now modifiable
 
 updated 19/09/2012
 -In this version the cron function : via_update_enrolment() was uncommented to synchronize users
