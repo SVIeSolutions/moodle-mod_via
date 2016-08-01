@@ -60,29 +60,6 @@ TABLE#via_recordings .dimmed_text .deleteplayback A {
     color: #999;
 }
 
-/*TABLE#via_recordings A.modify {
-    background: url([[pix:moodle|i/edit]]) left center no-repeat;
-    padding-left: 20px;
-}
-TABLE#via_recordings A.deleteplayback {
-    background: url([[pix:moodle|t/delete]]) left center no-repeat;
-    padding-left: 20px;
-}
-
-TABLE#via_recordings A.maskvia {
-    background: url([[pix:moodle|i/show]]) left center no-repeat;
-    padding-left: 20px;
-}
-
-TABLE#via_recordings A.showvia {
-    background: url([[pix:moodle|i/hide]]) left center no-repeat;
-    padding-left: 20px;
-}
-TABLE#via_recordings A.download {
-    background: url([[pix:moodle|a/download_all]]) left center no-repeat;
-    padding-left: 20px;
-}*/
-
 .viaaccessbutton IMG,
 .viabutton IMG {
     position: relative;
@@ -132,7 +109,7 @@ table#via_recordings td.duration {
 
 table#via_recordings td.modify {
     border-left: none;
-    width: 10%;
+    width: 12%;
     vertical-align: top;
 }
 
@@ -200,6 +177,7 @@ INPUT#choosecategories.hide {
 TABLE#via_recordings TD.nowrap,
 TABLE.viausers TD.nowrap {
     white-space:nowrap;
+    vertical-align: top;
 }
 #page-mod-viaassign-view .felement.fgroup,
 #page-mod-via-mod .felement.fgroup{
