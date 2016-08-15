@@ -1266,8 +1266,15 @@ function via_get_downlodablefiles_table($files, $via, $context, $viaurlparam = '
             $table .= "</td>";
 
             $table .= "<td class='tdcenter'>";
+			
+			if($file["Type"] == "19") {
+				$table .= '<a target="_blank" class="download" href="'.$file["URL"];
+				$table .= '"><img src="'.$CFG->wwwroot.'/pix/a/download_all.png" /></a>';
+			}
+			else {
+				$table .= str_replace("%FILEID%", $file["FileID"], $downloadbtntemplate);
+			}
 
-            $table .= str_replace("%FILEID%", $file["FileID"], $downloadbtntemplate);
 
             $table .= "</td>";
 
