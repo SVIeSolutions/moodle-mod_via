@@ -1,5 +1,11 @@
 
 This file defines the changes made to Via - Virtual teaching
+last update 01/01/2016 (2016042010)
+- bug fix in participants list when changing enrolment type!
+
+last update 01/01/2016 (2016042009)
+- bug fix in playbacksync when retrieving and saveing breakouts!
+
 last update 01/01/2016 (2016042008)
 - bug fix in content management for the URL types
 

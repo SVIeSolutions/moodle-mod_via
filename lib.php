@@ -299,6 +299,7 @@ function via_update_instance($via) {
     }
 
     $via->viaactivityid = $viaactivity->viaactivityid;
+	$via->playbacksync = 0; // We want to force it to sync again!
 
     $api = new mod_via_api();
 

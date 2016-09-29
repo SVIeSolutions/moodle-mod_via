@@ -76,6 +76,13 @@ jQuery(document).ready(function () {
             // Activity was already saved, we are editing!
             if ($('#id_enroltype').val() == 0) {
                 // Automatic enrol!
+                
+                // Move all the potential users to the participants list...
+                var potentialusersselect = $(".viauserlists:not(.hide):first").attr("id");
+                $("#" + potentialusersselect + " option").each(function () {
+                    $(this).remove().appendTo('#id_participants');
+                });
+                // then hide the lists
                 $(".viauserlists:not(.hide):first").addClass('hide');
                 $('#id_participants_remove_btn').addClass('hide');
                 $('#id_participants_add_btn').addClass('hide');
@@ -86,11 +93,7 @@ jQuery(document).ready(function () {
                 $('#fitem_id_searchpotentialusers').addClass('hide');
                 $('#fitem_id_searchparticipants').removeClass('hide');
 
-                // Move all the potential users to the participants list...
-                var potentialusersselect = $(".viauserlists:not(.hide):first").attr("id");
-                $("#" + potentialusersselect + " option").each(function () {
-                    $(this).remove().appendTo('#id_participants');
-                });
+                
             } else {
                 // Manual enrol!
                 $('#id_potentialusers').removeClass('hide');

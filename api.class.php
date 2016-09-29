@@ -914,7 +914,7 @@ class mod_via_api {
         $data .= "<ActivityID>".$via->viaactivityid."</ActivityID>";
         if ($via->playbacksync) {
             // Minus 1 hour as we kept missing some!
-            $data .= "<DateFrom>".$this->change_date_format($via->playbacksync - 3660)."</DateFrom>";
+			$data .= "<DateFrom>".$this->change_date_format($via->playbacksync - 3660)."</DateFrom>";
         }
         $data .= "</cApiListPlayback>";
         $data .= "</soap:Body>";

@@ -646,25 +646,25 @@ function via_sync_activity_playbacks($via) {
                     foreach ($playback['BreackOutPlaybackList'] as $breakout) {
                         if (gettype($breakout) == "array") {
                             if (isset($breakout['PlaybackID'])) {
-                                if (!$DB->record_exists('via_playbacks', array("playbackid" => $playback['PlaybackID']))) {
+								if (!$DB->record_exists('via_playbacks', array("playbackid" => $breakout['PlaybackID']))) {
                                     $param = new stdClass();
-                                    $param->playbackid = $bkout['PlaybackID'];
-                                    $param->title = $bkout['Title'];
-                                    $param->duration = $bkout['Duration'];
-                                    $param->creationdate = strtotime($bkout['CreationDate']);
+									$param->playbackid = $breakout['PlaybackID'];
+									$param->title = $breakout['Title'];
+									$param->duration = $breakout['Duration'];
+									$param->creationdate = strtotime($breakout['CreationDate']);
                                     $param->accesstype = $via->isreplayallowed;
-                                    $param->isdownloadable = $bkout['IsDownloadable'];
-                                    $param->hasfullvideorecord = $bkout['HasFullVideoRecord'];
-                                    $param->hasmobilevideorecord = $bkout['HasMobileVideoRecord'];
-                                    $param->hasaudiorecord = $bkout['HasAudioRecord'];
+									$param->isdownloadable = $breakout['IsDownloadable'];
+									$param->hasfullvideorecord = $breakout['HasFullVideoRecord'];
+									$param->hasmobilevideorecord = $breakout['HasMobileVideoRecord'];
+									$param->hasaudiorecord = $breakout['HasAudioRecord'];
                                     $param->activityid = $via->id;
-                                    $param->playbackidref = $bkout['PlaybackRefID'];
+									$param->playbackidref = $breakout['PlaybackRefID'];
                                     $newparam = $DB->insert_record('via_playbacks', $param);
                                 }
                             } else {
                                 foreach ($breakout as $bkout) {
                                     if (gettype($bkout) == "array") {
-                                        if (!$DB->record_exists('via_playbacks', array("playbackid" => $playback['PlaybackID']))) {
+										if (!$DB->record_exists('via_playbacks', array("playbackid" => $bkout['PlaybackID']))) {
                                             $param = new stdClass();
                                             $param->playbackid = $bkout['PlaybackID'];
                                             $param->title = $bkout['Title'];
