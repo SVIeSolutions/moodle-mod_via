@@ -646,25 +646,25 @@ function via_sync_activity_playbacks($via) {
                     foreach ($playback['BreackOutPlaybackList'] as $breakout) {
                         if (gettype($breakout) == "array") {
                             if (isset($breakout['PlaybackID'])) {
-								if (!$DB->record_exists('via_playbacks', array("playbackid" => $breakout['PlaybackID']))) {
+                                if (!$DB->record_exists('via_playbacks', array("playbackid" => $breakout['PlaybackID']))) {
                                     $param = new stdClass();
-									$param->playbackid = $breakout['PlaybackID'];
-									$param->title = $breakout['Title'];
-									$param->duration = $breakout['Duration'];
-									$param->creationdate = strtotime($breakout['CreationDate']);
+                                    $param->playbackid = $breakout['PlaybackID'];
+                                    $param->title = $breakout['Title'];
+                                    $param->duration = $breakout['Duration'];
+                                    $param->creationdate = strtotime($breakout['CreationDate']);
                                     $param->accesstype = $via->isreplayallowed;
-									$param->isdownloadable = $breakout['IsDownloadable'];
-									$param->hasfullvideorecord = $breakout['HasFullVideoRecord'];
-									$param->hasmobilevideorecord = $breakout['HasMobileVideoRecord'];
-									$param->hasaudiorecord = $breakout['HasAudioRecord'];
+                                    $param->isdownloadable = $breakout['IsDownloadable'];
+                                    $param->hasfullvideorecord = $breakout['HasFullVideoRecord'];
+                                    $param->hasmobilevideorecord = $breakout['HasMobileVideoRecord'];
+                                    $param->hasaudiorecord = $breakout['HasAudioRecord'];
                                     $param->activityid = $via->id;
-									$param->playbackidref = $breakout['PlaybackRefID'];
+                                    $param->playbackidref = $breakout['PlaybackRefID'];
                                     $newparam = $DB->insert_record('via_playbacks', $param);
                                 }
                             } else {
                                 foreach ($breakout as $bkout) {
                                     if (gettype($bkout) == "array") {
-										if (!$DB->record_exists('via_playbacks', array("playbackid" => $bkout['PlaybackID']))) {
+                                        if (!$DB->record_exists('via_playbacks', array("playbackid" => $bkout['PlaybackID']))) {
                                             $param = new stdClass();
                                             $param->playbackid = $bkout['PlaybackID'];
                                             $param->title = $bkout['Title'];
@@ -839,11 +839,11 @@ function via_get_participants_table($via, $context, $presence = null) {
         if ($total >= 50 && $page == 1 && $notsynched > 0) {
             // We display a button to synch the users.
             echo '<div class="usersynch">';
-            echo '<p>'.get_sting('usersynch', 'via');
+            echo '<p>'.get_string('usersynch', 'via');
             echo '<a href="manual_synch.php?id='.$via->id.'" id="btnsynch" >
-                  <i class="fa fa-refresh" aria-hidden="true"></i>'.get_sting('usersynchbtn', 'via').'</a> </p>';
+                  <i class="fa fa-refresh" aria-hidden="true"></i>'.get_string('usersynchbtn', 'via').'</a> </p>';
             echo '<p id="wait" class="hide wait">
-                  <img src="'.$CFG->wwwroot.'/mod/via/pix/4.gif">'.get_sting('usersynchwarning', 'via').'</p>';
+                  <img src="'.$CFG->wwwroot.'/mod/via/pix/4.gif">'.get_string('usersynchwarning', 'via').'</p>';
             echo '</div>';
         }
     }
@@ -1266,15 +1266,13 @@ function via_get_downlodablefiles_table($files, $via, $context, $viaurlparam = '
             $table .= "</td>";
 
             $table .= "<td class='tdcenter'>";
-			
-			if($file["Type"] == "19") {
-				$table .= '<a target="_blank" class="download" href="'.$file["URL"];
-				$table .= '"><img src="'.$CFG->wwwroot.'/pix/a/download_all.png" /></a>';
-			}
-			else {
-				$table .= str_replace("%FILEID%", $file["FileID"], $downloadbtntemplate);
-			}
 
+            if ($file["Type"] == "19") {
+                $table .= '<a target="_blank" class="download" href="'.$file["URL"];
+                $table .= '"><img src="'.$CFG->wwwroot.'/pix/a/download_all.png" /></a>';
+            } else {
+                $table .= str_replace("%FILEID%", $file["FileID"], $downloadbtntemplate);
+            }
 
             $table .= "</td>";
 

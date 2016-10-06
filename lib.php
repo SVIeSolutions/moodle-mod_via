@@ -103,11 +103,11 @@ function via_add_instance($via) {
             $profil = $DB->get_record('via_params', array('param_type' => 'multimediaprofil', 'value' => $via->profilid));
             via_get_list_profils();
 
-			if ($profil) {
-				$exists = $DB->get_record('via_params', array('id' => $profil->id));
-			} else {
-				$exists = false;
-			}
+            if ($profil) {
+                $exists = $DB->get_record('via_params', array('id' => $profil->id));
+            } else {
+                $exists = false;
+            }
 
             if ($exists) {
                 $via->profilid = $exists->value;
@@ -115,20 +115,20 @@ function via_add_instance($via) {
                 $defaultprofil = $DB->get_record('via_params', array('param_type' => 'multimediaprofil'));
                 $via->profilid = $defaultprofil->value;
             }
-			// set back activity type, otherwise it will be changed again
-			switch($via->activitytype) {
-				case 2:
-					$via->activitytype = 1;
-					break;
-				case 1:
-					$via->activitytype = 0;
-					break;
-				default:
-					$via->activitytype = 0;
-					break;
-			}
+            // Set back activity type, otherwise it will be changed again.
+            switch($via->activitytype) {
+                case 2:
+                    $via->activitytype = 1;
+                    break;
+                case 1:
+                    $via->activitytype = 0;
+                    break;
+                default:
+                    $via->activitytype = 0;
+                    break;
+            }
 
-            return via_add_instance($via); 
+            return via_add_instance($via);
 
         } else {
             handle_createactivityapierror($e);
@@ -299,7 +299,7 @@ function via_update_instance($via) {
     }
 
     $via->viaactivityid = $viaactivity->viaactivityid;
-	$via->playbacksync = 0; // We want to force it to sync again!
+    $via->playbacksync = 0; // We want to force it to sync again!
 
     $api = new mod_via_api();
 

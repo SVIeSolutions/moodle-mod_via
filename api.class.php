@@ -861,7 +861,7 @@ class mod_via_api {
     public function list_downloadablefiles($via) {
         global $CFG, $USER;
 
-        if (!$userid = $this->get_user_via_id($USER->id, true)) {
+        if (!$userid = $this->get_user_via_id($USER->id)) {
             return false;
         }
 
@@ -914,7 +914,7 @@ class mod_via_api {
         $data .= "<ActivityID>".$via->viaactivityid."</ActivityID>";
         if ($via->playbacksync) {
             // Minus 1 hour as we kept missing some!
-			$data .= "<DateFrom>".$this->change_date_format($via->playbacksync - 3660)."</DateFrom>";
+            $data .= "<DateFrom>".$this->change_date_format($via->playbacksync - 3660)."</DateFrom>";
         }
         $data .= "</cApiListPlayback>";
         $data .= "</soap:Body>";
@@ -1461,7 +1461,7 @@ class mod_via_api {
         } else {
             $muser->viauserid = $viauser->viauserid;
 
-            if ($connection == true && $viauser->timemodified < (time() - (30 * 60)) || $forceupdate) {
+            if ($connection == true || $viauser->timemodified < (time() - (30 * 60)) || $forceupdate) {
                 // We only synchronize if/when the participant is trying to connect to an activity.
                 $viau = $this->via_user_get($muser->viauserid);
                 // These values should never change!

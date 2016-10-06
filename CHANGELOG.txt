@@ -1,5 +1,11 @@
 
 This file defines the changes made to Via - Virtual teaching
+
+last update 04/10/2016 (2016042011)
+- bug fix in user information update on Via! 
+The information was not updated often enough due to too strict validations of when to update the information.
+- bug fix user table when there are more that 50 users! 
+
 last update 01/01/2016 (2016042010)
 - bug fix in participants list when changing enrolment type!
 
