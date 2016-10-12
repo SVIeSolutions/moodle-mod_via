@@ -1504,7 +1504,7 @@ class mod_via_api {
                             foreach ($viaparticipant as $participant) {
                                 // We update all activities in which the user was enrolled, synched or not.
                                 try {
-                                    $this->via_add_participant($muser->id, $participant->activityid,
+                                    via_add_participant($muser->id, $participant->activityid,
                                     $participant->participanttype, true);
                                 } catch (Exception $e) {
                                     return false;
