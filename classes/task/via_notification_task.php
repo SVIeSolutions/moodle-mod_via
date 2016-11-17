@@ -27,8 +27,7 @@
 
 namespace mod_via\task;
 
-class via_notification_task extends \core\task\scheduled_task
-{
+class via_notification_task extends \core\task\scheduled_task {
 
     public function get_name() {
         return get_string('via_notification_task', 'via');
@@ -46,6 +45,6 @@ class via_notification_task extends \core\task\scheduled_task
         if ($viatask->lastruntime == 0) {
             $viatask->lastruntime = time();
         }
-        via_send_activity_notifications($viatask->lastruntime);
+		via_send_activity_notifications($viatask->lastruntime);
     }
 }

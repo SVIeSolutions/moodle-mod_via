@@ -72,7 +72,7 @@ $participants = $DB->get_records_sql("SELECT v.id, v.userid, v.activityid, vu.vi
                                       LEFT JOIN {via} via ON via.id = v.activityid
                                       LEFT JOIN {user} u ON u.id = v.userid
                                       LEFT JOIN {via_presence} vp ON v.userid = vp.userid AND v.activityid = vp.activityid
-                                      WHERE v.activityid = " . $via->id . ' ORDER BY (v.participanttype+1)%3 , u.lastname ASC');
+                                      WHERE v.activityid = ? ORDER BY (v.participanttype+1)%3 , u.lastname ASC", array($via->id));
 
 foreach ($participants as $participant) {
     if (!isset($participant->connection_duration)) {

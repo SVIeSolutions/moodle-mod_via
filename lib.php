@@ -205,22 +205,25 @@ function via_add_instance($via) {
                 $query = 'SELECT u.* FROM {groupings_groups} gg
                         LEFT JOIN {groups_members} gm ON gm.groupid = gg.groupid
                         LEFT JOIN {user} u ON u.id = gm.userid
-                        WHERE gg.groupingid = '.$via->groupingid.' ORDER BY u.lastname ASC';
+                        WHERE gg.groupingid = ? ORDER BY u.lastname ASC';
+                $param = array($via->groupingid);
             } else if ($via->groupid != 0) {
                 $query = 'SELECT u.* FROM {groups_members} gm
                         LEFT JOIN {user} u ON u.id = gm.userid
-                        WHERE gm.groupid = '.$via->groupingid.' ORDER BY u.lastname ASC';
+                        WHERE gm.groupid = ? ORDER BY u.lastname ASC';
+                $param = array($via->groupingid);
             } else {
                 // We add users.
                 $query = 'SELECT a.id as rowid, a.*, u.*
                             FROM {role_assignments} a, {user} u
-                            WHERE contextid=' . $context->id . ' AND a.userid=u.id ORDER BY u.lastname ASC';
+                            WHERE contextid= ? AND a.userid=u.id ORDER BY u.lastname ASC';
+                $param = array($context->id);
             }
         }
 
         if (isset($query)) {
             $count = 1;
-            $users = $DB->get_records_sql( $query );
+            $users = $DB->get_records_sql($query, $param);
             foreach ($users as $user) {
                 $type = via_user_type($user->id, $via->course, $via->noparticipants);
                 /* We only add the 50 first users, the rest will be synched on access */
@@ -318,25 +321,38 @@ function via_update_instance($via) {
     $callvia = true;
 
     // Grouping is selected!
-    if ($viaactivity->groupingid != $via->groupingid) {
+    if ($viaactivity->groupingid == 0 && $via->groupingid != 0) {
         $query = 'SELECT u.* FROM {groupings_groups} gg
                 LEFT JOIN {groups_members} gm ON gm.groupid = gg.groupid
                 LEFT JOIN {user} u ON u.id = gm.userid
-                WHERE gg.groupingid = '.$via->groupingid.'';
-
+                WHERE gg.groupingid = ?';
+        $param = array($via->groupingid);
+        $queryoldusers = 'SELECT u.* FROM {via_participants} vp
+                        LEFT JOIN {user} u ON u.id = vp.userid
+                        WHERE vp.activityid = ? AND vp.participanttype != 2';
+        $oldparams = array($via->id);
+    } else if ($viaactivity->groupingid != $via->groupingid) {
+        $query = 'SELECT u.* FROM {groupings_groups} gg
+                LEFT JOIN {groups_members} gm ON gm.groupid = gg.groupid
+                LEFT JOIN {user} u ON u.id = gm.userid
+                WHERE gg.groupingid = ?';
+        $param = array($via->groupingid);
         $queryoldusers = 'SELECT u.* FROM {groupings_groups} gg
                         LEFT JOIN {groups_members} gm ON gm.groupid = gg.groupid
                         LEFT JOIN {user} u ON u.id = gm.userid
-                        WHERE gg.groupingid = '.$viaactivity->groupingid.'';
+                        WHERE gg.groupingid = ?';
+        $oldparams = array($viaactivity->groupingid);
     } else if ($viaactivity->groupid != $via->groupid) {
         // Group is selected!
         $query = 'SELECT u.* FROM {groups_members} gm
                 LEFT JOIN {user} u ON u.id = gm.userid
-                WHERE gm.groupid = '.$via->groupid.'';
+                WHERE gm.groupid = ?';
+        $param = array($via->groupid);
 
         $queryoldusers = 'SELECT u.* FROM {groups_members} gm
                         LEFT JOIN {user} u ON u.id = gm.userid
-                        WHERE gg.groupid = '.$viaactivity->groupid.'';
+                        WHERE gg.groupid = ?';
+        $oldparams = array($viaactivity->groupid);
     } else {
         // Update roles for all both manual and automatic enrollement!
         $viausers = $DB->get_records('via_participants', array('activityid' => $via->id));
@@ -410,9 +426,9 @@ function via_update_instance($via) {
 
     if (isset($query)) {
         // Should only do this if groups or groupings are active.
-        $users = $DB->get_records_sql( $query );
+        $users = $DB->get_records_sql($query, $param);
         if ($queryoldusers) {
-            $oldusers = $DB->get_records_sql($queryoldusers);
+            $oldusers = $DB->get_records_sql($queryoldusers, $oldparams);
         } else {
             $oldusers = null;
         }
@@ -737,15 +753,20 @@ function via_access_activity($via) {
             }
         }
     } else {
-        $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $via->id));
-        if ($viaassign) {
-            $cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST);
-            $cangrade = has_capability('mod/viaassign:grade', context_module::instance($cm->id));
-        } else {
-            $cangrade = false;
-        }
-        if (has_capability('moodle/site:approvecourse', via_get_system_instance()) || $cangrade) {
-            return 7;
+        if (get_config('viaassign')) {
+            //This is just to validate that viaassign is installed, not to get an error the table does not exist.
+            $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $via->id));
+            if ($viaassign) {
+                $cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST);
+                $cangrade = has_capability('mod/viaassign:grade', context_module::instance($cm->id));
+            } else {
+                $cangrade = false;
+            }
+            if (has_capability('moodle/site:approvecourse', via_get_system_instance()) || $cangrade) {
+                return 7;
+            } else {
+                return 6;
+            }
         } else {
             return 6;
         }
@@ -841,6 +862,7 @@ function via_cron() {
 
     $viacron = $DB->get_records('via_cron');
     $update = '';
+    $params = array();
 
     foreach ($viacron as $function) {
         $lastcron = $function->lastcron;
@@ -850,37 +872,41 @@ function via_cron() {
                 echo "\n";
                 $result = via_send_reminders() && $result;
                 if ($result) {
-                    $update .= 'id=' . $function->id;
+                    $update .= 'id= ?';
+                    $params[] = $function->id;
                 }
             } else if ($function->name == 'via_add_enrolids') {
                 echo "add enrolids \n";
                 $result = via_add_enrolids() && $result;
                 if ($result) {
                     if ($update == '') {
-                        $update .= 'id=' . $function->id;
+                        $update .= 'id= ?';
                     } else {
-                        $update .= ' OR id=' . $function->id;
+                        $update .= ' OR id= ?';
                     }
+                    $params[] = $function->id;
                 }
             } else if ($function->name == 'via_synch_users') {
                 echo "synching users \n";
                 $result = via_synch_users() && $result;
                 if ($result) {
                     if ($update == '') {
-                        $update .= 'id=' . $function->id;
+                        $update .= 'id= ?';
                     } else {
-                        $update .= ' OR id=' . $function->id;
+                        $update .= ' OR id= ?';
                     }
+                    $params[] = $function->id;
                 }
             } else if ($function->name == 'via_synch_participants') {
                 echo "synching participants \n";
                 $result = via_synch_participants() && $result;
                 if ($result) {
                     if ($update == '') {
-                        $update .= 'id=' . $function->id;
+                        $update .= 'id= ?';
                     } else {
-                        $update .= ' OR id=' . $function->id;
+                        $update .= ' OR id= ?';
                     }
+                    $params[] = $function->id;
                 }
             } else if ($function->name == 'via_send_export_notice') {
                 echo "send export notice \n";
@@ -890,10 +916,11 @@ function via_cron() {
                 $result = via_send_export_notice($lastcron) && $result;
                 if ($result) {
                     if ($update == '') {
-                        $update .= 'id=' . $function->id;
+                        $update .= 'id= ?';
                     } else {
-                        $update .= ' OR id=' . $function->id;
+                        $update .= ' OR id= ?';
                     }
+                    $params[] = $function->id;
                 }
             }
         }
@@ -923,12 +950,12 @@ function via_add_enrolids() {
     $participants = $DB->get_records('via_participants', array('enrolid' => null, 'timesynched' => null));
     if ($participants) {
         foreach ($participants as $participant) {
-            $enrolid = $DB->get_record_sql('SELECT e.id FROM {via_participants} vp
+                $enrolid = $DB->get_record_sql('SELECT e.id FROM {via_participants} vp
                             left join {via} v ON vp.activityid = v.id
                             left join {enrol} e ON v.course = e.courseid
                             left join {user_enrolments} ue ON ue.enrolid = e.id AND ue.userid = vp.userid
-                            where vp.userid = '.$participant->userid.' and
-                            vp.activityid = '.$participant->activityid.' AND ue.id is not null');
+                            where vp.userid = ? and
+                            vp.activityid = ? AND ue.id is not null', array($participant->userid, $participant->activityid));
             try {
                 if ($enrolid) {
                     $DB->set_field('via_participants', 'enrolid', $enrolid->id, array('id' => $participant->id));
@@ -1025,10 +1052,10 @@ function via_get_reminders() {
     global $CFG, $DB;
     $now = time();
 
-        $sql = "SELECT p.id, p.userid, p.activityid, v.name, v.datebegin, v.duration, v.viaactivityid, v.course, v.activitytype ".
-        "FROM {via_participants} p ".
-        "INNER JOIN {via} v ON p.activityid = v.id ".
-        "WHERE v.remindertime > 0 AND ($now  >= (v.datebegin - v.remindertime)) AND v.mailed = 0 AND v.activitytype = 1";
+    $sql = "SELECT p.id, p.userid, p.activityid, v.name, v.datebegin, v.duration, v.viaactivityid, v.course, v.activitytype ".
+    "FROM {via_participants} p ".
+    "INNER JOIN {via} v ON p.activityid = v.id ".
+    "WHERE v.remindertime > 0 AND ($now  >= (v.datebegin - v.remindertime)) AND v.mailed = 0 AND v.activitytype = 1";
 
     $reminders = $DB->get_records_sql($sql);
 
@@ -1171,9 +1198,9 @@ function via_send_export_notice($lastcron) {
 
     foreach ($notices as $i) {
         if (isset($i['UserID'])) {
-            $muser = $DB->get_record_sql('SELECT u.* FROM {via_users} vu
+                $muser = $DB->get_record_sql('SELECT u.* FROM {via_users} vu
                                     LEFT JOIN {user} u ON vu.userid = u.id
-                                    WHERE vu.viauserid =\'' . $i['UserID'].'\'');
+                                    WHERE vu.viauserid = ?', array($i['UserID']));
 
             if (!$muser) {
                 echo "User with Via user ID {$i['UserID']} doesn't exist?!\n";
@@ -1196,7 +1223,7 @@ function via_send_export_notice($lastcron) {
                     $sql = "hasaudiorecord = 1";
                 }
 
-                $DB->execute('UPDATE {via_playbacks} SET '.$sql.' WHERE playbackid = \''.$i['PlaybackID'].'\'');
+                $DB->execute('UPDATE {via_playbacks} SET '.$sql.' WHERE playbackid = ?', array($i['PlaybackID']));
                 $result = via_send_notices($i, $muser, $activity);
             } catch (Exception $e) {
                 notify(get_string("error:".$e->getMessage(), "via"));
@@ -1236,7 +1263,7 @@ function via_send_activity_notifications($lastcron) {
         if (isset($i['HostID'])) {
             $muser = $DB->get_record_sql('SELECT u.* FROM {via_users} vu
                                     LEFT JOIN {user} u ON vu.userid = u.id
-                                    WHERE vu.viauserid =\'' . $i['HostID'].'\'');
+                                    WHERE vu.viauserid = ?', array($i['HostID']));
 
             if (!$muser) {
                 echo "User with Via user ID {$i['HostID']} doesn't exist?!\n";
@@ -1415,6 +1442,8 @@ function via_send_notices($i, $muser, $activity) {
      */
 function via_send_notification($i, $muser, $activity) {
     global $CFG, $DB, $SITE;
+	
+	$result = true;
 
     $course = $DB->get_record('course', array('id' => $activity->course));
     if (! $cm = get_coursemodule_from_instance("via", $activity->id, $activity->course)) {
@@ -1428,19 +1457,17 @@ function via_send_notification($i, $muser, $activity) {
     $from = $SITE->fullname;
 
     $muserfrom = $DB->get_record_sql('SELECT u.* FROM {via_users} vu
-                                    LEFT JOIN {user} u ON vu.userid = u.id
-                                    WHERE vu.viauserid =\'' . $i['UserID'].'\'');
+                                LEFT JOIN {user} u ON vu.userid = u.id
+                                WHERE vu.viauserid = ?', array($i['UserID']));
 
     if (!$muserfrom) {
-        echo "User with Via user ID {$i['UserID']} doesn't exist?!\n";
-        continue;
+		$muserfrom = '';
     }
 
     // Recipient is self!
-    $result = true;
     $a = new stdClass();
     $a->username = fullname($muser);
-    $a->userfrom = fullname($muserfrom);
+	$a->userfrom = fullname($muserfrom);
     $a->date = userdate(strtotime($i['DateSent']), '%d %B, %H:%M');
     $a->activitytitle = $activity->name;
     $a->coursename = $course->shortname;
@@ -1484,10 +1511,10 @@ function via_get_invitations($activityid) {
         WHERE v.sendinvite = 1";
 
     if ($activityid <> null) {
-        $sql .= " AND v.id = " . $activityid;
+        $sql .= " AND v.id = ? ";
     }
 
-    $invitations = $DB->get_records_sql($sql);
+    $invitations = $DB->get_records_sql($sql, array($activityid));
 
     return $invitations;
 }
@@ -1605,7 +1632,7 @@ function via_remove_participants($vias) {
     foreach ($vias as $via) {
         // Unenrol all participants on VIA server only if we do not delete activity on VIA, since this activity was backuped.
         $participants = $DB->get_records_sql("SELECT * FROM {via_participants}
-                                            WHERE activityid=$via->id AND participanttype != 2");
+                                            WHERE activityid= ? AND participanttype != 2", array($via->id));
         foreach ($participants as $participant) {
             if (!via_remove_participant($participant->userid, $via->id)) {
                 $result = false;

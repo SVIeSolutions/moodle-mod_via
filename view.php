@@ -77,10 +77,14 @@ require_capability('mod/via:view', $context);
 
 // SYNC STUFF.
 if (has_capability('mod/via:manage', $context)) {
-    if (($via->usersynchronization + 300) < time() && $via->activitytype == 1 && time() > ($via->datebegin + $via->duration * 60)) {
+    if (($via->usersynchronization + 120) < time()) {
         // Check to sync users to the activity.
         via_synch_participants(null, $via->id);
-        $updated = $DB->execute('UPDATE {via} SET usersynchronization='.time().' WHERE id=' . $via->id);
+
+        $via->usersynchronization = time();
+
+        $updated = $DB->update_record('via', $via);
+
     }
 } else {
     if (!($userassociated = $DB->get_record('via_participants', array('activityid' => $via->id, 'userid' => $USER->id )))) {
@@ -210,7 +214,6 @@ if (isset($deleted)) {
         $table .= '</tr>';
     }
 
-
     if ($cancreatevia) {
         if ($via->presence != 0) {
             // Presence.
@@ -293,7 +296,9 @@ if (isset($deleted)) {
     $table->data = array();
 
     // Buttons so that students may confirm teir precence.
-    if (!has_capability('mod/via:manage', $context) && $via->needconfirmation && get_config('via', 'via_participantmustconfirm')) {
+    if (has_capability('mod/via:view', $context) &&
+        $via->needconfirmation && get_config('via', 'via_participantmustconfirm') &&
+        ($via->datebegin + $via->duration) >= time()) {
         // If participant must confim attendance.
         $confirmation = true;
 

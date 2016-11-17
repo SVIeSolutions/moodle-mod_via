@@ -87,7 +87,7 @@ if ($edit == get_string('cancel', 'via')) {
 
 if ($edit != 'del' && $edit != get_string('delete', 'via')) {
     // For all pages except delete we need to load the playback's info.
-    $playbacks = $DB->get_records_sql('select * from {via_playbacks} WHERE playbackid = \''. $playbackid . '\'');
+    $playbacks = $DB->get_records('via_playbacks', array('playbackid' => $playbackid));
 
     foreach ($playbacks as $playbacksearch) {
         if (strtoupper($playbacksearch->playbackid) == strtoupper($playbackid)) {
@@ -145,12 +145,7 @@ if ($edit == get_string('delete', 'via')) {
                 $playback->accesstype = 2;
             }
 
-            $sql = 'UPDATE {via_playbacks} SET title = \''.$playback->title.'\',
-                    isdownloadable = '. $playback->isdownloadable.',
-                    accesstype = '.$playback->accesstype;
-            $sql .= ' WHERE playbackid = \''.$playback->playbackid.'\'';
-
-            $DB->execute($sql);
+            $DB->update_record('via_playbacks', $playback);
             redirect("view.php?".$viaurlparam."=".$viaurlparamvalue);
         }
 

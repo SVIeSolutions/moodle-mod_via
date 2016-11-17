@@ -49,7 +49,7 @@ function via_synch_users() {
     foreach ($deleted as $vuser) {
         $activities = $DB->get_records_sql('SELECT v.id, v.viaactivityid FROM {via_participants} vp
                                             LEFT JOIN {via} v ON v.id = vp.activityid
-                                            WHERE vp.userid = '. $vuser->id);
+                                            WHERE vp.userid = ?', array($vuser->id));
 
         try {
             foreach ($activities as $via) {
@@ -101,22 +101,25 @@ function via_synch_participants($userid, $activityid) {
         left join {via_participants} vp on vp.activityid = v.id AND ue.userid = vp.userid
         left join {context} c on c.instanceid = e.courseid
         left join {role_assignments} ra on ra.contextid = c.id AND ue.userid = ra.userid';
-    $where = 'where (vp.activityid is null OR ra.timemodified > '.$viatask->lastruntime.' )
+    $where = 'where (vp.activityid is null OR ra.timemodified > ? )
             and c.contextlevel = 50 and v.enroltype = 0 and e.status = 0 and v.enroltype = 0 and v.groupingid = 0 ';
+    $array = array($viatask->lastruntime);
 
     if ($activityid <> null) {
-        $where .= " and v.id = " . $activityid;
+        $where .= " and v.id = ?";
+        $array[] = $activityid;
     } else {
         // If no activity ID is sent, we only check perm and activities in the futur. (CALLED FROM TASK)!
         $where .= " and (v.activitytype = 2 or (v.activitytype = 1 and (v.datebegin + v.duration*60) > " . time() . ")) ";
     }
 
     if ($userid <> null) {
-        $where .= " and ue.userid = " . $userid;
+        $where .= " and ue.userid = ?";
+        $array[] = $userid;
     }
 
-    $ners = $DB->get_recordset_sql('select distinct ue.userid, e.courseid, v.id as viaactivity, v.noparticipants '.
-        $sql.' '.$where, null, $limitfrom = 0, $limitnum = 0);
+    $ners = $DB->get_recordset_sql('SELECT distinct ue.userid, e.courseid, v.id as viaactivity, v.noparticipants '.
+    $sql.' '.$where, $array, $limitfrom = 0, $limitnum = 0);
 
     // Add users from automatic enrol type.
     foreach ($ners as $add) {
@@ -139,21 +142,23 @@ function via_synch_participants($userid, $activityid) {
                             LEFT JOIN {groupings_groups} gg ON v.groupingid = gg.groupingid
                             LEFT JOIN {groups_members} gm ON gm.groupid = gg.groupid
                             LEFT JOIN {via_participants} vp ON vp.activityid = v.id AND vp.userid = gm.userid ';
-    $newgroupmemberswhere = ' WHERE v.groupingid != 0 AND vp.id is null AND gm.timeadded > '.$viatask->lastruntime;
+    $newgroupmemberswhere = ' WHERE v.groupingid != 0 AND vp.id is null AND gm.timeadded > ? OR gg .timeadded > ?';
+    $array = array($viatask->lastruntime, $viatask->lastruntime);
 
     if ($activityid <> null) {
-        $newgroupmemberswhere .= " and v.id = " . $activityid;
+        $newgroupmemberswhere .= " and v.id = ?";
+        $array[] = $activityid;
     } else {
         // If no activity ID is sent, we only check perm and activities in the futur. (CALLED FROM TASK)!
         $newgroupmemberswhere .= " and (v.activitytype = 2 or (v.activitytype = 1 and v.datebegin > " . time() . ")) ";
     }
 
     if ($userid <> null) {
-        $newgroupmemberswhere .= " and gm.userid = " . $userid;
+        $newgroupmemberswhere .= " and gm.userid = ?";
+        $array[] = $userid;
     }
-
     $newgroupmembers = $DB->get_recordset_sql('select distinct v.id as activityid, v.course, v.noparticipants, gm.userid
-                                            '.$newgroupmemberssql.' '.$newgroupmemberswhere);
+                                            '.$newgroupmemberssql.' '.$newgroupmemberswhere, $array);
 
     foreach ($newgroupmembers as $add) {
         try {
@@ -171,44 +176,71 @@ function via_synch_participants($userid, $activityid) {
         }
     }
 
-    // If we are not in the task we do not do the user removal sync.
+    // We need to remove users removed from a group or grouping or someone unenroled from the cours completly!
     if ($activityid <> null) {
-        return $result;
-    }
-    // Now we remove via participants that have been unerolled from a cours.
-    $oldenrollments = $DB->get_records_sql('SELECT vp.id, vp.activityid, vp.userid, vp.timesynched, vp.synchvia
+        $via = $DB->get_record('via', array('id' => $activityid));
+        $particpants = $DB->get_records_sql('SELECT distinct vp.userid, vp.timesynched, vp.synchvia
+                                            FROM {via_participants} vp
+                                            LEFT JOIN {via} v ON v.id = vp.activityid WHERE v.id = ?
+                                            AND vp.participanttype <> 2', array($activityid));
+        // If we are using groups and groupings.
+        if ($via->groupingid != 0 || $via->groupid != 0) {
+            if ($via->groupingid != 0) {
+                $where = ' AND gg.groupingid = ?';
+                $array = array($via->groupingid);
+            } else if ($via->groupid != 0) {
+                $where = ' AND gg.groupid = ?';
+                $array = array($via->groupid);
+            }
+            $groupmembers = $DB->get_records_sql('SELECT distinct gm.userid FROM {groupings_groups} gg
+                                            LEFT JOIN {groups_members} gm ON gm.groupid = gg.groupid
+                                            LEFT JOIN {via_participants} vp ON gm.userid = vp.userid
+                                            WHERE vp.participanttype <> 2 '
+                . $where, $array);
+            $total = array_diff_key($particpants, $groupmembers);
+        } else if ($via->enroltype == 0) {
+            // Unenrolments!
+            $oldenrollments = $DB->get_records_sql('SELECT vp.id, vp.activityid, vp.userid, vp.timesynched, vp.synchvia
+                                        FROM {via_participants} vp
+                                        LEFT JOIN {user_enrolments} ue ON ue.enrolid = vp.enrolid and ue.userid = vp.userid
+                                        WHERE ue.enrolid is null AND vp.userid != 2
+                                        AND vp.enrolid != 0 AND vp.activityid = ?', array($activityid));
+            if ($oldenrollments != 0) {
+                $total = array_diff_key($oldenrollments, $particpants);
+            }
+        }
+    } else {
+        // Now we remove via participants that have been removed from the group.
+        $oldenrollments = $DB->get_records_sql('SELECT vp.id, vp.activityid, vp.userid, vp.timesynched, vp.synchvia
                                         FROM {via_participants} vp
                                         LEFT JOIN {user_enrolments} ue ON ue.enrolid = vp.enrolid and ue.userid = vp.userid
                                         WHERE ue.enrolid is null AND vp.userid != 2 and vp.enrolid != 0');
-    // 2== admin user which is never enrolled.
-
-    // If we are using groups.
-    $oldgroupmembers = $DB->get_records_sql('SELECT distinct vp.id, vp.activityid, vp.userid, vp.timesynched, vp.synchvia
-                                        FROM {via_participants} vp
-                                        LEFT JOIN {via} v ON v.id = vp.activityid
-                                        LEFT JOIN {groupings_groups} gg ON gg.groupingid = v.groupingid
-                                        LEFT JOIN {groups} g ON gg.groupid = g.id AND v.course = g.courseid
-                                        LEFT JOIN {groups_members} gm ON vp.userid = gm.userid
-                                        WHERE  ( gm.id is null OR g.id is null )
-                                        AND vp.participanttype = 1 AND v.groupingid != 0');
-
-    $totalmerge = array_merge($oldenrollments, $oldgroupmembers);
-    $total = array_unique($totalmerge, SORT_REGULAR);
-    foreach ($total as $remove) {
-        try {
-            // If user is not mananger, we remove him.
-            if (!$DB->get_record('role_assignments', array('userid' => $remove->userid, 'contextid' => 1, 'roleid' => 1))) {
-                // By adding the info here, we are cutting on calls to the DB later on.
-                if ($remove->synchvia == 1 || $remove->timesynched && is_null($remove->synchvia)) {
-                    $synch = true;
+        // 2== admin user which is never enrolled.
+        // If we are using groups.
+        $oldgroupmembers = $DB->get_records_sql('SELECT vp.id, vp.activityid, vp.userid, vp.timesynched, vp.synchvia
+                                    FROM {via_participants} vp
+                                    LEFT JOIN {via} v ON v.id = vp.activityid
+                                    WHERE  (SELECT COUNT(gm.id) FROM {groupings_groups} gg
+                                    JOIN {groups_members} gm ON gm.groupid = gg.groupid
+                                    WHERE gg.groupingid = v.groupingid AND
+                                    gm.userid = vp.userid) = 0 AND v.groupingid != 0 AND vp.participanttype != 2');
+        $totalmerge = array_merge($oldenrollments, $oldgroupmembers);
+        $total = array_unique($totalmerge, SORT_REGULAR);
+    }
+    if ($total) {
+        foreach ($total as $remove) {
+            try {
+                if (isset($remove->activityid)) {
+                    $activityid = $remove->activityid;
                 } else {
-                    $synch = false;
+                    $activityid = $activityid;
                 }
-                via_remove_participant($remove->userid, $remove->activityid, $synch);
+                via_remove_participant($remove->userid, $activityid, false);
+
+            } catch (Exception $e) {
+                notify("error:".$e->getMessage());
+                $result = false;
             }
-        } catch (Exception $e) {
-            notify("error:".$e->getMessage());
-            $result = false;
         }
     }
 
@@ -423,11 +455,11 @@ function via_participants($course, $via, $participanttype, $context = null) {
                                     u.idnumber, u.email, u.city, u.country, u.lastaccess, u.lastlogin, u.picture,
                                     u.timezone, u.theme, u.lang, u.trackforums, u.mnethostid
                                     FROM {user} u, {via_participants} s
-                                    WHERE s.activityid = '.$via->id.'
+                                    WHERE s.activityid = ?
                                     AND s.userid = u.id
-                                    AND s.participanttype = '. $participanttype.'
+                                    AND s.participanttype = ?
                                     AND u.deleted = 0
-                                    ORDER BY u.email ASC ');
+                                    ORDER BY u.email ASC ', array($via->id, $participanttype));
 
     static $guestid = null;
 
@@ -533,8 +565,9 @@ function via_get_list_profils() {
                         if ($exists->value != $info['ProfilID']) {
                             // If the profile has changed we need to update all vias using the old id.
                             $vias = $DB->get_records_sql('SELECT * FROM {via}
-                                                        WHERE profilid = \''.$exists->value.'\'
-                                                        AND datebegin > ' . time() .' OR activitytype = 2');
+                                                        WHERE profilid = ?
+                                                        AND datebegin > ' . time() .' OR activitytype = 2',
+                            array($exists->value));
                             foreach ($vias as $via) {
                                 $via->profilid = $info['ProfilID'];
                                 $DB->update_record('via', $via);
@@ -543,7 +576,7 @@ function via_get_list_profils() {
                             try {
                                 // If the profile has changed we need to update all viaassign using the old id.
                                 $viasss = $DB->get_records_sql('SELECT * FROM {via_assign}
-                                                            WHERE multimediaquality = \''.$exists->value.'\'');
+                                                            WHERE multimediaquality = ?', array($exists->value));
                                 foreach ($viasss as $via) {
                                     $via->multimediaquality = $info['ProfilID'];
                                     $DB->update_record('via_assign', $via);
@@ -652,7 +685,7 @@ function via_sync_activity_playbacks($via) {
                                     $param->title = $breakout['Title'];
                                     $param->duration = $breakout['Duration'];
                                     $param->creationdate = strtotime($breakout['CreationDate']);
-                                    $param->accesstype = $via->isreplayallowed;
+                                    $param->accesstype = $breakout['IsPublic'];
                                     $param->isdownloadable = $breakout['IsDownloadable'];
                                     $param->hasfullvideorecord = $breakout['HasFullVideoRecord'];
                                     $param->hasmobilevideorecord = $breakout['HasMobileVideoRecord'];
@@ -670,7 +703,7 @@ function via_sync_activity_playbacks($via) {
                                             $param->title = $bkout['Title'];
                                             $param->duration = $bkout['Duration'];
                                             $param->creationdate = strtotime($bkout['CreationDate']);
-                                            $param->accesstype = $via->isreplayallowed;
+                                            $param->accesstype = $bkout['IsPublic'];
                                             $param->isdownloadable = $bkout['IsDownloadable'];
                                             $param->hasfullvideorecord = $bkout['HasFullVideoRecord'];
                                             $param->hasmobilevideorecord = $bkout['HasMobileVideoRecord'];
@@ -691,7 +724,7 @@ function via_sync_activity_playbacks($via) {
                         $param->title = $playback['Title'];
                         $param->duration = $playback['Duration'];
                         $param->creationdate = strtotime($playback['CreationDate']);
-                        $param->accesstype = $via->isreplayallowed;
+                        $param->accesstype = $playback['IsPublic'];
                         $param->isdownloadable = $playback['IsDownloadable'];
                         $param->hasfullvideorecord = $playback['HasFullVideoRecord'];
                         $param->hasmobilevideorecord = $playback['HasMobileVideoRecord'];
@@ -750,35 +783,33 @@ function via_get_table_head($via, $presence = null) {
     $table->cellpadding = 5;
     $table->cellspacing = 0;
 
+    // Common values to both tables!
+    $table->head  = array();
+    $table->head[] = get_string("role", "via");
+    $table->head[] = get_string("lastname").', '.get_string("firstname");
+
     if ($presence) {
         $table->id = 'viapresence';
+        $table->head[] = get_string("presenceheader", "via");
+        $table->align = array ('left', 'left', 'center');
+
         if ($via->recordingmode != 0) {
-            $table->head  = array (get_string("role", "via"),
-                get_string("lastname").', '.get_string("firstname"),
-                get_string("presenceheader", "via"),
-                get_string("playbackheader", "via")
-                );
-            $table->align = array ('left', 'left', 'center', 'center');
-        } else {
-            $table->head  = array (get_string("role", "via"),
-                get_string("lastname").', '.get_string("firstname"),
-                get_string("presenceheader", "via"),
-                );
-            $table->align = array ('left', 'left', 'center');
+            $table->head[] = get_string("playbackheader", "via");
+            $table->align[] = 'center';
         }
+        if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation) {
+            $table->head[] = get_string("confirmationstatus", "via");
+            $table->align[] = 'center';
+        }
+
     } else {
         $table->id = 'viaparticipants';
+        $table->head[] = get_string("config", "via");
+        $table->align = array ('left', 'left', 'center');
+
         if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation) {
-            $table->head  = array (get_string("role", "via"),
-                get_string("lastname").', '.get_string("firstname"),
-                get_string("config", "via"),
-                get_string("confirmationstatus", "via"));
-            $table->align = array ('left', 'left', 'center', 'center');
-        } else {
-            $table->head  = array (get_string("role", "via"),
-                get_string("lastname").', '.get_string("firstname"),
-                get_string("config", "via"));
-            $table->align = array ('left', 'left', 'center');
+            $table->head[] = get_string("confirmationstatus", "via");
+            $table->align[] = 'center';
         }
     }
 
@@ -859,26 +890,27 @@ function via_get_participants_table($via, $context, $presence = null) {
     echo '</div>';
 
     // Prepare the paged query.
-    $where = 'WHERE activityid = ' . $via->id .' ORDER BY (participanttype+1)%3 , u.lastname ASC ';
     if ($presence) {
         $sql = 'SELECT vpp.userid, v.id as activityid, vu.viauserid, u.lastname, u.firstname,
                 u.email, vpp.participanttype, vp.status, v.presence, v.recordingmode, v.viaactivityid,
-                vp.connection_duration, vp.playback_duration
+                vp.connection_duration, vp.playback_duration, vpp.confirmationstatus
                 FROM {via_participants} vpp
                 LEFT JOIN {via_users} vu ON vu.userid = vpp.userid
                 LEFT JOIN {via} v ON v.id = vpp.activityid
                 LEFT JOIN {user} u ON u.id = vpp.userid
                 LEFT JOIN {via_presence} vp ON vpp.userid = vp.userid AND vpp.activityid = vp.activityid
-                WHERE vpp.activityid = '.$via->id.' ORDER BY (vpp.participanttype+1)%3, u.lastname ASC ';
+                WHERE vpp.activityid = ? ORDER BY (vpp.participanttype+1)%3, u.lastname ASC ';
+
     } else {
-        $sql = 'SELECT vp.*, u.firstname, u.lastname, u.email, vu.viauserid, vu.setupstatus
+        $sql = 'SELECT vp.*, u.firstname, u.lastname, u.email, vu.viauserid, vu.setupstatus, vp.confirmationstatus
                 FROM {via_participants} vp
                 LEFT JOIN {user} u ON u.id = vp.userid
-                LEFT JOIN {via_users} vu ON vu.userid = u.id ' .$where;
+                LEFT JOIN {via_users} vu ON vu.userid = u.id
+                WHERE activityid = ? ORDER BY (participanttype+1)%3 , u.lastname ASC';
     }
 
     try {
-        $participantslist = $DB->get_records_sql($sql, null, $offset * $limit, $limit);
+        $participantslist = $DB->get_records_sql($sql, array($via->id), $offset * $limit, $limit);
 
         if ($participantslist) {
             foreach ($participantslist as $participant) {
@@ -921,13 +953,16 @@ function via_get_participants_table($via, $context, $presence = null) {
                     }
                 }
 
-                if ($via->needconfirmation) {
-                    $info2 = via_get_confirmationstatus($participant->confirmationstatus);
-                }
-                if ((!$presence && isset($info2)) || ($presence && $via->recordingmode != 0)) {
-                    $table->data[] = array ($role, $userlink, $info1, $info2);
+                if ($via->needconfirmation && get_config('via', 'via_participantmustconfirm')) {
+                    $info3 = via_get_confirmationstatus($participant->confirmationstatus);
                 } else {
-                    $table->data[] = array ($role, $userlink, $info1);
+                    $info3 = null;
+                }
+
+                if ((!$presence && isset($info2)) || ($presence && $via->recordingmode != 0)) {
+                    $table->data[] = array ($role, $userlink, $info1, $info2, $info3);
+                } else {
+                    $table->data[] = array ($role, $userlink, $info1, $info3);
                 }
             }
         } else {
@@ -977,7 +1012,7 @@ function via_userlogs($participant) {
                     $duration = via_get_converted_time($userlog['PlaybackDuration']);
                     $playback = '<span class="viagreen">'.$duration. '</span>';
                 } else {
-                    $playback = "";
+                    $playback = "-";
                 }
 
                 $exists = $DB->get_record('via_presence',
@@ -1059,7 +1094,7 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
         $cmid = $via->id;
     }
     $playbacks = $DB->get_records_sql('SELECT * FROM {via_playbacks}
-                                       WHERE activityid = ' . $via->id . ' ORDER BY creationdate asc');
+                                       WHERE activityid = ? ORDER BY creationdate asc', array($via->id));
 
     if (count($playbacks) == 0) {
         return "";

@@ -1,9 +1,19 @@
 
 This file defines the changes made to Via - Virtual teaching
 
+last update 15/11/2016 (2016042015)
+- Correction in a scheduled task - not yet on moodle.org
+
+last update 19/10/2016 (2016042014)
+- Modification to all get_records_sql() to avoid sql injection! The variables were added to the parameters.
+- Correction to the confiramtion status validation and display.
+- Corrections made to synch_participnats! This works in 2.7 but not 2.9 or higher.
+
+last update 04/10/2016 (2016042013)
+- bug fix participants list if confirmation mode is activated, yet removed at plugin level!
+
 last update 04/10/2016 (2016042012)
-- bug fix in get_user_via_id when user was deleted in Via and the user was being recreated! 
- 
+- bug fix in get_user_via_id when user was deleted in Via and the user was being recreated!
 
 last update 04/10/2016 (2016042011)
 - bug fix in user information update on Via! 

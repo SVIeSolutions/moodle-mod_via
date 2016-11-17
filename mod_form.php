@@ -42,6 +42,9 @@ class mod_via_mod_form extends moodleform_mod {
         $mform =& $this->_form;
 
         $groupingid = optional_param('groupingid', null, PARAM_INT);
+        if (!$groupingid && $this->_cm->groupingid != 0) {
+            $groupingid = $this->_cm->groupingid;
+        }
 
         if (isset($_SESSION['ErrMaxSimActMessage'])) {
             $mform->addElement('html', '<div class="mform" style="text-align:center;">
@@ -295,8 +298,8 @@ class mod_via_mod_form extends moodleform_mod {
             $vusers = $DB->get_records_sql('SELECT vp.*, u.firstname, u.lastname, u.username
                                             FROM {via_participants} vp
                                             LEFT JOIN {user} u ON vp.userid = u.id
-                                            WHERE activityid = ' . $this->current->instance .'
-                                            ORDER BY u.lastname ASC');
+                                            WHERE activityid = ?
+                                            ORDER BY u.lastname ASC', array($this->current->instance));
             if ($vusers) {
                 foreach ($vusers as $u) {
                     if ($u->participanttype == 1) {

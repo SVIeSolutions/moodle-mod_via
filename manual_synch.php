@@ -38,8 +38,7 @@ $module = $DB->get_record('modules', array('name' => 'via'));
 $cm = $DB->get_record('course_modules', array('instance' => $id, 'course' => $via->course, 'module' => $module->id));
 $string = null;
 
-$notsynched = $DB->get_records_sql('SELECT * FROM {via_participants}
-                                    where activityid =' .$id . ' AND synchvia = 0');
+$notsynched = $DB->get_records('via_participants',  array('activityid' => $id, 'synchvia' => 0));
 
 foreach ($notsynched as $s) {
 
