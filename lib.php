@@ -753,8 +753,8 @@ function via_access_activity($via) {
             }
         }
     } else {
-        if (get_config('viaassign')) {
-            //This is just to validate that viaassign is installed, not to get an error the table does not exist.
+        if (get_config('mod_viaassign', 'version')) {
+            // This is just to validate that viaassign is installed, not to get an error the table does not exist.
             $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $via->id));
             if ($viaassign) {
                 $cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST);
@@ -1038,6 +1038,17 @@ function via_send_reminders() {
         }
 
         $result = via_send_moodle_reminders($r, $muser, $from);
+        if ($result) {
+            $record = new stdClass();
+            $record->id = $r->activityid;
+            $record->mailed = 1;
+            if (!$DB->update_record('via', $record)) {
+                // If this fails, stop everything to avoid sending a bunch of dupe emails.
+                echo "    Could not update via table!\n";
+                continue;
+                return false;
+            }
+        }
     }
 
     return $result;
@@ -1117,17 +1128,8 @@ function via_send_moodle_reminders($r, $muser, $from) {
             $result = false;
         } else {
             echo "Sent an email reminder to {$muser->firstname} {$muser->lastname} <{$muser->email}>.\n";
+            $result = true;
         }
-    }
-
-    $record = new stdClass();
-    $record->id = $r->activityid;
-    $record->mailed = 1;
-    if (!$DB->update_record('via', $record)) {
-        // If this fails, stop everything to avoid sending a bunch of dupe emails.
-        echo "    Could not update via table!\n";
-        $result = false;
-        continue;
     }
 
     return $result;
@@ -1149,23 +1151,35 @@ function via_send_invitations($activityid) {
 
     // If anything fails, we'll keep going but we'll return false at the end.
     $result = true;
+    $from = via_get_host($i->activityid);
 
     foreach ($invitations as $i) {
         $muser = $DB->get_record('user', array('id' => $i->userid));
-        $from = via_get_host($i->activityid);
 
         if (!$muser) {
-            $result = false;
             continue;
+            return false;
         }
 
         // Send reminder.
         try {
             $result = via_send_moodle_invitations($i, $muser, $from);
+            if ($result) {
+                $record = new stdClass();
+                $record->id = $i->activityid;
+                $record->sendinvite = 0;
+                $record->invitemsg = "";
+                if (!$DB->update_record('via', $record)) {
+                    // If this fails, stop everything to avoid sending a bunch of dupe emails.
+                    echo "    Could not update via table!\n";
+                    continue;
+                    return false;
+                }
+            }
         } catch (Exception $e) {
             notify(get_string("error:".$e->getMessage(), "via"));
-            $result = false;
             continue;
+            return false;
         }
     }
 
@@ -1352,20 +1366,9 @@ function via_send_moodle_invitations($i, $user, $from) {
     if (!isset($muser->emailstop) || !$muser->emailstop) {
         if (true !== email_to_user($user, $from, $subject, $body, $bodyhtml)) {
             echo "    Could not send email to <{$user->email}> (unknown error!)\n";
-            $result = false;
             continue;
+            return false;
         }
-    }
-
-    $record = new stdClass();
-    $record->id = $i->activityid;
-    $record->sendinvite = 0;
-    $record->invitemsg = "";
-    if (!$DB->update_record('via', $record)) {
-        // If this fails, stop everything to avoid sending a bunch of dupe emails.
-        echo "    Could not update via table!\n";
-        $result = false;
-        continue;
     }
 
     return $result;
@@ -1425,8 +1428,10 @@ function via_send_notices($i, $muser, $activity) {
     if (!isset($muser->emailstop) || !$muser->emailstop) {
         if (true !== email_to_user($muser, $from, $subject, $body, $bodyhtml)) {
             echo "    Could not send email to <{$muser->email}> (unknown error!)\n";
+            return false;
         } else {
             echo "    An export notice was sent to " . $muser->firstname ." " . $muser->lastname . " " .$muser->email. "\n";
+            return true;
         }
     }
 
@@ -1442,8 +1447,8 @@ function via_send_notices($i, $muser, $activity) {
      */
 function via_send_notification($i, $muser, $activity) {
     global $CFG, $DB, $SITE;
-	
-	$result = true;
+
+    $result = true;
 
     $course = $DB->get_record('course', array('id' => $activity->course));
     if (! $cm = get_coursemodule_from_instance("via", $activity->id, $activity->course)) {
@@ -1461,13 +1466,13 @@ function via_send_notification($i, $muser, $activity) {
                                 WHERE vu.viauserid = ?', array($i['UserID']));
 
     if (!$muserfrom) {
-		$muserfrom = '';
+        $muserfrom = '';
     }
 
     // Recipient is self!
     $a = new stdClass();
     $a->username = fullname($muser);
-	$a->userfrom = fullname($muserfrom);
+    $a->userfrom = fullname($muserfrom);
     $a->date = userdate(strtotime($i['DateSent']), '%d %B, %H:%M');
     $a->activitytitle = $activity->name;
     $a->coursename = $course->shortname;
@@ -1487,8 +1492,10 @@ function via_send_notification($i, $muser, $activity) {
     if (!isset($muser->emailstop) || !$muser->emailstop) {
         if (true !== email_to_user($muser, $from, $subject, $body, $bodyhtml)) {
             echo "    Could not send email to <{$muser->email}> (unknown error!)\n";
+            return false;
         } else {
             echo "    An activity notification was sent to " . $muser->firstname ." " . $muser->lastname . " " .$muser->email. "\n";
+            return true;
         }
     }
 

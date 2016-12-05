@@ -30,8 +30,8 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 $plugin->component = 'mod_via';
-$plugin->version = 2016042015;
+$plugin->version = 2016042016;
 $plugin->requires = 2011033010;
 $plugin->cron     = 300;
 $plugin->maturity = MATURITY_STABLE; // This is considered as ready for production sites.
-$plugin->release = 'v2.7-r15';
+$plugin->release = 'v2.7-r16';

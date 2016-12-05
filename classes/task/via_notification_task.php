@@ -45,6 +45,6 @@ class via_notification_task extends \core\task\scheduled_task {
         if ($viatask->lastruntime == 0) {
             $viatask->lastruntime = time();
         }
-		via_send_activity_notifications($viatask->lastruntime);
+        via_send_activity_notifications($viatask->lastruntime);
     }
 }
