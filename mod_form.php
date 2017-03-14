@@ -20,11 +20,11 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
-
+defined('MOODLE_INTERNAL') || die();
 require_once($CFG->dirroot.'/course/moodleform_mod.php');
 
 require_once(get_vialib());
@@ -42,8 +42,18 @@ class mod_via_mod_form extends moodleform_mod {
         $mform =& $this->_form;
 
         $groupingid = optional_param('groupingid', null, PARAM_INT);
-        if (!$groupingid && $this->_cm->groupingid != 0) {
-            $groupingid = $this->_cm->groupingid;
+        $enroltype = optional_param('enroltype', null, PARAM_INT);
+        $groupid = optional_param('groupid', null, PARAM_INT);
+        if (!isset($groupingid)) {
+            if (isset($this->_cm)) {
+                $groupingid = $this->_cm->groupingid;
+            }
+            $ajax = false;
+            if (isset($groupid)) {
+                $ajax = true;
+            }
+        } else {
+            $ajax = true;
         }
 
         if (isset($_SESSION['ErrMaxSimActMessage'])) {
@@ -72,17 +82,21 @@ class mod_via_mod_form extends moodleform_mod {
 
         // Permanent activity!
         if (get_config('via', 'via_permanentactivities') == 1) {
-            $mform->addElement('checkbox', 'activitytype', get_string("permanent", "via"));
+            $mform->addElement('advcheckbox', 'activitytype', get_string("permanent", "via"), '', array('group' => 0), array(0, 1));
             $mform->disabledif ('activitytype', 'pastevent', 'eq', 1);
             $mform->addHelpButton('activitytype', 'permanent', 'via');
         }
 
         // Start Date!
-        $mform->addElement('date_time_selector', 'datebegin', get_string('availabledate', 'via'), array('optional' => false));
-        $mform->setDefault('datebegin', (time() + (60 * 10)));
+        if (isset($this->current->activitytype) && $this->current->activitytype == '3') {
+            $mform->addElement('date_time_selector', 'datebegin', get_string('availabledate', 'via'), array('optional' => true));
+        } else {
+            $mform->addElement('date_time_selector', 'datebegin', get_string('availabledate', 'via'), array('optional' => false));
+            $mform->setDefault('datebegin', (time() + (60 * 10)));
+            $mform->disabledif ('datebegin', 'nowevent', 'eq', 1);
+            $mform->disabledif ('datebegin', 'pastevent', 'eq', 1);
+        }
         $mform->disabledif ('datebegin', 'activitytype', 'checked');
-        $mform->disabledif ('datebegin', 'nowevent', 'eq', 1);
-        $mform->disabledif ('datebegin', 'pastevent', 'eq', 1);
 
         // Duration!
         $mform->addElement('text', 'duration', get_string('duration', 'via'), array('size' => 4, 'maxlength' => 4));
@@ -143,24 +157,6 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->setDefault('showparticipants', 1);
         $mform->disabledif ('showparticipants', 'roomtype', 'eq', 1);
         $mform->addHelpButton('showparticipants', 'showparticipants', 'via');
-
-        // Activity version!
-        $versions = $DB->get_record('via_params', array('param_type' => 'viaversion'));
-        if (!$versions) {
-            via_get_cieinfo();
-            $versions = $DB->get_record('via_params', array('param_type' => 'viaversion'));
-        }
-        if ($versions->value == 0) {
-            $versionoptions = array( 0 => get_string('versionold', 'via'), 1 => get_string('versionnew', 'via'));
-        } else if ($versions->value == 1) {
-            $versionoptions = array( 0 => get_string('versionold', 'via'));
-        } else {
-            $versionoptions = array(1 => get_string('versionnew', 'via'));
-        }
-
-        $mform->addElement('select', 'isnewvia', get_string('roomversion', 'via'), $versionoptions);
-        $mform->disabledif ('isnewvia', 'wassaved', 'eq', 1);
-        $mform->addHelpButton('isnewvia', 'roomversion', 'via');
 
         $qualityoptions = $DB->get_records('via_params', array('param_type' => 'multimediaprofil'));
         if (!$qualityoptions) {
@@ -267,15 +263,20 @@ class mod_via_mod_form extends moodleform_mod {
         // Enrolled users lists.
         $ctx = context_course::instance($this->current->course);
         if (!isset($groupingid) || $groupingid == 0) {
-            $users = get_enrolled_users($ctx);
+
+            if (isset($groupid)) {
+                $users = get_enrolled_users($ctx, null, $groupid);
+            } else {
+                $users = get_enrolled_users($ctx);
+            }
 
             $pusers = array();
             foreach ($users as $key => $value) {
                 $pusers[$key] = $value->lastname . ' ' . $value->firstname . ' (' . $value->username .')';
             }
         } else {
-            $groups = groups_get_all_groups($this->current->course, 0, $groupingid);
 
+            $groups = groups_get_all_groups($this->current->course, 0, $groupingid);
             $i = 1;
             foreach ($groups as $g) {
                 $groupusers = get_enrolled_users($ctx, null, $g->id);
@@ -286,14 +287,18 @@ class mod_via_mod_form extends moodleform_mod {
                 }
                 $i++;
             }
+
             $pusers = array();
-            foreach ($users as $key => $value) {
-                $pusers[$value->id] = $value->lastname . ' ' . $value->firstname . ' (' . $value->username .')';
+            if (isset($users)) {
+                foreach ($users as $key => $value) {
+                    $pusers[$value->id] = $value->lastname . ' ' . $value->firstname . ' (' . $value->username .')';
+                }
             }
         }
 
         // If we are editing, we have a participants list.
-        if ($this->current->instance != '') {
+        if ($this->current->instance != '' && !$ajax && (isset($this->current->activitytype) &&
+        $this->current->activitytype != '3')) {
             $editing = true;
             $vusers = $DB->get_records_sql('SELECT vp.*, u.firstname, u.lastname, u.username
                                             FROM {via_participants} vp
@@ -327,6 +332,9 @@ class mod_via_mod_form extends moodleform_mod {
             $host[$USER->id] = $USER->lastname . ' ' . $USER->firstname . ' (' . $USER->username .')';
             $participants = '';
             $animators = '';
+            if ($ajax) {
+                unset($pusers[$USER->id]);
+            }
         }
 
         $group = array();
@@ -347,7 +355,6 @@ class mod_via_mod_form extends moodleform_mod {
                            <p class="three animators">'.get_string('animators', 'via').'</p></div>');
 
         $group = array();
-
         $select1 = $mform->createElement('select', 'potentialusers', '', $pusers, array('class' => 'viauserlists'));
         $select1->setMultiple(true);
         $group[] =& $select1;
@@ -405,8 +412,16 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->addElement('hidden', 'audiotype', 1);
         $mform->setType('audiotype', PARAM_INT);
 
+        $mform->addElement('hidden', 'isnewvia', 1);
+        $mform->setType('isnewvia', PARAM_INT);
+
         $mform->addElement('hidden', 'sendinvite', 0);
         $mform->setType('sendinvite', PARAM_INT);
+
+        if (isset($this->current->activitytype) && $this->current->activitytype == '3') {
+            $mform->addElement('hidden', 'template', 1);
+            $mform->setType('template', PARAM_INT);
+        }
 
         // Temporary!
         $mform->addElement('hidden', 'groupid', 0);
@@ -450,16 +465,24 @@ class mod_via_mod_form extends moodleform_mod {
                 }
                 $defaultvalues['wassaved'] = 1;
             }
-            if (($defaultvalues['datebegin'] + ($defaultvalues['duration'] * 60)) < time() &&
-                $defaultvalues['activitytype'] != 2) {
+            if (($defaultvalues['datebegin'] + ($defaultvalues['duration'] * 60)) < time() && $defaultvalues['activitytype'] == 1) {
                 $defaultvalues['pastevent'] = 1;
             } else {
                 $defaultvalues['pastevent'] = 0;
             }
-            if (time() > $defaultvalues['datebegin'] &&
-                time() < ($defaultvalues['datebegin'] + ($defaultvalues['duration'] * 60))) {
+            if (time() > $defaultvalues['datebegin'] && time() < ($defaultvalues['datebegin'] + ($defaultvalues['duration'] * 60)
+                && $defaultvalues['activitytype'] == 1)) {
                 $defaultvalues['nowevent'] = 1;
             } else {
+                $defaultvalues['nowevent'] = 0;
+            }
+        } else if (isset($defaultvalues['activitytype']) && $defaultvalues['activitytype'] == 3) {
+            if ($sviinfos = $DB->get_record('via', array('id' => $defaultvalues['id']))) {
+                foreach ($sviinfos as $key => $svi) {
+                    $defaultvalues[$key] = $svi;
+                }
+                $defaultvalues['wassaved'] = 0;
+                $defaultvalues['pastevent'] = 0;
                 $defaultvalues['nowevent'] = 0;
             }
         } else {
@@ -502,10 +525,6 @@ class mod_via_mod_form extends moodleform_mod {
                             $defaultvalues['roomtype'] = $svi->value;
                             break;
 
-                        case 'IsNewVia' :
-                            $defaultvalues['isnewvia'] = $svi->value;
-                            break;
-
                         case 'WaitingRoomAccessMode' :
                             $defaultvalues['waitingroomaccessmode'] = $svi->value;
                             break;
@@ -516,8 +535,6 @@ class mod_via_mod_form extends moodleform_mod {
                     }
                 }
             }
-
-            $defaultvalues['wassaved'] = 0;
         }
 
         if (isset($_SESSION['ErrMaxSimActMessageVia'])) {
@@ -570,8 +587,8 @@ class mod_via_mod_form extends moodleform_mod {
 
         $errors = parent::validation($data, $files);
         if ((($data['datebegin'] + ($data['duration'] * 60) < time() && !$data['viaactivityid'] && $data['activitytype'] == 0) ||
-        ($data['viaactivityid'] != 0 && ($data['datebegin'] != 0 && ($data['datebegin'] + ($data['duration'] * 60) < time())) &&
-        $data['activitytype'] == 0)) && $data['pastevent'] == 0) {
+            ($data['viaactivityid'] != 0 && ($data['datebegin'] != 0 && ($data['datebegin'] + ($data['duration'] * 60) < time())) &&
+            $data['activitytype'] == 0)) && $data['pastevent'] == 0 && !isset($data['template'])) {
             $errors['datebegin'] = get_string('passdate', 'via');
         }
 
@@ -580,6 +597,10 @@ class mod_via_mod_form extends moodleform_mod {
                 && isset($data['recordingmode'])
                 && $data['recordingmode'] == 1 ) {
             $errors['recordingmode'] = get_string('nounifiedrecordpermanent', 'via');
+        }
+
+        if (isset($data['template']) && $data['activitytype'] == 0 && $data['datebegin'] == 0) {
+                $errors['datebegin'] = get_string('unplanned_error', 'via');
         }
 
         return $errors;

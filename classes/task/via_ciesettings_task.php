@@ -24,9 +24,8 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
-
 namespace mod_via\task;
-
+defined('MOODLE_INTERNAL') || die();
 class via_ciesettings_task extends \core\task\scheduled_task {
 
     public function get_name() {
@@ -47,7 +46,9 @@ class via_ciesettings_task extends \core\task\scheduled_task {
         // Profils.
         via_get_list_profils();
 
-        // Version restriction.
-        via_get_cieinfo();
+        // Version restriction : via_get_cieinfo() This has been removed.
+
+        // Delete deactivitated actities in Via, they have been emptied from recycle bin!
+        via_delete_recylebin_instances();
     }
 }

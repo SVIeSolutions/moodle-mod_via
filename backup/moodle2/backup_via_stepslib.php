@@ -24,7 +24,7 @@
  * @copyright  2009 Petr Skoda  {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+defined('MOODLE_INTERNAL') || die();
 /**
  * Define the complete via structure for backup, with file and id annotations
  */
@@ -40,10 +40,18 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
 
         $controller = $DB->get_record('backup_controllers', array('backupid' => $backupid));
 
-        if ($controller->type == "activity") {
-            $userinfo = 1;
+        if ($controller->type == 'course' && $controller->interactive == 1
+            && ($controller->purpose == 10 || $controller->purpose == 20) ||
+            ( $controller->purpose == 40 && $controller->interactive == 0)|| // For the web service!
+            ($controller->type == 'activity' && $controller->purpose == 20 && $controller->interactive == 0)) {
+            // This is the RESTORE of a course OR DUPLICATION OR an IMPORT.
+            // We do not create a viaactiviyid!
+            // We change the activity type!
+            // There is no start date!
+            // And no users!
+            $userinfo = 0;
         } else {
-            $userinfo = $this->get_setting_value('userinfo');
+            $userinfo = 1;
         }
 
         // Define each element separated.

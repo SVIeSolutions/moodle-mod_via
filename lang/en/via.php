@@ -20,7 +20,7 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
@@ -85,7 +85,6 @@ $string['confirmdelete'] = 'Are you sure you want to delete this recording perma
 $string['confirmneeded'] = 'Attendence confirmation is needed';
 $string['connectsuccess'] = 'Success with the connection to the API';
 $string['conntest'] = 'Connection test';
-$string['copied'] = ' - Copy';
 $string['createdby'] = 'Report created by: ';
 $string['creationdate'] = 'Report created on: ';
 
@@ -152,7 +151,7 @@ $string['df_type_48'] = "GIF Sequence";
 /* */
 $string['description'] = 'Description';
 $string['displayuserlist'] = 'Display associated users list for all';
-$string['displayuserlistdesc'] = 'If checked, all users will be able to see the other users assosiated with the activity and their email.';
+$string['displayuserlistdesc'] = 'If checked, all users will be able to see the other users assosiated with the activity and their confirmation status, if activated.';
 $string['donousewaitingroom'] = 'Do not use (deactivated)';
 $string['downloadablefiles'] = 'Downloadable content';
 $string['downloadplaybacks'] = 'Download Recordings';
@@ -473,12 +472,11 @@ $string['playbackaccesstype2'] = 'Visible for those associated to the delegated 
 $string['playbackaccesstypelbl'] = 'Access rights for the recording';
 $string['playbackheader'] = 'Playback viewed (h:m:s)';
 $string['pluginadministration'] = 'Via administration';
-$string['pluginname'] = 'Via';
-$string['pluginversion'] = 'Version : ';
+$string['pluginname'] = 'Via - Virtual classroom';
 $string['portalaccess'] = 'Via portal access.';
 $string['portalaccessdesc'] = 'Permits users to access the Via portal without loging in.';
 $string['potentialusers'] = 'Potential users';
-$string['preparation'] = 'Prepare your activity: ';
+$string['preparation'] = 'Prepare your activity ';
 $string['prepareactivity'] = 'Click here prepare your activity';
 $string['presence'] = 'Minimum attendance required';
 $string['presence_help'] = 'Text must be changed!!!! Value corresponding to the time in minutes from which the user gets the presence status for the activity.';
@@ -588,6 +586,9 @@ $string['title_exists'] = 'The title already exists, please try again.';
 $string['timeduration'] = 'Duration :';
 
 $string['unified'] = 'Unified';
+$string['unplanned'] = 'Unplanned';
+$string['unplanned_error'] = 'You can only save your modifications if it is a planned activity!';
+$string['unplanned_text'] = 'This activiy has not yet been planned.';
 $string['updatethisvia'] = 'Update this Via';
 $string['userishost'] = 'This user is the host, chose a new one in order to give this user a new role.';
 $string['users_search'] = 'Search potential users';
@@ -622,3 +623,17 @@ $string['waitingconfirm'] = 'Waiting for confirmation';
 $string['waitingroomaccessmode'] = 'Waiting room';
 $string['waitingroomaccessmode_help'] = 'The option "Pending Authorization" allows the host to allow individual participants\' access while the option "In the absence of the host" ensures that no user can access the activity until the speaker is not connected. This last option is particularly useful when using permanent activities.';
 
+// New 3.1 - to be translated and displaced!
+$string['emailheadercolor'] = 'Email title color';
+$string['emailheadercolor_desc'] = 'This will be applied to the Via reminder and invitation emails\' title; the name of your moodle.';
+$string['emailtextcolor'] = 'Email text color';
+$string['emailtextcolor_desc'] = 'This will be applied to Via reminder and invitation emails\' text except for the links and title.';
+$string['email_personnalised_options'] = 'Personnalise your Via reminder and invitation emails';
+$string['emaillinkcolor'] = 'Link color';
+$string['emaillinkcolor_desc'] = 'This will be applied to the links in your Via reminder and invitation emails, we suggest you add the same colors as your theme.';
+$string['emailheaderbgcolor'] = 'Email title background color';
+$string['emailheaderbgcolor_desc'] = 'This will be applied to the Via reminder and invitation emails\' title\'s background and behind the image.';
+$string['emailheaderimage'] = 'Email header image';
+$string['emailheaderimage_desc'] = 'A default image has been added, which you may override at any time. The default image\'s dimensions are 750 x 98 pixels and the right hand side of the image has the same color as the "emailheaderbgcolor" below. IMPORTANT : Emails do not support transperancy.';
+$string['emailaccesslinkcolor'] = 'Email access link color';
+$string['emailaccesslinkcolor_desc'] = 'This will be applied to the access link in your Via reminder and invitation emails. We suggest you use a different color as the other links as this is more important.';

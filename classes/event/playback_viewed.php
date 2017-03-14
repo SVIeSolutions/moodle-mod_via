@@ -84,5 +84,14 @@ class playback_viewed extends \core\event\base {
         return array($this->courseid, "via", get_string('playback_viewed', 'via'),
         $this->get_url(), $this->objectid, $this->contextinstanceid);
     }
+    public static function get_objectid_mapping() {
+        return array('db' => 'via', 'restore' => 'via');
+    }
+    public static function get_other_mapping() {
+        $othermapped = array();
+        $othermapped['viaid'] = array('db' => 'via', 'restore' => 'via');
+
+        return $othermapped;
+    }
 
 }

@@ -20,7 +20,7 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
@@ -77,12 +77,12 @@ require_capability('mod/via:view', $context);
 
 // SYNC STUFF.
 if (has_capability('mod/via:manage', $context)) {
-    if (($via->usersynchronization + 120) < time()) {
+    if (($via->usersynchronization + 300) < time() && $via->enroltype == 0 &&
+        $via->activitytype == 1 && time() > ($via->datebegin + $via->duration * 60)) {
         // Check to sync users to the activity.
         via_synch_participants(null, $via->id);
 
         $via->usersynchronization = time();
-
         $updated = $DB->update_record('via', $via);
 
     }
@@ -94,8 +94,11 @@ if (has_capability('mod/via:manage', $context)) {
         }
     }
 }
-
-if (has_capability('mod/via:view', $context) && (is_mobile_phone() == false || $via->isnewvia == 1)) {
+if (has_capability('mod/via:view', $context) && (is_mobile_phone() == false || $via->isnewvia == 1)
+    && $via->activitytype != 3 && $via->recordingmode != 0) {
+    if ($via->recordingmode == 1) {
+        $via->playplacksync = 0;
+    }
     via_sync_activity_playbacks($via);
 }
 
@@ -109,29 +112,49 @@ $PAGE->set_heading($course->fullname);
 
 $cancreatevia = false;
 
-if ($viaid) {
-    require_once($CFG->dirroot.'/mod/viaassign/locallib.php');
-    $button = "";
-    $PAGE->navbar->add(format_string($via->name), '/mod/via/view.php?viaid='.$viaid);
-    $viaassign = new viaassign($context,  $cm, $course);
+// Before the version 2016120501 we have to add an edit button which is handled by the theme in the latest versions.
+if ($CFG->version >= 2016120501) {
+    if ($viaid) {
+        require_once($CFG->dirroot.'/mod/viaassign/locallib.php');
+        $button = "";
+        $PAGE->navbar->add(format_string($via->name), '/mod/via/view.php?viaid='.$viaid);
+        $viaassign = new viaassign($context,  $cm, $course);
 
-    // Only the host can modify the activity! OR someone with editing rights!
-    if ($host = $DB->get_record('via_participants', array('userid' => $USER->id, 'activityid' => $via->id, 'participanttype' => 2))
-        || has_capability('mod/viaassign:deleteothers', $context)) {
-        $cancreatevia = true;
-        $button .= '<div class="singlebutton via"><form method="post" action="'.
-            $CFG->wwwroot.'/mod/viaassign/view.php?action=editvia&viaid='.$viaid.'&id='.$cm->id.'"><div><input
-            type="submit" value="'.get_string("updatethisvia", "via").'" /></div></form></div>';
+        // Only the host can modify the activity! OR someone with editing rights!
+        if ($host = $DB->get_record('via_participants',
+                array('userid' => $USER->id, 'activityid' => $via->id, 'participanttype' => 2))
+            || has_capability('mod/viaassign:deleteothers', $context)) {
+            $cancreatevia = true;
+        }
+    } else {
+        $cancreatevia = has_capability('mod/via:manage', $context);
     }
-    $button .= '<div class="singlebutton via"><form method="post" action="'.
-        $CFG->wwwroot.'/mod/viaassign/view.php?id='.$cm->id.'"><div><input type="submit" value="'
-        .get_string("returnto", "via").'" /></div></form></div>';
-} else {
-    $button = $OUTPUT->update_module_button($cm->id, 'via');
-    $cancreatevia = has_capability('mod/via:manage', $context);
-}
 
-$PAGE->set_button($button);
+} else {
+    if ($viaid) {
+        require_once($CFG->dirroot.'/mod/viaassign/locallib.php');
+        $button = "";
+        $PAGE->navbar->add(format_string($via->name), '/mod/via/view.php?viaid='.$viaid);
+        $viaassign = new viaassign($context,  $cm, $course);
+
+        // Only the host can modify the activity! OR someone with editing rights!
+        if ($host = $DB->get_record('via_participants',
+                    array('userid' => $USER->id, 'activityid' => $via->id, 'participanttype' => 2))
+                || has_capability('mod/viaassign:deleteothers', $context)) {
+            $cancreatevia = true;
+            $button .= '<div class="singlebutton via"><form method="post" action="'.
+                $CFG->wwwroot.'/mod/viaassign/view.php?action=editvia&viaid='.$viaid.'&id='.$cm->id.'"><div><input
+                type="submit" value="'.get_string("updatethisvia", "via").'" /></div></form></div>';
+        }
+            $button .= '<div class="singlebutton via"><form method="post" action="'.
+                $CFG->wwwroot.'/mod/viaassign/view.php?id='.$cm->id.'"><div><input type="submit" value="'
+                .get_string("returnto", "via").'" /></div></form></div>';
+    } else {
+            $button = $OUTPUT->update_module_button($cm->id, 'via');
+        $cancreatevia = has_capability('mod/via:manage', $context);
+    }
+        $PAGE->set_button($button);
+}
 
 // Show some info for guests.
 if (isguestuser()) {
@@ -164,7 +187,7 @@ try {
     }
 
     $connectedusers = 0;
-    if (strpos($previous, 'modedit') == false && strpos($previous, 'via/view') == false ) {
+    if ($via->activitytype != 3 && strpos($previous, 'modedit') == false && strpos($previous, 'via/view') == false ) {
         // We only check or update if we are not coming directly from the editing page.
         $api = new mod_via_api();
         $sviinfos = $api->activity_get($via);
@@ -181,7 +204,7 @@ try {
 
     via_viewed_log($via, $context, $cm);
 } catch (Exception $e) {
-    notify(get_string("error:".$e->getMessage(), "via"));
+    print_error(get_string("error:".$e->getMessage(), "via"));
 }
 
 // Print the page header.
@@ -204,7 +227,11 @@ if (isset($deleted)) {
         // Start date.
         $table .= '<tr>';
         $table .= "<td><b>".get_string("startdate", "via").":</b></td>";
-        $table .= "<td style='padding-left:5px;'>".userdate($via->datebegin)."</td>";
+        if ($via->activitytype == 1) {
+            $table .= "<td style='padding-left:5px;'>".userdate($via->datebegin)."</td>";
+        } else {
+            $table .= "<td style='padding-left:5px;'>".get_string("unplanned_text", "via")."</td>";
+        }
         $table .= '</tr>';
 
         // Duration.
@@ -214,8 +241,9 @@ if (isset($deleted)) {
         $table .= '</tr>';
     }
 
+
     if ($cancreatevia) {
-        if ($via->presence != 0) {
+        if ($via->presence != 0 && $via->activitytype != 2) {
             // Presence.
             $table .= '<tr>';
             $table .= "<td><b>".get_string("presence", "via").":</b></td>";
@@ -296,9 +324,7 @@ if (isset($deleted)) {
     $table->data = array();
 
     // Buttons so that students may confirm teir precence.
-    if (has_capability('mod/via:view', $context) &&
-        $via->needconfirmation && get_config('via', 'via_participantmustconfirm') &&
-        ($via->datebegin + $via->duration) >= time()) {
+    if (!has_capability('mod/via:manage', $context) && $via->needconfirmation && get_config('via', 'via_participantmustconfirm')) {
         // If participant must confim attendance.
         $confirmation = true;
 
@@ -410,6 +436,11 @@ if (isset($deleted)) {
                 $cell->text .= '</span></p><br/>';
                 $table->data[] = new html_table_row(array($cell));
                 break;
+            case 8;
+                // Activity not yet planned!
+                    $cell->text .= get_string('unplanned_text', 'via') . '</span></p>';
+                $table->data[] = new html_table_row(array($cell));
+                break;
             default :
                 break;
         }
@@ -430,44 +461,47 @@ if (isset($deleted)) {
             echo via_get_downlodablefiles_table($dlfiles, $via, $context, $viaurlparam, $cancreatevia);
         }
 
-        // Print recordings list.
-        if ($viewinfo && has_capability('mod/via:view', $context) && (is_mobile_phone() == false || $via->isnewvia == 1)) {
-            if (isset($error)) {
-                echo  'this title aready exists';
-            }
-
-            echo via_get_playbacks_table($via, $context, $viaurlparam, $cancreatevia);
-        }
-
-        // If activity is finished and the user has the right to see reports, we display the report.
-        echo $OUTPUT->box_start('via generaltable');
-
-        if (get_config('via', 'via_presencestatus') && $via->presence != 0 && $via->activitytype == 1 &&
-            ($via->datebegin + ($via->duration * 60)) < time()) {
-            if ($connectedusers == 0 && (has_capability('mod/via:viewpresence', $context) || $cancreatevia)) {
-                echo via_report_btn($via->id, $viaid);
-
-                echo via_get_participants_table($via, $context, true);
-
-                echo via_report_btn($via->id, $viaid);
-
-                echo "<p style='margin: auto; width: 90%;'>".get_string("presencewarning", "via")."</p>";
-            }
-        } else {
-            // If the activity has not yet started we print the user list for everyone to see!
-            if ($cancreatevia || get_config('via', 'via_displayuserlist')) {
-                if ($synch == 1) {
-                    echo '<p class="notifysuccess">'.get_string('notifysuccess_synch1', 'via').'</p>';
-                } else if ($synch == 2) {
-                    echo '<p class="notifysuccess">'.get_string('notifysuccess_synch2', 'via').'</p>';
+        // No point validating everthing, the activity is not yet planned, there are no playbacks and no users!
+        if ($via->activitytype != 3) {
+            // Print recordings list.
+            if ($viewinfo && has_capability('mod/via:view', $context) && (is_mobile_phone() == false || $via->isnewvia == 1)) {
+                if (isset($error)) {
+                    echo  'this title aready exists';
                 }
 
-                echo via_get_participants_table($via, $context);
+                echo via_get_playbacks_table($via, $context, $viaurlparam, $cancreatevia);
             }
+
+            // If activity is finished and the user has the right to see reports, we display the report.
+
+            echo $OUTPUT->box_start('via generaltable');
+
+            if (get_config('via', 'via_presencestatus') && $via->presence != 0 && $via->activitytype == 1 &&
+                ($via->datebegin + ($via->duration * 60)) < time()) {
+                if ($connectedusers == 0 && (has_capability('mod/via:viewpresence', $context) || $cancreatevia)) {
+                    echo via_report_btn($via->id, $viaid);
+
+                    echo via_get_participants_table($via, $context, true);
+
+                    echo via_report_btn($via->id, $viaid);
+
+                    echo "<p style='margin: auto; width: 90%;'>".get_string("presencewarning", "via")."</p>";
+                }
+            } else {
+                // If the activity has not yet started we print the user list for everyone to see!
+                if ($cancreatevia || get_config('via', 'via_displayuserlist')) {
+                    if ($synch == 1) {
+                        echo '<p class="notifysuccess">'.get_string('notifysuccess_synch1', 'via').'</p>';
+                    } else if ($synch == 2) {
+                        echo '<p class="notifysuccess">'.get_string('notifysuccess_synch2', 'via').'</p>';
+                    }
+
+                    echo via_get_participants_table($via, $context);
+                }
+            }
+
+                echo $OUTPUT->box_end();
         }
-
-        echo $OUTPUT->box_end();
-
         echo '<hr>';
 
         echo '<div class="vialogo" ><img src = "' . $CFG->wwwroot . '/mod/via/pix/logo_via.png" width="60"

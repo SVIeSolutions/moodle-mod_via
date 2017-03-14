@@ -20,13 +20,13 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
 
+defined('MOODLE_INTERNAL') || die();
 ?>
-
 <form id="subscriberform" method="post" action="<?php echo 'manage.php?id='.$id.'&t='.$participanttype;?>">
 <input type="hidden" name="id" value="<?php echo $id?>" />
   <table align="center" border="0" cellpadding="5" cellspacing="0" class="participantsmanagementtable" >

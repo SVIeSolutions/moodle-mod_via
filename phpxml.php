@@ -20,11 +20,11 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
-
+defined('MOODLE_INTERNAL') || die();
 /**
  * XML Library, by Keith Devens, version 1.2b
  * http://keithdevens.com/software/phpxml

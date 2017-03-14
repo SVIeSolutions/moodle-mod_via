@@ -21,7 +21,7 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
@@ -55,7 +55,7 @@ $PAGE->set_pagelayout('popup');
 
 // New with version 20140861.
 // We validate the version.
-$required = '8.6.0.0';
+$required = '8.7.0.0';
 
 // Print the page header.
 echo $OUTPUT->header();
@@ -70,7 +70,7 @@ try {
 
 } catch (Exception $e) {
     $result = false;
-    notify(get_string("error:".$e->getMessage(), "via"));
+    print_error(get_string("error:".$e->getMessage(), "via"));
 }
 
 if ($result) {

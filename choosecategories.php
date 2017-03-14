@@ -20,7 +20,7 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
@@ -33,7 +33,7 @@ $PAGE->requires->js('/mod/via/javascript/list.js');
 global $CFG, $DB;
 
 $save = optional_param('save', null, PARAM_TEXT);
-$category = optional_param('category', array(), PARAM_RAW);
+$category = optional_param_array('category', null, PARAM_RAW);
 $isdefault = optional_param('isdefault', null, PARAM_INT);
 
 require_login();

@@ -133,7 +133,7 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
       </KEYS>
     </TABLE>
 
-    <TABLE NAME="via_playbacks" COMMENT="Playback data" PREVIOUS="via_params">
+    <TABLE NAME="via_playbacks" COMMENT="Playback data" PREVIOUS="via_params" >
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="playbackid" />
         <FIELD NAME="playbackid" TYPE="char" LENGTH="100" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" NEXT="playbackidref" PREVIOUS="id" />;
@@ -146,7 +146,8 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
         <FIELD NAME="isdownloadable" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" NEXT="hasfullvideorecord" PREVIOUS="accesstype" />;
         <FIELD NAME="hasfullvideorecord" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" NEXT="hasmobilevideorecord" PREVIOUS="isdownloadable" />;
         <FIELD NAME="hasmobilevideorecord" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" NEXT="hasaudiorecord" PREVIOUS="hasfullvideorecord" />;
-        <FIELD NAME="hasaudiorecord" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" PREVIOUS="hasmobilevideorecord" />;
+        <FIELD NAME="hasaudiorecord" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" NEXT="deleted" PREVIOUS="hasmobilevideorecord" />;
+        <FIELD NAME="deleted" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" PREVIOUS="hasaudiorecord" />;
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_playbacks" />
@@ -154,6 +155,24 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
       <INDEXES>
         <INDEX NAME="playbackid" UNIQUE="true" FIELDS="playbackid" NEXT="activityid" />
         <INDEX NAME="activityid" UNIQUE="false" FIELDS="activityid" PREVIOUS="playbackid" />
+      </INDEXES>
+    </TABLE>
+
+    <TABLE NAME="via_recyclebin" COMMENT="Recylebin data" PREVIOUS="via_params" NEXT="via_recyclebin">
+      <FIELDS>
+        <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="viaid" />
+        <FIELD NAME="viaid" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" NEXT="viaactivityid" PREVIOUS="id" />;
+        <FIELD NAME="viaactivityid" TYPE="char" LENGTH="50" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" NEXT="recyclebinid" PREVIOUS="viaid" />;
+        <FIELD NAME="recyclebinid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" NEXT="recyclebintype" PREVIOUS="viaactivityid" />;
+        <FIELD NAME="recyclebintype" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" NEXT="expiry" PREVIOUS="recyclebinid" />;
+        <FIELD NAME="expiry" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="recyclebintype" />;
+      </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_recyclebin" />
+      </KEYS>
+      <INDEXES>
+        <INDEX NAME="recyclebinid" UNIQUE="false" FIELDS="recyclebinid" NEXT="viaactivityid" />
+        <INDEX NAME="viaactivityid" UNIQUE="true" FIELDS="viaactivityid" PREVIOUS="recyclebinid" />
       </INDEXES>
     </TABLE>
   </TABLES>

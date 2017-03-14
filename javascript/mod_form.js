@@ -24,6 +24,7 @@ jQuery(document).ready(function () {
     $(".btn_animators").wrapAll("<div class='btns' />");
 
     if ($('#id_enroltype').val() == 0 && $('[name="wassaved"]').val() == 0) {
+
         // Automatic enrol and not saved we hide all the user lists.
         $('#fgroup_id_add_hostgroup').addClass('hide');
         $('#fgroup_id_add_users').addClass('hide');
@@ -31,7 +32,12 @@ jQuery(document).ready(function () {
         $('#fitem_id_searchpotentialusers').addClass('hide');
         $('#fitem_id_searchparticipants').addClass('hide');
     } else if ($('#id_enroltype').val() == 0 && $('[name="wassaved"]').val() == 1) {
-        // Automatic enrol and was saved we hide only the potential user lists.
+        // Automatic enrol and was saved we add all the potential users to the participants list.
+        var potentialusersselect = $(".viauserlists:not(.hide):first").attr("id");
+        $("#" + potentialusersselect + " option").each(function () {
+            $(this).remove().appendTo('#id_participants');
+        });
+
         $(".viauserlists:not(.hide):first").addClass('hide');
         $('#id_participants_remove_btn').addClass('hide');
         $('#id_participants_add_btn').addClass('hide');
@@ -93,7 +99,6 @@ jQuery(document).ready(function () {
                 $('#fitem_id_searchpotentialusers').addClass('hide');
                 $('#fitem_id_searchparticipants').removeClass('hide');
 
-                
             } else {
                 // Manual enrol!
                 $('#id_potentialusers').removeClass('hide');
@@ -143,18 +148,26 @@ jQuery(document).ready(function () {
         $("#id_animators").empty();
 
         var groupingid = this.value;
+        var enroltype = $('#id_enroltype option:selected').val();
         var link = window.location.href;
-        var dataString = "groupingid=" + groupingid;
 
         $.ajax({
             type: "POST",
             url: link,
-            data: dataString,
+            data: {
+                groupingid: groupingid,
+                enroltype: enroltype
+            },
             success: function (html) {
                 var list = $(html).find('#id_potentialusers option');
+
+                if (enroltype == "0") {
+                    $("#id_participants").html(list);
+                } else {
+                    $("#id_potentialusers").html(list);
+                }
                 var host = $(html).find('#id_host option');
 
-                $("#id_potentialusers").html(list);
                 $("#id_host").html(host);
                 $(".fa-spinner.fa-spin").hide();
             }
@@ -172,8 +185,8 @@ jQuery(document).ready(function () {
         var totala = 0;
         var count = 1;
 
-        totalp = $('#id_participants option').size();
-        totala = $("#id_animators option").size();
+        totalp = $('#id_participants option').length;
+        totala = $("#id_animators option").length;
 
         $("#id_participants option").each(function () {
             participants += $(this).val();
@@ -195,6 +208,7 @@ jQuery(document).ready(function () {
         var host = $("#id_host option").val();
 
         $("#id_save_participants:text").val(participants);
+        console.log(participants);
         $("#id_save_animators:text").val(animators);
         $("#id_save_host:text").val(host);
     }
@@ -284,16 +298,17 @@ function remove_animators() {
 }
 
 function setgroupfunction() {
+
     if ($('.availability_grouping .availability-group select[name="id"]').length) {
         $('.availability_grouping .availability-group select[name="id"]').attr('onchange', 'groupuserschange()');
-
-        setTimeout(function () { setgroupusers() }, 1000);
+    } else {
+        setTimeout(function () { setgroupfunction() }, 1000);
     }
 
     if ($('.availability_group .availability-group select[name="id"]').length) {
         $('.availability_group .availability-group select[name="id"]').attr('onchange', 'groupuserschange()');
-
-        setTimeout(function () { setgroupusers() }, 1000);
+    } else {
+        setTimeout(function () { setgroupfunction() }, 1000);
     }
 }
 
@@ -304,18 +319,29 @@ function groupuserschange() {
     $("#id_animators").empty();
 
     var groupingid = $('.availability_grouping .availability-group select[name="id"]').val();
+    var groupid = $('.availability_group .availability-group select[name="id"]').val();
+    var enroltype = $('#id_enroltype option:selected').val();
     var link = window.location.href;
-    var dataString = "groupingid=" + groupingid;
 
     $.ajax({
         type: "POST",
         url: link,
-        data: dataString,
+        data: {
+            groupingid: groupingid,
+            enroltype: enroltype,
+            groupid: groupid
+        },
         success: function (html) {
-            var list = $(html).find('#id_potentialusers option');
-            var host = $(html).find('#id_host option');
 
-            $("#id_potentialusers").html(list);
+            var list = $(html).find('#id_potentialusers option');
+
+            if (enroltype == "0") {
+                $("#id_participants").html(list);
+            } else {
+                $("#id_potentialusers").html(list);
+            }
+
+            var host = $(html).find('#id_host option');
             $("#id_host").html(host);
             $(".fa-spinner.fa-spin").hide();
         }

@@ -20,7 +20,7 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
@@ -32,18 +32,19 @@ require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/via/lib.php');
 require_once(get_vialib());
 
+global $CFG, $DB;
+
 $id    = required_param('id', PARAM_INT);// Via!
 $showemail = optional_param('e', 0, PARAM_INT);
 
-$cm = get_coursemodule_from_id('via', $id);
-
-global $CFG, $DB;
-
 $via = $DB->get_record('via', array('id' => $id));
 
-$sitecontext = via_get_system_instance();
-$PAGE->set_context($sitecontext);
+$cm = get_coursemodule_from_instance('via', $id, $via->course);
+
 $PAGE->set_url('/via/presence.php');
+$PAGE->set_context(via_get_system_instance());
+
+require_login($via->course, false, $cm);
 
 echo $OUTPUT->box_start('center', 'presence');
 

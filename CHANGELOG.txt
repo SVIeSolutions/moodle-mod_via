@@ -1,30 +1,13 @@
+This file defines the changes made to Via - Virtual classroom
 
-This file defines the changes made to Via - Virtual teaching
-
-last update 05/12/2016 (2016042016)
-- Continue loops were modified following comments made by the moodle.org developpers.
-
-last update 15/11/2016 (2016042015)
-- Correction in a scheduled task - not yet on moodle.org
-
-last update 19/10/2016 (2016042014)
-- Modification to all get_records_sql() to avoid sql injection! The variables were added to the parameters.
-- Correction to the confiramtion status validation and display.
-- Corrections made to synch_participnats! This works in 2.7 but not 2.9 or higher.
-
-last update 04/10/2016 (2016042013)
-- bug fix participants list if confirmation mode is activated, yet removed at plugin level!
-
-last update 04/10/2016 (2016042012)
-- bug fix in get_user_via_id when user was deleted in Via and the user was being recreated!
-
-last update 04/10/2016 (2016042011)
-- bug fix in user information update on Via! 
-The information was not updated often enough due to too strict validations of when to update the information.
-- bug fix user table when there are more that 50 users! 
-
-last update 01/01/2016 (2016042010)
-- bug fix in participants list when changing enrolment type!
+last update 01/03/2017 (2017030101)
+- new tables were created to render the recylcle bin functional
+- new settings were created to permit users to personnalise their mails and reminders
+- if the setting 'via_activitydeletion' is true we still pemit users to delete recordings but only in moodle,
+they continue to existe in Via.
+- a new status exists for duplicated or restored activities; these are now unplanned activities and do not yet existe in Via.
+- PHP 7 was installed and used to validate the code.
+- many bug fixes included.
 
 last update 01/01/2016 (2016042009)
 - bug fix in playbacksync when retrieving and saveing breakouts!

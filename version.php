@@ -20,7 +20,7 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
@@ -30,8 +30,8 @@ defined('MOODLE_INTERNAL') || die();
 global $CFG;
 
 $plugin->component = 'mod_via';
-$plugin->version = 2016042016;
+$plugin->version = 2017030101;
 $plugin->requires = 2011033010;
 $plugin->cron     = 300;
 $plugin->maturity = MATURITY_STABLE; // This is considered as ready for production sites.
-$plugin->release = 'v2.7-r16';
+$plugin->release = 'v3.2-r1';

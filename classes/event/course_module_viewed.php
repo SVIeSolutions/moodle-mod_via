@@ -49,5 +49,14 @@ class course_module_viewed extends \core\event\course_module_viewed {
         $this->data['edulevel'] = self::LEVEL_PARTICIPATING;
     }
 
+    public static function get_objectid_mapping() {
+        return array('db' => 'via', 'restore' => 'via');
+    }
+    public static function get_other_mapping() {
+        $othermapped = array();
+        $othermapped['viaid'] = array('db' => 'via', 'restore' => 'via');
+        return $othermapped;
+    }
+
 }
 

@@ -20,7 +20,7 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
@@ -131,7 +131,7 @@ function via_add_instance($via) {
             return via_add_instance($via);
 
         } else {
-            handle_createactivityapierror($e);
+            via_handle_createactivityapierror($e);
             return false;
         }
     }
@@ -139,7 +139,8 @@ function via_add_instance($via) {
     // We add the activity creator as host.
     if ($newactivity = $DB->insert_record('via', $via)) {
         // We add the host.
-        if ($via->enroltype == 1 && isset($via->save_host)) {
+
+        if ($via->enroltype == 1 && ($via->save_host != '')) {
             $host = $via->save_host;
         } else {
             $host = $USER->id;
@@ -151,7 +152,7 @@ function via_add_instance($via) {
             try {
                 $response = $api->removeuser_activity($via->viaactivityid, get_config('via', 'via_adminid'), $moodleid);
             } catch (Exception $e) {
-                notify(get_string("error:".$e->getMessage(), "via"));
+                print_error(get_string("error:".$e->getMessage(), "via"));
             }
         }
 
@@ -307,9 +308,16 @@ function via_update_instance($via) {
     $api = new mod_via_api();
 
     try {
-        $response = $api->activity_edit($via);
+        if ($via->viaactivityid != '0') {
+            $response = $api->activity_edit($via);
+        } else {
+            // This was an unplanned activity, it does not exisit on Via.
+            $response = $api->activity_create($via);
+            $via->viaactivityid = $response;
+            $DB->update_record('via', $via);
+        }
     } catch (Exception $e) {
-        handle_createactivityapierror($e);
+        via_handle_createactivityapierror($e);
         return false;
     }
 
@@ -321,7 +329,7 @@ function via_update_instance($via) {
     $callvia = true;
 
     // Grouping is selected!
-    if ($viaactivity->groupingid == 0 && $via->groupingid != 0) {
+    if ($viaactivity->groupingid == 0 && $via->groupingid != 0 && $via->enroltype == 0) {
         $query = 'SELECT u.* FROM {groupings_groups} gg
                 LEFT JOIN {groups_members} gm ON gm.groupid = gg.groupid
                 LEFT JOIN {user} u ON u.id = gm.userid
@@ -331,7 +339,7 @@ function via_update_instance($via) {
                         LEFT JOIN {user} u ON u.id = vp.userid
                         WHERE vp.activityid = ? AND vp.participanttype != 2';
         $oldparams = array($via->id);
-    } else if ($viaactivity->groupingid != $via->groupingid) {
+    } else if ($viaactivity->groupingid != $via->groupingid && $via->enroltype == 0) {
         $query = 'SELECT u.* FROM {groupings_groups} gg
                 LEFT JOIN {groups_members} gm ON gm.groupid = gg.groupid
                 LEFT JOIN {user} u ON u.id = gm.userid
@@ -342,7 +350,7 @@ function via_update_instance($via) {
                         LEFT JOIN {user} u ON u.id = gm.userid
                         WHERE gg.groupingid = ?';
         $oldparams = array($viaactivity->groupingid);
-    } else if ($viaactivity->groupid != $via->groupid) {
+    } else if ($viaactivity->groupid != $via->groupid && $via->enroltype == 0) {
         // Group is selected!
         $query = 'SELECT u.* FROM {groups_members} gm
                 LEFT JOIN {user} u ON u.id = gm.userid
@@ -354,8 +362,19 @@ function via_update_instance($via) {
                         WHERE gg.groupid = ?';
         $oldparams = array($viaactivity->groupid);
     } else {
-        // Update roles for all both manual and automatic enrollement!
+
         $viausers = $DB->get_records('via_participants', array('activityid' => $via->id));
+
+        if ($via->enroltype == 0 && !$viausers) {
+            // We add users.
+            $query = 'SELECT a.id as rowid, a.*, u.*
+                        FROM {role_assignments} a, {user} u
+                        WHERE contextid= ? AND a.userid=u.id ORDER BY u.lastname ASC';
+            $param = array($context->id);
+
+        }
+
+        // Update roles for all both manual and automatic enrollement!
         $vusers = array();
         // We need to add the userid as key!
         foreach ($viausers as $vu) {
@@ -364,12 +383,18 @@ function via_update_instance($via) {
         $savedhost = $DB->get_record('via_participants', array('activityid' => $via->id, 'participanttype' => 2));
 
         // If host is different we need to remove the old host!
-        if ($via->save_host != '' && $savedhost->userid != $via->save_host ) {
+        if (!$savedhost) {
+            $hostadded = via_add_participant($via->save_host, $via->id, 2, true);
+            $oldhostremoved = $api->removeuser_activity($via->viaactivityid, get_config('via', 'via_adminid'), false);
+
+        } else if ($via->save_host != '' && $savedhost->userid != $via->save_host ) {
             $hostadded = via_add_participant($via->save_host, $via->id, 2, true);
             $oldhostremoved = via_remove_participant($savedhost->userid, $via->id);
             unset($vusers[$via->save_host]);
+
         } else {
             unset($vusers[$savedhost->userid]);
+
         }
 
         $count = 1;
@@ -377,7 +402,8 @@ function via_update_instance($via) {
             $participants = explode(', ', $via->save_participants);
             if ($participants) {
                 foreach ($participants as $p) {
-                    /* We only add the 50 first users, the rest will be synched on access */
+
+                    // We only add the 50 first users, the rest will be synched on access.
                     if ($callvia && $count > 50) {
                         $callvia = false;
                     }
@@ -388,15 +414,19 @@ function via_update_instance($via) {
                         echo get_string("error:".$e->getMessage(), "via");
                     }
                     $count ++;
+
                     unset($vusers[$p]);
+
                 }
             }
         }
+
         if ($via->save_animators != '') {
             $animators = explode(', ', $via->save_animators);
             if ($animators) {
                 foreach ($animators as $a) {
-                    /* We only add the 50 first users, combined participants and animators the rest will be synched on access */
+
+                    // We only add the 50 first users, combined participants and animators the rest will be synched on access.
                     if ($callvia && $count > 50) {
                         $callvia = false;
                     }
@@ -407,10 +437,13 @@ function via_update_instance($via) {
                         echo get_string("error:".$e->getMessage(), "via");
                     }
                     $count ++;
+
                     unset($vusers[$a]);
+
                 }
             }
         }
+
         if ($vusers) {
             foreach ($vusers as $v) {
                 // We need to remove these users!
@@ -418,7 +451,7 @@ function via_update_instance($via) {
                 try {
                     via_remove_participant($v->userid, $via->id);
                 } catch (Exception $e) {
-                    notify(get_string("error:".$e->getMessage(), "via"));
+                    print_error(get_string("error:".$e->getMessage(), "via"));
                 }
             }
         }
@@ -462,8 +495,8 @@ function via_update_instance($via) {
         }
     }
 
-    // Only if it's a normal Via activity.
-    if (!$isviaassign) {
+    // Only if it's a normal Via activity and not a permanent one.
+    if (!$isviaassign && $via->activitytype != 2) {
         // Updates activity in calendar.
         $event = new stdClass();
 
@@ -509,14 +542,73 @@ function via_delete_instance($id) {
     $api = new mod_via_api();
 
     try {
+
         $via = $DB->get_record('via', array('id' => $id));
-        if (!get_config('via', 'via_activitydeletion')) {
-            $activitystate = '2';
-            $response = $api->activity_edit($via, $activitystate);
+
+        if (get_config('tool_recyclebin', 'coursebinenable') || get_config('tool_recyclebin', 'categorybinenable')) {
+            $recyclebin = true;
+        } else {
+            $recyclebin = false;
+        }
+
+        if ($via->viaactivityid != '0') {
+            // No point calling to delete, no activity was created!
+            if (get_config('via', 'via_activitydeletion') || $recyclebin) {
+
+                // Deactivates activities only, they will be deleted later!
+                $activitystate = '3';
+                $response = $api->activity_edit($via, $activitystate);
+
+                // Only if $recyclebin exists, in moodle 2.7, this does not exist yet!
+                if ($recyclebin) {
+                    // Create new table to know which viaactivities we need to delete in Via...
+                    $course = $DB->get_record('course', array('id' => $via->course));
+                    $bin = $DB->get_records('tool_recyclebin_category', array('categoryid' => $course->category,
+                        'shortname' => $course->shortname,
+                        'fullname' => $course->fullname));
+                    if ($bin) {
+                        foreach ($bin as $b) {
+                            $binid = $b->id;
+                            $recyle = new stdClass();
+                            $recyle->viaid = $via->id;
+                            $recyle->viaactivityid = $via->viaactivityid;
+                            $recyle->recyclebinid = $binid;
+                            $recyle->recyclebintype = 'category';
+                            $recyle->expiry = (time() + get_config('tool_recyclebin', 'categorybinexpiry'));
+
+                            $DB->insert_record('via_recyclebin', $recyle);
+                        }
+                    } else {
+                        $cm = get_coursemodule_from_instance('via', $via->id, null, false, MUST_EXIST);
+                        $bin = $DB->get_records_sql('SELECT * FROM {tool_recyclebin_course}
+                                                WHERE courseid = ?
+                                                AND section = ?
+                                                AND module = ?
+                                                AND name = ?
+                                                AND (timecreated < '.(time() + 2).'
+                                                OR timecreated > ' .(time() - 2).')',
+                            array($course->id, $cm->section, $cm->module, $via->name));
+                        foreach ($bin as $b) {
+                            $binid = $b->id;
+
+                            $recyle = new stdClass();
+                            $recyle->viaid = $via->id;
+                            $recyle->viaactivityid = $via->viaactivityid;
+                            $recyle->recyclebinid = $binid;
+                            $recyle->recyclebintype = 'course';
+                            $recyle->expiry = (time() + get_config('tool_recyclebin', 'coursebinexpiry'));
+                            $DB->insert_record('via_recyclebin', $recyle);
+                        }
+                    }
+                }
+            } else {
+                $activitystate = '2'; // We delete the activity in Via.
+                $response = $api->activity_edit($via, $activitystate);
+            }
         }
     } catch (Exception $e) {
-        $result = false;
-        print_error(get_string("error:".$e->getMessage(), "via"));
+
+        print_error($e->getMessage());
         return false;
     }
 
@@ -527,39 +619,13 @@ function via_delete_instance($id) {
         if (!$DB->delete_records('via_participants', array('activityid' => $id))) {
             $result = false;
         }
+        if (!$DB->delete_records('via_playbacks', array('activityid' => $id))) {
+            $result = false;
+        }
         if (!$DB->delete_records('event', array('modulename' => 'via', 'instance' => $id))) {
             $result = false;
         }
-        via_grade_item_delete($via);
-    }
 
-    return $result;
-}
-
-/**
- * Adds users to the participant list
- * @param array $users array of users
- * @param integer $viaid the via activity ID
- * @param integer $type the user type (host, animator or partcipant)
- * @return bool Success/Fail.
- */
-function via_add_participants($users, $viaid, $type) {
-    global $DB;
-
-    $count = 1;
-    $callvia = true;
-
-    foreach ($users as $user) {
-        try {
-            /* We only add the 50 first users, the rest will be synched on access */
-            if ($callvia && $count > 50) {
-                $callvia = false;
-            }
-            $result = via_add_participant($user->id, $viaid, $type, $callvia);
-        } catch (Exception $e) {
-            echo get_string("error:".$e->getMessage(), "via");
-        }
-        $count ++;
     }
 
     return $result;
@@ -614,15 +680,17 @@ function via_add_participant($userid, $viaid, $type, $callvia = null, $confirmat
             if ($enrolid) {
                 $sub->enrolid = $enrolid;
             } else {
-                // We need this 0 later to keep the user not enrolled in the coruse not to be deleted when synching users.
+                // We need this 0 later to keep the user not enrolled in the course not to be deleted when synching users.
                 $sub->enrolid = 0;
             }
         }
 
-        if (!$confirmationstatus) {
-            $sub->confirmationstatus = 1;// Not confirmed!
-        } else {
+        if (isset($confirmationstatus)) {
             $sub->confirmationstatus = $confirmationstatus;
+        } else if (isset($participant) && isset($participant->confirmationstatus)) {
+            $sub->confirmationstatus = $participant->confirmationstatus;
+        } else {
+            $sub->confirmationstatus = 1;// Not confirmed!
         }
 
         if ($callvia) {
@@ -692,7 +760,7 @@ function via_remove_participant($userid, $viaid, $synched = null) {
             return $DB->delete_records('via_participants', array('userid' => $userid, 'activityid' => $viaid));
         }
     } catch (Exception $e) {
-        notify(get_string("error:".$e->getMessage(), "via"));
+        print_error(get_string("error:".$e->getMessage(), "via"));
     }
 }
 
@@ -726,35 +794,38 @@ function via_access_activity($via) {
     global $USER, $CFG, $DB;
 
     // If the user is an admin, he can access the activiy even though he is not added.
+    if ($via->activitytype == 3) {
+        // This is not yet planned, no point in going through all the motions!
+        return 8;
+    }
 
     $participant = $DB->get_record('via_participants', array('userid' => $USER->id, 'activityid' => $via->id));
 
     if ($participant || $via->enroltype == 0) {// If automatic enrol!
-        if (!$participant && has_capability('moodle/site:approvecourse', via_get_system_instance())) {
-            return 7;
-        } else {
-            if ((time() >= ($via->datebegin - (30 * 60))
-                    && time() <= ($via->datebegin + ($via->duration * 60) + 60))
-                || $via->activitytype == 2) {
-                // If activity is hapening right now, show link to the activity.
-                return 1;
-            } else if (time() < $via->datebegin) {
-                // Activity hasn't started yet.
-                if ($participant->participanttype == 1) {
-                    // If participant, user can't access activity.
-                    return 3;
-                } else {
-                    // If participant is animator or host, show link to prepare activity.
-                    return 2;
-                }
+
+        if ((time() >= ($via->datebegin - (30 * 60))
+                && time() <= ($via->datebegin + ($via->duration * 60) + 60))
+            || $via->activitytype == 2) {
+            // If activity is hapening right now, show link to the activity.
+            return 1;
+        } else if (time() < $via->datebegin) {
+            // Activity hasn't started yet.
+            if ( $participant&& $participant->participanttype == 1) {
+                // If participant, user can't access activity.
+                return 3;
             } else {
-                // Activity is done. Must verify if there are any recordings of if.
-                return 5;
+                // If participant is animator or host, show link to prepare activity.
+                return 2;
             }
+        } else {
+            // Activity is done. Must verify if there are any recordings of if.
+            return 5;
         }
+
+    } else if (!$participant && has_capability('moodle/site:approvecourse', via_get_system_instance())) {
+        return 7;
     } else {
         if (get_config('mod_viaassign', 'version')) {
-            // This is just to validate that viaassign is installed, not to get an error the table does not exist.
             $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $via->id));
             if ($viaassign) {
                 $cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST);
@@ -800,7 +871,7 @@ function via_print_overview($courses, &$htmlarray) {
         if ($via->activitytype == 1 && ($via->datebegin + ($via->duration * 60) >= $now && ($via->datebegin - (30 * 60)) < $now)) {
             // Give a link to via.
             $str = '<div class="via overview"><div class="name"><img src="'.$CFG->wwwroot.'/mod/via/pix/icon.gif"
-        "class="icon" alt="'.$strvia.'">';
+                    "class="icon" alt="'.$strvia.'">';
 
             $str .= '<a ' . ($via->visible ? '' : ' class="dimmed"') .
             ' href="' . $CFG->wwwroot . '/mod/via/view.php?id=' . $via->coursemodule . '">' .
@@ -818,8 +889,6 @@ function via_print_overview($courses, &$htmlarray) {
             } else {
                 $htmlarray[$via->course]['via'] .= $str;
             }
-        } else {
-            continue;
         }
     }
 }
@@ -872,8 +941,8 @@ function via_cron() {
                 echo "\n";
                 $result = via_send_reminders() && $result;
                 if ($result) {
-                    $update .= 'id= ?';
-                    $params[] = $function->id;
+                        $update .= 'id= ?';
+                        $params[] = $function->id;
                 }
             } else if ($function->name == 'via_add_enrolids') {
                 echo "add enrolids \n";
@@ -916,11 +985,10 @@ function via_cron() {
                 $result = via_send_export_notice($lastcron) && $result;
                 if ($result) {
                     if ($update == '') {
-                        $update .= 'id= ?';
+                        $update .= 'id=' . $function->id;
                     } else {
-                        $update .= ' OR id= ?';
+                        $update .= ' OR id=' . $function->id;
                     }
-                    $params[] = $function->id;
                 }
             }
         }
@@ -963,8 +1031,6 @@ function via_add_enrolids() {
                 }
             } catch (Exception $e) {
                 echo get_string("error:".$e->getMessage(), "via")."\n";
-                $result = false;
-                continue;
             }
         }
     }
@@ -1031,22 +1097,16 @@ function via_send_reminders() {
         $muser = $DB->get_record('user', array('id' => $r->userid));
         $from = via_get_host($r->activityid);
 
-        if (!$muser) {
-            echo "    User with ID {$r->userid} doesn't exist?!\n";
-            $result = false;
-            continue;
-        }
-
-        $result = via_send_moodle_reminders($r, $muser, $from);
-        if ($result) {
-            $record = new stdClass();
-            $record->id = $r->activityid;
-            $record->mailed = 1;
-            if (!$DB->update_record('via', $record)) {
-                // If this fails, stop everything to avoid sending a bunch of dupe emails.
-                echo "    Could not update via table!\n";
-                continue;
-                return false;
+        if ($muser) {
+            $result = via_send_moodle_reminders($r, $muser, $from);
+            if ($result) {
+                $record = new stdClass();
+                $record->id = $r->activityid;
+                $record->mailed = 1;
+                if (!$DB->update_record('via', $record)) {
+                    // If this fails, stop everything to avoid sending a bunch of dupe emails.
+                    echo "    Could not update via table!\n";
+                }
             }
         }
     }
@@ -1063,10 +1123,10 @@ function via_get_reminders() {
     global $CFG, $DB;
     $now = time();
 
-    $sql = "SELECT p.id, p.userid, p.activityid, v.name, v.datebegin, v.duration, v.viaactivityid, v.course, v.activitytype ".
-    "FROM {via_participants} p ".
-    "INNER JOIN {via} v ON p.activityid = v.id ".
-    "WHERE v.remindertime > 0 AND ($now  >= (v.datebegin - v.remindertime)) AND v.mailed = 0 AND v.activitytype = 1";
+        $sql = "SELECT p.id, p.userid, p.activityid, v.name, v.datebegin, v.duration, v.viaactivityid, v.course, v.activitytype ".
+        "FROM {via_participants} p ".
+        "INNER JOIN {via} v ON p.activityid = v.id ".
+        "WHERE v.remindertime > 0 AND ($now  >= (v.datebegin - v.remindertime)) AND v.mailed = 0 AND v.activitytype = 1";
 
     $reminders = $DB->get_records_sql($sql);
 
@@ -1132,6 +1192,15 @@ function via_send_moodle_reminders($r, $muser, $from) {
         }
     }
 
+    $record = new stdClass();
+    $record->id = $r->activityid;
+    $record->mailed = 1;
+    if (!$DB->update_record('via', $record)) {
+        // If this fails, stop everything to avoid sending a bunch of dupe emails.
+        echo "    Could not update via table!\n";
+        $result = false;
+    }
+
     return $result;
 }
 
@@ -1151,35 +1220,28 @@ function via_send_invitations($activityid) {
 
     // If anything fails, we'll keep going but we'll return false at the end.
     $result = true;
-    $from = via_get_host($i->activityid);
 
     foreach ($invitations as $i) {
         $muser = $DB->get_record('user', array('id' => $i->userid));
+        $from = via_get_host($i->activityid);
 
-        if (!$muser) {
-            continue;
-            return false;
-        }
-
-        // Send reminder.
-        try {
-            $result = via_send_moodle_invitations($i, $muser, $from);
-            if ($result) {
-                $record = new stdClass();
-                $record->id = $i->activityid;
-                $record->sendinvite = 0;
-                $record->invitemsg = "";
-                if (!$DB->update_record('via', $record)) {
-                    // If this fails, stop everything to avoid sending a bunch of dupe emails.
-                    echo "    Could not update via table!\n";
-                    continue;
-                    return false;
+        if ($muser) {
+            // Send reminder.
+            try {
+                $result = via_send_moodle_invitations($i, $muser, $from);
+                if ($result) {
+                    $record = new stdClass();
+                    $record->id = $i->activityid;
+                    $record->sendinvite = 0;
+                    $record->invitemsg = "";
+                    if (!$DB->update_record('via', $record)) {
+                        // If this fails, stop everything to avoid sending a bunch of dupe emails.
+                        echo "    Could not update via table!\n";
+                    }
                 }
+            } catch (Exception $e) {
+                print_error(get_string("error:".$e->getMessage(), "via"));
             }
-        } catch (Exception $e) {
-            notify(get_string("error:".$e->getMessage(), "via"));
-            continue;
-            return false;
         }
     }
 
@@ -1212,36 +1274,28 @@ function via_send_export_notice($lastcron) {
 
     foreach ($notices as $i) {
         if (isset($i['UserID'])) {
-                $muser = $DB->get_record_sql('SELECT u.* FROM {via_users} vu
+            $muser = $DB->get_record_sql('SELECT u.* FROM {via_users} vu
                                     LEFT JOIN {user} u ON vu.userid = u.id
                                     WHERE vu.viauserid = ?', array($i['UserID']));
-
-            if (!$muser) {
-                echo "User with Via user ID {$i['UserID']} doesn't exist?!\n";
-                continue;
-            }
             $activity = $DB->get_record('via', array('viaactivityid' => $i['ActivityID']));
-            if (!$activity) {
-                echo "Activity with Via activity ID {$i['ActivityID']} doesn't exist?!\n";
-                continue;
-            }
 
-            // Send notice.
-            try {
-                $sql = "";
-                if ($i["RecordingType"] == 1) {
-                    $sql = "hasfullvideorecord = 1";
-                } else if ($i["RecordingType"] == 2) {
-                    $sql = "hasmobilevideorecord = 1";
-                } else if ($i["RecordingType"] == 3) {
-                    $sql = "hasaudiorecord = 1";
+            if ($muser && $activity) {
+                // Send notice.
+                try {
+                    $sql = "";
+                    if ($i["RecordingType"] == 1) {
+                        $sql = "hasfullvideorecord = 1";
+                    } else if ($i["RecordingType"] == 2) {
+                        $sql = "hasmobilevideorecord = 1";
+                    } else if ($i["RecordingType"] == 3) {
+                        $sql = "hasaudiorecord = 1";
+                    }
+
+                    $DB->execute('UPDATE {via_playbacks} SET '.$sql.' WHERE playbackid = ?', array($i['PlaybackID']));
+                    $result = via_send_notices($i, $muser, $activity);
+                } catch (Exception $e) {
+                    print_error(get_string("error:".$e->getMessage(), "via"));
                 }
-
-                $DB->execute('UPDATE {via_playbacks} SET '.$sql.' WHERE playbackid = ?', array($i['PlaybackID']));
-                $result = via_send_notices($i, $muser, $activity);
-            } catch (Exception $e) {
-                notify(get_string("error:".$e->getMessage(), "via"));
-                continue;
             }
         }
     }
@@ -1249,11 +1303,11 @@ function via_send_export_notice($lastcron) {
     return $result;
 }
 
-    /**
-     * Called by the cron job to send activity notices
-     *
-     * @return bool $result sucess/fail
-     */
+/**
+ * Called by the cron job to send activity notices
+ *
+ * @return bool $result sucess/fail
+ */
 function via_send_activity_notifications($lastcron) {
     global $CFG, $DB;
     // If anything fails, we'll keep going but we'll return false at the end.
@@ -1278,23 +1332,14 @@ function via_send_activity_notifications($lastcron) {
             $muser = $DB->get_record_sql('SELECT u.* FROM {via_users} vu
                                     LEFT JOIN {user} u ON vu.userid = u.id
                                     WHERE vu.viauserid = ?', array($i['HostID']));
-
-            if (!$muser) {
-                echo "User with Via user ID {$i['HostID']} doesn't exist?!\n";
-                continue;
-            }
             $activity = $DB->get_record('via', array('viaactivityid' => $i['ActivityID']));
-            if (!$activity) {
-                echo "Activity with Via activity ID {$i['ActivityID']} doesn't exist?!\n";
-                continue;
-            }
-
-            // Send notification.
-            try {
-                $result = via_send_notification($i, $muser, $activity);
-            } catch (Exception $e) {
-                notify(get_string("error:".$e->getMessage(), "via"));
-                continue;
+            if ($muser && $activity) {
+                // Send notification.
+                try {
+                    $result = via_send_notification($i, $muser, $activity);
+                } catch (Exception $e) {
+                    print_error(get_string("error:".$e->getMessage(), "via"));
+                }
             }
         }
     }
@@ -1366,21 +1411,28 @@ function via_send_moodle_invitations($i, $user, $from) {
     if (!isset($muser->emailstop) || !$muser->emailstop) {
         if (true !== email_to_user($user, $from, $subject, $body, $bodyhtml)) {
             echo "    Could not send email to <{$user->email}> (unknown error!)\n";
-            continue;
-            return false;
         }
+    }
+
+    $record = new stdClass();
+    $record->id = $i->activityid;
+    $record->sendinvite = 0;
+    $record->invitemsg = "";
+    if (!$DB->update_record('via', $record)) {
+        // If this fails, stop everything to avoid sending a bunch of dupe emails.
+        echo "    Could not update via table!\n";
     }
 
     return $result;
 }
 
-    /**
-     * Sends export notices
-     *
-     * @param object $i via object
-     * @param object $muser user to send reminder
-     * @return bool $result sucess/fail
-     */
+/**
+ * Sends export notices
+ *
+ * @param object $i via object
+ * @param object $muser user to send reminder
+ * @return bool $result sucess/fail
+ */
 function via_send_notices($i, $muser, $activity) {
     global $CFG, $DB, $SITE;
 
@@ -1438,13 +1490,13 @@ function via_send_notices($i, $muser, $activity) {
     return $result;
 }
 
-    /**
-     * Sends activity notification
-     *
-     * @param object $i via object
-     * @param object $muser user to send reminder
-     * @return bool $result sucess/fail
-     */
+/**
+ * Sends activity notification
+ *
+ * @param object $i via object
+ * @param object $muser user to send reminder
+ * @return bool $result sucess/fail
+ */
 function via_send_notification($i, $muser, $activity) {
     global $CFG, $DB, $SITE;
 
@@ -1462,14 +1514,15 @@ function via_send_notification($i, $muser, $activity) {
     $from = $SITE->fullname;
 
     $muserfrom = $DB->get_record_sql('SELECT u.* FROM {via_users} vu
-                                LEFT JOIN {user} u ON vu.userid = u.id
-                                WHERE vu.viauserid = ?', array($i['UserID']));
+                                    LEFT JOIN {user} u ON vu.userid = u.id
+                                    WHERE vu.viauserid =\'' . $i['UserID'].'\'');
 
     if (!$muserfrom) {
         $muserfrom = '';
     }
 
     // Recipient is self!
+    $result = true;
     $a = new stdClass();
     $a->username = fullname($muser);
     $a->userfrom = fullname($muserfrom);
@@ -1518,10 +1571,10 @@ function via_get_invitations($activityid) {
         WHERE v.sendinvite = 1";
 
     if ($activityid <> null) {
-        $sql .= " AND v.id = ? ";
+            $sql .= " AND v.id = ? ";
     }
 
-    $invitations = $DB->get_records_sql($sql, array($activityid));
+        $invitations = $DB->get_records_sql($sql, array($activityid));
 
     return $invitations;
 }
@@ -1732,7 +1785,13 @@ function get_vialib() {
     }
 }
 
-function handle_createactivityapierror($e) {
+/**
+ * Handles/converts API errors to printable text.
+ *
+ * Adds message to temporary session.
+ *
+ */
+function via_handle_createactivityapierror($e) {
     if (strpos($e->getMessage(), 'SIMULTANEOUS_ROOM_MAX') !== false) {
         $msg = $e->getMessage();
         $msg = substr($msg, strpos($e->getMessage(), ' ') + 1);
@@ -1784,4 +1843,55 @@ class via_send_invite_form extends moodleform {
 
         $this->add_action_buttons(true, get_string('submitinvite', 'via'));
     }
+}
+
+/**
+ * Serves the via attachments. Implements needed access control
+ *
+ * @package  mod_glossary
+ * @category files
+ * @param stdClass $course course object
+ * @param stdClass $cm course module object
+ * @param stdClsss $context context object
+ * @param string $filearea file area
+ * @param array $args extra arguments
+ * @param bool $forcedownload whether or not force download
+ * @param array $options additional options affecting the file serving
+ * @return bool false if file not found, does not return if found - justsend the file
+ */
+function via_pluginfile($course, $cm, $context, $filearea, $args) {
+
+    // Make sure the filearea is one of those used by the plugin.
+    if ($filearea !== 'emailheaderimage') {
+        return false;
+    }
+
+    // Check the relevant capabilities - these may vary depending on the filearea being accessed.
+    if (!has_capability('mod/via:view', $context)) {
+        return false;
+    }
+
+    // Leave this line out if you set the itemid to null in make_pluginfile_url (set $itemid to 0 instead).
+    $itemid = array_shift($args); // The first item in the $args array.
+
+    // Use the itemid to retrieve any relevant data records and perform any security checks to see if the
+    // user really does have access to the file in question.
+
+    // Extract the filename / filepath from the $args array.
+    $filename = array_pop($args); // The last item in the $args array.
+    if (!$args) {
+        $filepath = '/'; // Args is empty => the path is '/'!
+    } else {
+        $filepath = '/'.implode('/', $args).'/'; // Args contains elements of the filepath!
+    }
+
+    // Retrieve the file from the Files API.
+    $fs = get_file_storage();
+        $file = $fs->get_file($context->id, 'mod_via', $filearea, $itemid, $filepath, $filename);
+    if (!$file) {
+        return false; // The file does not exist.
+    }
+
+    // We can now send the file back to the browser - in this case with a cache lifetime of 1 day and no filtering. .
+    send_stored_file ($file, 86400, 0, false);
 }

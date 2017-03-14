@@ -24,10 +24,10 @@
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
-
 namespace mod_via\task;
-
-class via_notification_task extends \core\task\scheduled_task {
+defined('MOODLE_INTERNAL') || die();
+class via_notification_task extends \core\task\scheduled_task
+{
 
     public function get_name() {
         return get_string('via_notification_task', 'via');

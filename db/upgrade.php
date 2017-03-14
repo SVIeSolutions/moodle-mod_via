@@ -19,10 +19,10 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
+defined('MOODLE_INTERNAL') || die();
 /**
  * This is function xmldb_via_upgrade
  *
@@ -438,8 +438,41 @@ function xmldb_via_upgrade($oldversion = 0) {
         upgrade_mod_savepoint($result, 2016042003, 'via');
     }
 
-	if ($oldversion < 2016042016) {
+    if ($oldversion < 2017030101) {
+
+        $table = new xmldb_table('via_params');
+        if ($dbman->table_exists($table) && $DB->record_exists('via_params', array('param_type' => 'viaversion'))) {
+            $DB->delete_records('via_params', array('param_type' => 'viaversion'));
+        }
+
+        $table = new xmldb_table('via_recyclebin');
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('viaid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'id');
+        $table->add_field('viaactivityid', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, null, null, 'viaid');
+        $table->add_field('recyclebinid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'viaactivityid');
+        $table->add_field('recyclebintype', XMLDB_TYPE_CHAR, '50', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'recyclebinid');
+        $table->add_field('expiry', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'recyclebintype');
+
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, array('id'));
+
+        if (!$dbman->table_exists($table)) {
+
+            $index = new xmldb_index('recyclebinid', XMLDB_INDEX_NOTUNIQUE, array('recyclebinid'));
+            $dbman->add_index($table, $index);
+
+            $index = new xmldb_index('viaactivityid', XMLDB_INDEX_UNIQUE, array('viaactivityid'));
+            $dbman->add_index($table, $index);
+
+            $dbman->create_table($table);
+        }
+
+        $table = new xmldb_table('via_playbacks');
+        $field = new xmldb_field('deleted', XMLDB_TYPE_INTEGER, '1', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, 0, 'hasaudiorecord');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
         // Savepoint reached!
-		upgrade_mod_savepoint($result, 2016042016, 'via');
+        upgrade_mod_savepoint($result, 2017030101, 'via');
     }
 }

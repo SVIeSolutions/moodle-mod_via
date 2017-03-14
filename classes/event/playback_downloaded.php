@@ -97,4 +97,13 @@ class playback_downloaded extends \core\event\base {
             throw new \coding_exception('The \'type\' value must be set in other.');
         }
     }
+
+    public static function get_objectid_mapping() {
+        return array('db' => 'via', 'restore' => 'via');
+    }
+    public static function get_other_mapping() {
+        $othermapped = array();
+        $othermapped['viaid'] = array('db' => 'via', 'restore' => 'via');
+        return $othermapped;
+    }
 }

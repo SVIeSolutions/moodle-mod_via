@@ -1,7 +1,8 @@
-Version 2016042006
+Version 2017030101
 
 /* for more information on the version please see mod/via/version.php */
-/* This plugin requires Via 8.6 or greater */
+/* This plugin requires Via 8.7 or greater */
+
 
 Procedure for a NEW installation of this plugin :
 *********************************************************************
@@ -17,7 +18,10 @@ Procedure for a NEW installation of this plugin :
     - Moodle admin ID
     - You can test the key
 
+    As added security you will need to provide us with your IP address.
+    This will be validated along with the IDs provided.
+
 3 - For invoicing and statistics purposes you may create categories in Via and make them available in Moodle.
-Note these need to be created in Via to be available.  
-For these to be available, the moodle administrator must check the ckeckbox in the settings page,
-it is them possible to chose which categories will be avaiable and set one as default.
+    Note these need to be created in Via to be available.
+    The moodle administrator must check the ckeckbox in the settings page.
+    He may also select a default category.

@@ -20,13 +20,13 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
 
-global $DB;
 require_once("../../config.php");
+global $DB;
 require_once("lib.php");
 require_once(get_vialib());
 
@@ -87,7 +87,7 @@ if ($edit == get_string('cancel', 'via')) {
 
 if ($edit != 'del' && $edit != get_string('delete', 'via')) {
     // For all pages except delete we need to load the playback's info.
-    $playbacks = $DB->get_records('via_playbacks', array('playbackid' => $playbackid));
+    $playbacks = $DB->get_records('via_playbacks', array('playbackid' => $playbackid, 'deleted' => 0));
 
     foreach ($playbacks as $playbacksearch) {
         if (strtoupper($playbacksearch->playbackid) == strtoupper($playbackid)) {
@@ -98,16 +98,27 @@ if ($edit != 'del' && $edit != get_string('delete', 'via')) {
 }
 
 if ($edit == get_string('delete', 'via')) {
-    try {
-        $api = new mod_via_api();
-        $result = $api->delete_playback($via->viaactivityid, $playbackid);
-        if ($result) {
-            $DB->delete_records('via_playbacks', array('playbackid' => $playbackid));
-            redirect("view.php?".$viaurlparam."=".$viaurlparamvalue);
-        }
 
-    } catch (Exception $e) {
-        $error = $OUTPUT->notification("error:".$e->getMessage());
+    if (get_config('via', 'via_activitydeletion') == false) {
+        // If this setting is false, then delete the playback for real!
+        try {
+            $api = new mod_via_api();
+            $result = $api->delete_playback($via->viaactivityid, $playbackid);
+            if ($result) {
+                $DB->delete_records('via_playbacks', array('playbackid' => $playbackid));
+                redirect("view.php?".$viaurlparam."=".$viaurlparamvalue);
+            }
+
+        } catch (Exception $e) {
+            $error = $OUTPUT->notification("error:".$e->getMessage());
+        }
+    } else {
+        // Otherwise, simply mark it as deleted in Moodle, but the recording will still appear in Via.
+        $playback = $DB->get_record('via_playbacks', array('playbackid' => $playbackid));
+        $playback->deleted = '1';
+        $deleted = $DB->update_record('via_playbacks', $playback);
+
+        redirect("view.php?".$viaurlparam."=".$viaurlparamvalue);
     }
 
 } else if ($edit == get_string('save', 'via')) {
@@ -146,6 +157,7 @@ if ($edit == get_string('delete', 'via')) {
             }
 
             $DB->update_record('via_playbacks', $playback);
+
             redirect("view.php?".$viaurlparam."=".$viaurlparamvalue);
         }
 

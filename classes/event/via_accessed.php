@@ -82,5 +82,14 @@ class via_accessed extends \core\event\base {
     protected function get_legacy_logdata() {
         return array($this->courseid, "via", "activity accessed", $this->get_url(), $this->objectid, $this->contextinstanceid);
     }
+    public static function get_objectid_mapping() {
+        return array('db' => 'via', 'restore' => 'via');
+    }
+    public static function get_other_mapping() {
+        $othermapped = array();
+        $othermapped['viaid'] = array('db' => 'via', 'restore' => 'via');
+
+        return $othermapped;
+    }
 
 }

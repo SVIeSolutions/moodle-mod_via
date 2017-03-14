@@ -20,7 +20,7 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
@@ -152,7 +152,7 @@ try {
         echo $OUTPUT->header();
         echo $OUTPUT->box_start();
         $msg = get_string('notenrolled', 'via');
-        notify($msg, $style = 'recordwarning', $return = false);
+        print_error($msg, $style = 'recordwarning', $return = false);
         echo $OUTPUT->box_end();
         echo $OUTPUT->footer($course);
     }

@@ -20,7 +20,7 @@
  *
  * @package    mod
  * @subpackage via
- * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+ * @copyright  SVIeSolutions <support@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
@@ -249,8 +249,9 @@ if ($via->enroltype == 0 && $participanttype == 1) {
                                                 FROM {groups_members} gm
                                                 LEFT JOIN {groups} g ON gm.groupid = g.id
                                                 LEFT JOIN {groupings_groups} gg ON gg.groupid = g.id
-                                                WHERE gm.userid = ? AND g.courseid = ?',
-                                                array($subscriber->id, $via->course));
+                                                 WHERE gm.userid = ? AND g.courseid = ?',
+            array($subscriber->id, $via->course));
+
             // Some users might be in more than one group.
             if ($usergroupingid) {
                 foreach ($usergroupingid as $gid) {

@@ -19,10 +19,11 @@
   *
   * @package    mod
   * @subpackage via
-  * @copyright  SVIeSolutions <alexandra.dinan@sviesolutions.com>
+  * @copyright  SVIeSolutions <support@sviesolutions.com>
   * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
   *
   */
+defined('MOODLE_INTERNAL') || die();
 
 /** Data access class for the via module. **/
 class mod_via_api {
@@ -113,8 +114,7 @@ class mod_via_api {
                     $resultdata = 'LOGIN_USED';
                     return $resultdata;
                 } else {
-                    throw new Exception('user_create : ["ResultState"] == "ERROR")');
-                    return false;
+                    throw new Exception($resultdata['Result']['ResultDetail']);
                 }
             }
         }
@@ -265,7 +265,7 @@ class mod_via_api {
         $data .= "<IsReplayAllowed>".$via->isreplayallowed."</IsReplayAllowed>";
         $data .= "<ActivityState>1</ActivityState>";
         $data .= "<RoomType>".$via->roomtype."</RoomType>";
-        $data .= "<IsNewVia>".$via->isnewvia."</IsNewVia>";
+        $data .= "<IsNewVia>".$via->isnewvia."</IsNewVia>"; /* Always 1 for new activities. */
         $data .= "<AudioType>".$via->audiotype."</AudioType>";
         $data .= "<ActivityType>".$via->activitytype."</ActivityType>";
         $data .= "<ShowParticipants>".$via->showparticipants."</ShowParticipants>";
@@ -373,7 +373,7 @@ class mod_via_api {
         $data .= "<IsReplayAllowed>".$via->isreplayallowed."</IsReplayAllowed>";
         $data .= "<ActivityState>".$activitystate."</ActivityState>";
         $data .= "<RoomType>".$via->roomtype."</RoomType>";
-        $data .= "<IsNewVia>".$via->isnewvia."</IsNewVia>";
+        $data .= "<IsNewVia>".$via->isnewvia."</IsNewVia>";  /* Always 1 for new activities*/
         $data .= "<AudioType>".$via->audiotype."</AudioType>";
         $data .= "<ActivityType>".$via->activitytype."</ActivityType>";
         $data .= "<ShowParticipants>".$via->showparticipants."</ShowParticipants>";
@@ -431,6 +431,42 @@ class mod_via_api {
 
         if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivity"]) {
             throw new Exception("Problem reading getting VIA activity id");
+        }
+
+        if ($resultdata['Result']['ResultState'] == "ERROR") {
+            return $resultdata['Result']['ResultDetail'];
+        }
+
+        return $resultdata;
+    }
+
+    /**
+     * Deletes an acitivity on Via
+     *
+     * @param object $viaactivityid
+     * @return Array containing response from Via
+     */
+    public function via_activity_delete($viaactivityid) {
+        global $CFG;
+
+        $url = 'ActivityDelete';
+
+        $data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ';
+        $data .= 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        $data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        $data .= '<soap:Body>';
+        $data .= "<cApiActivityDelete>";
+        $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
+        $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
+        $data .= "<UserID>".get_config('via', 'via_adminid')."</UserID>";
+        $data .= "<ActivityID>".$viaactivityid."</ActivityID>";
+        $data .= "</cApiActivityDelete>";
+        $data .= "</soap:Body>";
+        $data .= "</soap:Envelope>";
+        $response = $this->send_saop_enveloppe($viaactivityid, $data, $url);
+
+        if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivityDelete"]) {
+            throw new Exception("Problem deleting activity on Via");
         }
 
         if ($resultdata['Result']['ResultState'] == "ERROR") {
@@ -913,8 +949,8 @@ class mod_via_api {
         $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
         $data .= "<ActivityID>".$via->viaactivityid."</ActivityID>";
         if ($via->playbacksync) {
-            // Minus 1 hour as we kept missing some!
-            $data .= "<DateFrom>".$this->change_date_format($via->playbacksync - 3660)."</DateFrom>";
+            // Minus 5 minutes just in case!
+            $data .= "<DateFrom>".$this->change_date_format($via->playbacksync - 300)."</DateFrom>";
         }
         $data .= "</cApiListPlayback>";
         $data .= "</soap:Body>";
@@ -1168,8 +1204,10 @@ class mod_via_api {
      * @param timestamp ($lastcron)
      * @return list of notifications
      */
-    public function get_latest_added_playbacks($fromdate) {
+    public function get_latest_added_playbacks($fromdate, $playbackarray = null) {
         global $CFG;
+
+        static $resultdata;
 
         $url = 'PlaybackSearch';
 
@@ -1195,7 +1233,28 @@ class mod_via_api {
             throw new Exception($resultdata['Result']['ResultDetail']);
         }
 
-        return $resultdata;
+        if ($playbackarray) {
+            if ($resultdata['PlaybackSearch']['PlaybackMatch']) {
+                $newplaybackarray = array_filter($resultdata['PlaybackSearch']['PlaybackMatch']);
+            } else {
+                $newplaybackarray = array($resultdata['PlaybackSearch']['PlaybackMatch attr']);
+                unset($resultdata['PlaybackSearch']['PlaybackMatch attr']);
+            }
+            if ($newplaybackarray) {
+                $temparray = array_merge(array_values($playbackarray), $newplaybackarray);
+                $resultdata['PlaybackSearch']['PlaybackMatch'] = array_unique($temparray, SORT_REGULAR);
+            } else {
+                $resultdata['PlaybackSearch']['PlaybackMatch'] = array_unique($playbackarray, SORT_REGULAR);
+            }
+        }
+
+        if ($resultdata['Result']["ResultDetail"]) {
+            $playbacks = array_filter($resultdata['PlaybackSearch']['PlaybackMatch']);
+            $lastrecording = end($playbacks);
+            return $this->get_latest_added_playbacks(strtotime($lastrecording["DateAdded"]), $playbacks);
+        } else {
+            return $resultdata;
+        }
     }
 
     /**
