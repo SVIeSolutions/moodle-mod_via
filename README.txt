@@ -1,4 +1,4 @@
-Version 2017030101
+Version 2017030102
 
 /* for more information on the version please see mod/via/version.php */
 /* This plugin requires Via 8.7 or greater */

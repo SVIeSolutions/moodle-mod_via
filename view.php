@@ -212,7 +212,7 @@ echo $OUTPUT->header();
 
 echo $OUTPUT->heading(format_string($via->name), 2, 'main');
 
-echo $OUTPUT->box_start('', '', '', 0, 'generalbox', 'intro');
+    echo $OUTPUT->box_start('generalbox intro');
 
 if (isset($deleted)) {
     echo '<p>'.get_string('activity_deleted', 'via').'</p>';

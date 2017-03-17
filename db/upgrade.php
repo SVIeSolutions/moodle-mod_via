@@ -438,7 +438,7 @@ function xmldb_via_upgrade($oldversion = 0) {
         upgrade_mod_savepoint($result, 2016042003, 'via');
     }
 
-    if ($oldversion < 2017030101) {
+    if ($oldversion < 2017030102) {
 
         $table = new xmldb_table('via_params');
         if ($dbman->table_exists($table) && $DB->record_exists('via_params', array('param_type' => 'viaversion'))) {
@@ -457,13 +457,10 @@ function xmldb_via_upgrade($oldversion = 0) {
 
         if (!$dbman->table_exists($table)) {
 
-            $index = new xmldb_index('recyclebinid', XMLDB_INDEX_NOTUNIQUE, array('recyclebinid'));
-            $dbman->add_index($table, $index);
+			$table->add_index('recyclebinid', XMLDB_INDEX_NOTUNIQUE, array('recyclebinid'));
+			$table->add_index('viaactivityid', XMLDB_INDEX_UNIQUE, array('viaactivityid'));
 
-            $index = new xmldb_index('viaactivityid', XMLDB_INDEX_UNIQUE, array('viaactivityid'));
-            $dbman->add_index($table, $index);
-
-            $dbman->create_table($table);
+			$dbman->create_table($table);
         }
 
         $table = new xmldb_table('via_playbacks');
@@ -473,6 +470,6 @@ function xmldb_via_upgrade($oldversion = 0) {
         }
 
         // Savepoint reached!
-        upgrade_mod_savepoint($result, 2017030101, 'via');
+        upgrade_mod_savepoint($result, 2017030102, 'via');
     }
 }
