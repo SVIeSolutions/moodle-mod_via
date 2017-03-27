@@ -298,23 +298,22 @@ function remove_animators() {
 }
 
 function setgroupfunction() {
+// There is probably a way to improve this function.
+    var Inter = setInterval(function(){  
+        if ($('.availability_grouping .availability-group select[name="id"]').length) {
+            $('.availability_grouping .availability-group select[name="id"]').attr('onchange', 'groupuserschange()');
+        }
 
-    if ($('.availability_grouping .availability-group select[name="id"]').length) {
-        $('.availability_grouping .availability-group select[name="id"]').attr('onchange', 'groupuserschange()');
-    } else {
-        setTimeout(function () { setgroupfunction() }, 1000);
-    }
-
-    if ($('.availability_group .availability-group select[name="id"]').length) {
-        $('.availability_group .availability-group select[name="id"]').attr('onchange', 'groupuserschange()');
-    } else {
-        setTimeout(function () { setgroupfunction() }, 1000);
-    }
+    }, 1000);
+    var Inter2 = setInterval(function(){  
+        if ($('.availability_group .availability-group select[name="id"]').length) {
+            $('.availability_group .availability-group select[name="id"]').attr('onchange', 'groupuserschange()');
+        }
+    }, 1000);
 }
 
 function groupuserschange() {
     $(".fa-spinner.fa-spin").show();
-
     $("#id_participants").empty();
     $("#id_animators").empty();
 
