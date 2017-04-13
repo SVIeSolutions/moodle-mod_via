@@ -579,7 +579,12 @@ function via_delete_instance($id) {
                             $DB->insert_record('via_recyclebin', $recyle);
                         }
                     } else {
-                        $cm = get_coursemodule_from_instance('via', $via->id, null, false, MUST_EXIST);
+                        $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $via->id));
+                        if ($viaassign) {
+                            $cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST);
+                        } else {
+                            $cm = get_coursemodule_from_instance('via', $via->id, null, false, MUST_EXIST);
+                        }
                         $bin = $DB->get_records_sql('SELECT * FROM {tool_recyclebin_course}
                                                 WHERE courseid = ?
                                                 AND section = ?
@@ -1409,8 +1414,8 @@ function via_send_moodle_invitations($i, $user, $from) {
     $bodyhtml = via_make_invitation_reminder_mail_html($i->course, $i, $user);
 
     if (!isset($muser->emailstop) || !$muser->emailstop) {
-        if (true !== email_to_user($user, $from, $subject, $body, $bodyhtml)) {
-            echo "    Could not send email to <{$user->email}> (unknown error!)\n";
+        if (true !== email_to_user($muser, $from, $subject, $body, $bodyhtml)) {
+            echo "    Could not send email to ".$muser->email." (unknown error!)\n";
         }
     }
 

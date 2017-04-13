@@ -1411,7 +1411,7 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
 
     if (! $cm = get_coursemodule_from_instance("via", $via->activityid, $courseid)) {
         $viaurlparam = 'viaid';
-        $viaurlparamvalue = $via->viaid;
+        $viaurlparamvalue = $via->activityid;
     } else {
         $viaurlparam = 'id';
         $viaurlparamvalue = $cm->id;
@@ -1452,9 +1452,8 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
     $posthtml .= '<a style="font-family: Calibri,sans-serif; font-size:18px; color:'.$linkcolor.'; "
                     target="_blank" href="'. $CFG->wwwroot.'/course/view.php?id='.$courseid.'">'.$coursename->shortname.'</a>
                       &raquo;  ';
-
-    $posthtml .= '<a style="font-family: Calibri,sans-serif; font-size:18px; color:'.$linkcolor.'"
-                    target="_blank" href="'. $CFG->wwwroot.'/mod/via/view.php?'.$viaurlparam.'='.$viaurlparamvalue.'">'.
+        $posthtml .= '<a style="font-family: Calibri,sans-serif; font-size:18px; color:'.$linkcolor.'"
+                    target="_blank" href="'. $CFG->wwwroot.'/mod/via/view.php?'. $viaurlparam.'='.$viaurlparamvalue.'">'.
                     $via->name.'</a>';
     $posthtml .= '</td></tr>';
 
@@ -1505,17 +1504,19 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
     <br/><br/>".get_string("inviteclicktoaccesshtml", "via")."";
 
     $posthtml .= "<div style='text-align:center'>";
-    $posthtml .= "<a href='".$CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue."'
+        $posthtml .= "<a href='".$CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue."'
         style='background:".$accesslinkcolor."; color:#fff; font-size:1.2em; text-decoration:none;
         border:8px solid ".$accesslinkcolor.";'>
         <img src='" . $CFG->wwwroot ."/mod/via/pix/access.png' align='top'
         height='25px' width='25px' style='border:0; margin-right:5px;'>".
         get_string("gotoactivity", "via")."</a>";
+
     $posthtml .= "<p><br/>
         <a href=". $CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue ."
         style='color:".$linkcolor."'>".
-        $CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue .
+            $CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue .
         "</a></p>";
+
     $posthtml .= "</div>";
     $posthtml .= '</td><td>';
 

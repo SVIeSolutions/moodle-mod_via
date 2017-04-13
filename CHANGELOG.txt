@@ -1,4 +1,12 @@
 This file defines the changes made to Via - Virtual classroom
+last update 05/04/2017 (2017030104)
+- Bug fixes for email reminder sended from viaassign
+- Bug fixes for export from Via
+- Bug fixes for the access to unified reccordings
+
+last update 27/03/2017 (2017030103)
+- Bug fixes for incompatibility with IE
+
 last update 17/03/2017 (2017030102)
 - Bug fixes for incompatibility with php7.1
 - Bug fixes for upgrade from version via 2016042016

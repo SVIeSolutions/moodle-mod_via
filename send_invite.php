@@ -85,7 +85,8 @@ $PAGE->set_url('/mod/via/send_invite.php', array('id' => $cm->id));
 $PAGE->set_title($course->shortname . ': ' . format_string($via->name));
 $PAGE->set_heading($course->fullname);
 if ($viaid) {
-    $PAGE->navbar->add(format_string($via->name), '/mod/via/view.php?viaid='.$viaid);
+    $PAGE->navbar->add(format_string($via->name), '/mod/viaassign/view.php?viaid='.$viaid);
+
 }
 
 if ($frm = data_submitted()) {
@@ -109,11 +110,19 @@ if ($frm = data_submitted()) {
     if ($count->cnt <= 50) {
         // Send invites now.
         via_send_invitations($via->id);
-
-        redirect($CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue, get_string("invitessent", "via"), 5);
+        if ($viaid) {
+            redirect($CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue, get_string("invitessent", "via"), 5);
+        } else {
+            redirect($CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue, get_string("invitessent", "via"), 5);
+        }
     } else {
         // Send invites later by task.
-        redirect($CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue, get_string("invitessend", "via"), 5);
+        if ($viaid) {
+            redirect($CFG->wwwroot."/mod/viaassign/view.php?".$viaurlparam."=".$viaurlparamvalue,
+            get_string("invitessent", "via"), 5);
+        } else {
+            redirect($CFG->wwwroot."/mod/via/view.php?".$viaurlparam."=".$viaurlparamvalue, get_string("invitessent", "via"), 5);
+        }
     }
 }
 

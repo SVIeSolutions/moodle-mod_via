@@ -97,7 +97,7 @@ if (has_capability('mod/via:manage', $context)) {
 if (has_capability('mod/via:view', $context) && (is_mobile_phone() == false || $via->isnewvia == 1)
     && $via->activitytype != 3 && $via->recordingmode != 0) {
     if ($via->recordingmode == 1) {
-        $via->playplacksync = 0;
+        $via->playbacksync = 0;
     }
     via_sync_activity_playbacks($via);
 }
@@ -134,7 +134,7 @@ if ($CFG->version >= 2016120501) {
     if ($viaid) {
         require_once($CFG->dirroot.'/mod/viaassign/locallib.php');
         $button = "";
-        $PAGE->navbar->add(format_string($via->name), '/mod/via/view.php?viaid='.$viaid);
+        $PAGE->navbar->add(format_string($via->name), '/mod/viaassign/view.php?viaid='.$viaid);
         $viaassign = new viaassign($context,  $cm, $course);
 
         // Only the host can modify the activity! OR someone with editing rights!
