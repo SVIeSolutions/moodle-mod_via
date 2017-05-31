@@ -208,7 +208,7 @@ jQuery(document).ready(function () {
         var host = $("#id_host option").val();
 
         $("#id_save_participants:text").val(participants);
-        console.log(participants);
+        //console.log(participants);
         $("#id_save_animators:text").val(animators);
         $("#id_save_host:text").val(host);
     }
@@ -298,7 +298,7 @@ function remove_animators() {
 }
 
 function setgroupfunction() {
-// There is probably a way to improve this function.
+// There is probably a better way to improve this function.
     var Inter = setInterval(function(){  
         if ($('.availability_grouping .availability-group select[name="id"]').length) {
             $('.availability_grouping .availability-group select[name="id"]').attr('onchange', 'groupuserschange()');
@@ -316,10 +316,14 @@ function groupuserschange() {
     $(".fa-spinner.fa-spin").show();
     $("#id_participants").empty();
     $("#id_animators").empty();
-
+    /*if ($("#availability_addrestriction_group")[0])
+        $("#availability_addrestriction_group")[0].disabled = true;
+    if ($(".availability-header"))
+    $(".availability-header").hide()*/
     var groupingid = $('.availability_grouping .availability-group select[name="id"]').val();
     var groupid = $('.availability_group .availability-group select[name="id"]').val();
     var enroltype = $('#id_enroltype option:selected').val();
+
     var link = window.location.href;
 
     $.ajax({

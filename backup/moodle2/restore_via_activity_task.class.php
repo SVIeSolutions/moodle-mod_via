@@ -26,8 +26,6 @@
  *
  */
 
-defined('MOODLE_INTERNAL') || die();
-
 require_once($CFG->dirroot . '/mod/via/backup/moodle2/restore_via_stepslib.php');
 // Because it exists (must).
 

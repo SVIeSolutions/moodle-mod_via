@@ -95,7 +95,7 @@ if (has_capability('mod/via:manage', $context)) {
     }
 }
 if (has_capability('mod/via:view', $context) && (is_mobile_phone() == false || $via->isnewvia == 1)
-    && $via->activitytype != 3 && $via->recordingmode != 0) {
+    && $via->activitytype != 3 && $via->activitytype != 4 && $via->recordingmode != 0) {
     if ($via->recordingmode == 1) {
         $via->playbacksync = 0;
     }
@@ -187,7 +187,7 @@ try {
     }
 
     $connectedusers = 0;
-    if ($via->activitytype != 3 && strpos($previous, 'modedit') == false && strpos($previous, 'via/view') == false ) {
+    if ($via->activitytype != 4 && $via->activitytype != 3 && strpos($previous, 'modedit') == false && strpos($previous, 'via/view') == false ) {
         // We only check or update if we are not coming directly from the editing page.
         $api = new mod_via_api();
         $sviinfos = $api->activity_get($via);
@@ -223,11 +223,11 @@ if (isset($deleted)) {
     // Desc.
     echo format_module_intro('via', $via, $cm->id);
 
-    if ($via->activitytype != 2) {
+    if ($via->activitytype != 2 && !($via->activitytype == 4 && $via->duration == 0)) {
         // Start date.
         $table .= '<tr>';
         $table .= "<td><b>".get_string("startdate", "via").":</b></td>";
-        if ($via->activitytype == 1) {
+        if ($via->activitytype == 1||$via->activitytype == 4) {
             $table .= "<td style='padding-left:5px;'>".userdate($via->datebegin)."</td>";
         } else {
             $table .= "<td style='padding-left:5px;'>".get_string("unplanned_text", "via")."</td>";
@@ -239,6 +239,7 @@ if (isset($deleted)) {
         $table .= "<td><b>".get_string("duration", "via").":</b></td>";
         $table .= "<td style='padding-left:5px;'>".$via->duration."</td>";
         $table .= '</tr>';
+
     }
 
 
@@ -323,9 +324,11 @@ if (isset($deleted)) {
     $table->width = "90%";
     $table->data = array();
 
-    // Buttons so that students may confirm teir precence.
-    if (!has_capability('mod/via:manage', $context) && $via->needconfirmation && get_config('via', 'via_participantmustconfirm')) {
-        // If participant must confim attendance.
+    // Buttons so that students may confirm their precence.
+    $host = $DB->get_record('via_participants', array('activityid' => $via->id, 'participanttype' => '2'));
+    // Only the host doesn't have to confirm.
+    if ( $host->userid != $USER->id && $via->needconfirmation && get_config('via', 'via_participantmustconfirm')) {
+        // If participant must confirm attendance.
         $confirmation = true;
 
         if ($ptypes = $DB->get_records('via_participants', array('userid' => $USER->id, 'activityid' => $via->id))) {
@@ -427,7 +430,7 @@ if (isset($deleted)) {
                 break;
             case 7;
                 // Admin user which is not enrolled but can access the activity anyways.
-                if ($via->activitytype == 1 && $via->datebegin + ($via->duration * 60) < time()) {
+                if (($via->activitytype == 1||$via->activitytype == 4) && $via->datebegin + ($via->duration * 60) < time()) {
                     $cell->text .= get_string("activitydone", "via");
                 } else {
                     $cell->text .= get_string("adminnotrenrolled", "via");
@@ -450,7 +453,7 @@ if (isset($deleted)) {
         echo $OUTPUT->box_end();
 
         // Print downloadable files list.
-        if ($viewinfo && has_capability('mod/via:view', $context)) {
+        if ($via->activitytype != 4 && $viewinfo && $via->activitytype != 3  && has_capability('mod/via:view', $context)) {
             if (isset($error)) {
                 echo  'this title aready exists';
             }
@@ -500,7 +503,7 @@ if (isset($deleted)) {
                 }
             }
 
-                echo $OUTPUT->box_end();
+             echo $OUTPUT->box_end();
         }
         echo '<hr>';
 

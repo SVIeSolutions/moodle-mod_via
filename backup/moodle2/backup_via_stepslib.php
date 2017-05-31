@@ -24,7 +24,6 @@
  * @copyright  2009 Petr Skoda  {@link http://skodak.org}
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-defined('MOODLE_INTERNAL') || die();
 /**
  * Define the complete via structure for backup, with file and id annotations
  */
@@ -51,7 +50,9 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
             // And no users!
             $userinfo = 0;
         } else {
-            $userinfo = 1;
+            // We never keep all participants, only the host because of an Moodle error with restore from recycle bin.
+            // Change to 1 to keep the users
+            $userinfo = 0;
         }
 
         // Define each element separated.
@@ -74,6 +75,9 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
 
         if ($userinfo) {
             $participant->set_source_sql('SELECT * FROM {via_participants} WHERE activityid = ?', array(backup::VAR_PARENTID));
+        } else {
+            $participant->set_source_sql('SELECT * FROM {via_participants} WHERE activityid = ? AND participanttype = 2',
+             array(backup::VAR_PARENTID));
         }
 
         // Define id annotations.

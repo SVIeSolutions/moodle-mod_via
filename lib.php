@@ -364,8 +364,8 @@ function via_update_instance($via) {
     } else {
 
         $viausers = $DB->get_records('via_participants', array('activityid' => $via->id));
-
-        if ($via->enroltype == 0 && !$viausers) {
+        // If it'a an automatic enrolment and there is no user, or if it's a duplication.
+        if ($via->enroltype == 0 && (!$viausers || count($viausers) == 1 )) {
             // We add users.
             $query = 'SELECT a.id as rowid, a.*, u.*
                         FROM {role_assignments} a, {user} u
@@ -383,18 +383,25 @@ function via_update_instance($via) {
         $savedhost = $DB->get_record('via_participants', array('activityid' => $via->id, 'participanttype' => 2));
 
         // If host is different we need to remove the old host!
-        if (!$savedhost) {
-            $hostadded = via_add_participant($via->save_host, $via->id, 2, true);
-            $oldhostremoved = $api->removeuser_activity($via->viaactivityid, get_config('via', 'via_adminid'), false);
+        if ($via->save_host != '') {
+            if (!$savedhost) {
+                $hostadded = via_add_participant($via->save_host, $via->id, 2, true);
+                $oldhostremoved = $api->removeuser_activity($via->viaactivityid, get_config('via', 'via_adminid'), false);
 
-        } else if ($via->save_host != '' && $savedhost->userid != $via->save_host ) {
-            $hostadded = via_add_participant($via->save_host, $via->id, 2, true);
-            $oldhostremoved = via_remove_participant($savedhost->userid, $via->id);
+            } else if ( $savedhost->userid != $via->save_host ) {
+                $hostadded = via_add_participant($via->save_host, $via->id, 2, true);
+                $oldhostremoved = via_remove_participant($savedhost->userid, $via->id);
+
+            } else {
+                // We remove and add again the host to take care of the duplication where the host is not in the API.
+                $oldhostremoved = via_remove_participant($savedhost->userid, $via->id);
+                $hostadded = via_add_participant($savedhost->userid, $via->id, 2, true);
+                $oldhostremoved = $api->removeuser_activity($via->viaactivityid, get_config('via', 'via_adminid'), false);
+
+            }
             unset($vusers[$via->save_host]);
-
         } else {
             unset($vusers[$savedhost->userid]);
-
         }
 
         $count = 1;
@@ -557,7 +564,9 @@ function via_delete_instance($id) {
 
                 // Deactivates activities only, they will be deleted later!
                 $activitystate = '3';
-                $response = $api->activity_edit($via, $activitystate);
+                if ( $via->activitytype != 4) {
+                     $response = $api->activity_edit($via, $activitystate);
+                }
 
                 // Only if $recyclebin exists, in moodle 2.7, this does not exist yet!
                 if ($recyclebin) {
@@ -575,24 +584,30 @@ function via_delete_instance($id) {
                             $recyle->recyclebinid = $binid;
                             $recyle->recyclebintype = 'category';
                             $recyle->expiry = (time() + get_config('tool_recyclebin', 'categorybinexpiry'));
-
-                            $DB->insert_record('via_recyclebin', $recyle);
+                            $result2 = $DB->get_record('via_recyclebin', array('viaactivityid' => $recyle->viaactivityid));
+                            if (!$result2) {
+                                $DB->insert_record('via_recyclebin', $recyle);
+                            }
                         }
                     } else {
-                        $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $via->id));
-                        if ($viaassign) {
-                            $cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST);
+                        if (get_config('mod_viaassign', 'version')) {
+                                $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $via->id));
+                            if ($viaassign) {
+                                $cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST);
+                            } else {
+                                $cm = get_coursemodule_from_instance('via', $via->id, null, false, MUST_EXIST);
+                            }
                         } else {
                             $cm = get_coursemodule_from_instance('via', $via->id, null, false, MUST_EXIST);
                         }
                         $bin = $DB->get_records_sql('SELECT * FROM {tool_recyclebin_course}
-                                                WHERE courseid = ?
-                                                AND section = ?
-                                                AND module = ?
-                                                AND name = ?
-                                                AND (timecreated < '.(time() + 2).'
-                                                OR timecreated > ' .(time() - 2).')',
-                            array($course->id, $cm->section, $cm->module, $via->name));
+                                                    WHERE courseid = ?
+                                                    AND section = ?
+                                                    AND module = ?
+                                                    AND name = ?
+                                                    AND (timecreated < '.(time() + 2).'
+                                                    OR timecreated > ' .(time() - 2).')',
+                        array($course->id, $cm->section, $cm->module, $via->name));
                         foreach ($bin as $b) {
                             $binid = $b->id;
 
@@ -602,17 +617,21 @@ function via_delete_instance($id) {
                             $recyle->recyclebinid = $binid;
                             $recyle->recyclebintype = 'course';
                             $recyle->expiry = (time() + get_config('tool_recyclebin', 'coursebinexpiry'));
-                            $DB->insert_record('via_recyclebin', $recyle);
+                            $result2 = $DB->get_record('via_recyclebin', array('viaactivityid' => $recyle->viaactivityid));
+                            if (!$result2) {
+                                $DB->insert_record('via_recyclebin', $recyle);
+                            }
                         }
                     }
                 }
             } else {
                 $activitystate = '2'; // We delete the activity in Via.
-                $response = $api->activity_edit($via, $activitystate);
+                if ( $via->activitytype != 4) {
+                    $response = $api->activity_edit($via, $activitystate);
+                }
             }
         }
     } catch (Exception $e) {
-
         print_error($e->getMessage());
         return false;
     }
@@ -807,12 +826,15 @@ function via_access_activity($via) {
     $participant = $DB->get_record('via_participants', array('userid' => $USER->id, 'activityid' => $via->id));
 
     if ($participant || $via->enroltype == 0) {// If automatic enrol!
-
         if ((time() >= ($via->datebegin - (30 * 60))
                 && time() <= ($via->datebegin + ($via->duration * 60) + 60))
             || $via->activitytype == 2) {
             // If activity is hapening right now, show link to the activity.
-            return 1;
+            if (!$participant && has_capability('moodle/site:approvecourse', via_get_system_instance())) {
+                return 7;
+            } else {
+                return 1;
+            }
         } else if (time() < $via->datebegin) {
             // Activity hasn't started yet.
             if ( $participant&& $participant->participanttype == 1) {

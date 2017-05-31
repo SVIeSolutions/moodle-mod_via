@@ -37,7 +37,9 @@ class mod_via_mod_form extends moodleform_mod {
         global $CFG, $DB, $USER, $PAGE;
 
         $PAGE->requires->jquery();
-        $PAGE->requires->js('/mod/via/javascript/mod_form.js', true);
+        if (!isset($this->_validated)) {
+            $PAGE->requires->js('/mod/via/javascript/mod_form.js', true);
+        }
 
         $mform =& $this->_form;
 
@@ -297,8 +299,7 @@ class mod_via_mod_form extends moodleform_mod {
         }
 
         // If we are editing, we have a participants list.
-        if ($this->current->instance != '' && !$ajax && (isset($this->current->activitytype) &&
-        $this->current->activitytype != '3')) {
+        if ($this->current->instance != '' || (isset($this->current->activitytype) && $this->current->activitytype == 3)) {
             $editing = true;
             $vusers = $DB->get_records_sql('SELECT vp.*, u.firstname, u.lastname, u.username
                                             FROM {via_participants} vp

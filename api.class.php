@@ -23,7 +23,6 @@
   * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
   *
   */
-defined('MOODLE_INTERNAL') || die();
 
 /** Data access class for the via module. **/
 class mod_via_api {
@@ -63,10 +62,11 @@ class mod_via_api {
             if (isset($muser->usertype)) {
                 $data .= "<UserType>".$muser->usertype."</UserType>";
             }
-            if (isset($user->status)) {
+            if (isset($muser->status)) {
                 $data .= "<Status>".$muser->status."</Status>";
             }
         }
+
         if ($muser->lastname) {
             $data .= "<LastName>".$muser->lastname."</LastName>";
         } else {
@@ -1396,7 +1396,12 @@ class mod_via_api {
             $viauser = $this->via_user_search(strtolower($muser->email), "Login");
             if (!$viauser) {
                 // False = create new user!
-                $info["UserType"] = 2;// Usertype is always 2!
+                // $context = context_system::instance();
+                if ( get_config('via', 'via_typepInscription')) {// || !has_capability('moodle/site:config',$context,$muser)) {.
+                    $info["UserType"] = get_config('via', 'via_typepInscription'); // Usertype is always 2!
+                } else { // si c'est un admin et qu'on a choisi un autre rôle par défaut que Member.
+                        $info["UserType"] = 2;
+                }
                 $companyname = str_replace('<,>', '', $SITE->shortname);
                 $info["CompanyName"] = str_replace('&', get_string('and', 'via'), $companyname);
                 $info["PhoneHome"] = $muser->phone1;
@@ -1406,7 +1411,7 @@ class mod_via_api {
                 $i = 1;
                 $viauserdata = $this->via_user_create($muser, false, $info);
 
-                if ($viauserdata == 'LOGIN_USED') {
+                while ($viauserdata == 'LOGIN_USED') {
                     $muser->viausername = $muser->viausername. '_'. $i++;
                     $viauserdata = $this->via_user_create($muser, false, $info);
                     if (!$viauserdata) {

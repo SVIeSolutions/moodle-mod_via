@@ -377,6 +377,7 @@ This tool allows you to manage sub-work-groups, annotations, screen sharing, imp
 The \'Participant enrolments\' options allow you to manually enroll participants or automatically synchronize them according to their Moodle rights by selecting the option \'Automatic enrolment\'.
 
 The \'Session parameters\' allow you to set the recording mode you wish and select the availability of these to your learners.';
+
 $string['modulenameplural'] = 'Via';
 $string['moodle_config'] = 'API configuration - Step 2';
 $string['moodle_adminid'] = 'Moodle Admin unique ID';
@@ -585,6 +586,12 @@ $string['testconnection'] = 'Test API connection';
 $string['title_exists'] = 'The title already exists, please try again.';
 $string['timeduration'] = 'Duration :';
 
+
+$string['typepInscriptionsetting'] = 'When creating users in Via, this right is granted by default.';
+$string['typepInscriptionmember'] = 'user';
+$string['typepInscriptioncollaborator'] = 'collaborator';
+$string['typepInscriptionCoordinator'] = 'Coordinator';
+
 $string['unified'] = 'Unified';
 $string['unplanned'] = 'Unplanned';
 $string['unplanned_error'] = 'You can only save your modifications if it is a planned activity!';
@@ -600,6 +607,9 @@ $string['versionold'] = 'Use Via version 6';
 $string['versionnew'] = 'Use the most recent version of Via';
 $string['versions_not_compatible'] = 'The plugin and Via versions are not compatible. The plugin requires a minimum of ';
 $string['versionscompatible'] = 'The plugin and Via versions are compatible.';
+
+$string['via_typepInscription'] = 'Default right in Via';
+
 /* permissions */
 $string['via:addinstance'] = 'Add a new via activity';
 $string['via:manage'] = 'Manage Via Activities';

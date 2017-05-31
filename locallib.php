@@ -1115,11 +1115,16 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
             $table .= $playback->title;
 
             $table .= "$endli</td>";
-
-            $table .= "<td class='duration  $private' style='text-align:left'>".
-                userdate($playback->creationdate)."<br/> ".
-                get_string("durationheader", "via")." : ".gmdate("H:i:s",  $playback->duration)."<br />".
-                get_string("playbackaccesstype".$playback->accesstype , "via")."</td>";
+            if ($via->activitytype != 4) {
+                $table .= "<td class='duration  $private' style='text-align:left'>".
+                    userdate($playback->creationdate)."<br/> ".
+                    get_string("durationheader", "via")." : ".gmdate("H:i:s",  $playback->duration)."<br />".
+                    get_string("playbackaccesstype".$playback->accesstype , "via")."</td>";
+            } else {
+                $table .= "<td class='duration  $private' style='text-align:left'>".
+                    userdate($playback->creationdate)."<br/> ".
+                    get_string("durationheader", "via")." : ".gmdate("H:i:s",  $playback->duration)."<br />"."</td>";
+            }
 
             if ($cancreatevia) {
                 if ($playback->accesstype > 0) {
@@ -1133,14 +1138,16 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
                 }
 
                 $table .= "<td class='modify $private'>";
-                $table .= '<a class="modify" href="edit_review.php?'.$viaurlparam.'='.$via->id.'&playbackid='.
-                urlencode($playback->playbackid).'&edit=edit">
-                <i class="fa fa-pencil via"></i>'.get_string("edit", "via").'</a><br/>';
+                if ($via->activitytype != 4) {
+                    $table .= '<a class="modify" href="edit_review.php?'.$viaurlparam.'='.$via->id.'&playbackid='.
+                        urlencode($playback->playbackid).'&edit=edit">
+                    <i class="fa fa-pencil via"></i>'.get_string("edit", "via").'</a><br/>';
 
                     // Delete recording!
                     $table .= '<a class="deleteplayback" href="edit_review.php?'.$viaurlparam.'='.$via->id.'&playbackid='.
                         urlencode($playback->playbackid).'&edit=del">
                         <i class="fa fa-times via"></i>'.get_string("delete", "via").'</a>';
+                }
 
                 $table .= "</td>";
             }
@@ -1160,29 +1167,29 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
                 }
 
                 $table .= "<td class='download nowrap $private $privaterecord'>";
-
-                if ($playback->hasfullvideorecord == 1) {
-                    $table .= '<a class="download" href="download_recording.php?'.
-                        $viaurlparam.'='.$via->id.$fa.'&type=1&playbackid='.
-                        urlencode($playback->playbackid).'" title="'. get_string('fullvideoinfo', 'via') .'">'.
-                        get_string('fullvideo', 'via') .'</a><br/>';
-                }
-                if ($playback->hasmobilevideorecord == 1) {
-                    $table .= '<a class="download" href="download_recording.php?'.
-                        $viaurlparam.'='.$via->id.'&type=2&playbackid='.
-                        urlencode($playback->playbackid).'" title="'. get_string('mobilevideoinfo', 'via') .'">'.
-                        get_string('mobilevideo', 'via') .'</a><br/>';
-                }
-                if ($playback->hasaudiorecord == 1) {
-                    $table .= '<a class="download" href="download_recording.php?'.
-                        $viaurlparam.'='.$via->id.$fa.'&type=3&playbackid='.
-                        urlencode($playback->playbackid).'" title="'. get_string('audiorecordinfo', 'via') .'">'.
-                        get_string('audiorecord', 'via') .'</a>';
+                if ($via->activitytype != 4) {
+                    if ($playback->hasfullvideorecord == 1) {
+                        $table .= '<a class="download" href="download_recording.php?'.
+                            $viaurlparam.'='.$via->id.$fa.'&type=1&playbackid='.
+                            urlencode($playback->playbackid).'" title="'. get_string('fullvideoinfo', 'via') .'">'.
+                            get_string('fullvideo', 'via') .'</a><br/>';
+                    }
+                    if ($playback->hasmobilevideorecord == 1) {
+                        $table .= '<a class="download" href="download_recording.php?'.
+                            $viaurlparam.'='.$via->id.'&type=2&playbackid='.
+                            urlencode($playback->playbackid).'" title="'. get_string('mobilevideoinfo', 'via') .'">'.
+                            get_string('mobilevideo', 'via') .'</a><br/>';
+                    }
+                    if ($playback->hasaudiorecord == 1) {
+                        $table .= '<a class="download" href="download_recording.php?'.
+                            $viaurlparam.'='.$via->id.$fa.'&type=3&playbackid='.
+                            urlencode($playback->playbackid).'" title="'. get_string('audiorecordinfo', 'via') .'">'.
+                            get_string('audiorecord', 'via') .'</a>';
+                    }
                 }
 
                 $table .= "</td>";
             }
-
             $table .= "<td class='review $private'>";
             if ($cancreatevia) {
                 $param = '&fa=1';
@@ -1195,14 +1202,14 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
                 $param = '';
                 $text = get_string("view", "via");
             }
-
-            $table .= '<input type="button" target="viewplayback" href="view.via.php"
-                            onclick="this.target=\'viewplayback\';
-                            return openpopup(null, {url:\'/mod/via/view.via.php?'.$viaurlparam.'='.$cmid.'&playbackid='.
-                            urlencode($playback->playbackid).'&review=1'.$param.'\',
-                            name:\'viewplayback\', options:\'menubar=0,location=0,scrollbars=yes,resizable=yes\'});"
-                            value="'.$text.'"/>';
-
+            if ($via->activitytype != 4) {
+                $table .= '<input type="button" target="viewplayback" href="view.via.php"
+                        onclick="this.target=\'viewplayback\';
+                        return openpopup(null, {url:\'/mod/via/view.via.php?'.$viaurlparam.'='.$cmid.'&playbackid='.
+                    urlencode($playback->playbackid).'&review=1'.$param.'\',
+                        name:\'viewplayback\', options:\'menubar=0,location=0,scrollbars=yes,resizable=yes\'});"
+                        value="'.$text.'"/>';
+            }
             $table .= "</td>";
             $table .= "</tr>";
         }
@@ -1839,6 +1846,9 @@ function via_get_profilname($profilnameorig) {
         $str = str_replace(' ', '', $str);
 
         $profilname = get_string($str, 'via');
+        if ( $profilname[0] == '[' &&  $profilname[ strlen($profilname) - 1] == ']' ) {
+            $profilname = $profilnameorig;
+        }
     } catch (exception $e) {
         $profilname = $profilnameorig;
     }
