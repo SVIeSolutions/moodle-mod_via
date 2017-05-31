@@ -74,6 +74,13 @@ if ($ADMIN->fulltree) {
         value="'.get_string('testadminid', 'via').'" />', ''));
     }
 
+    $name = get_string('via_typepInscription', 'via');
+    $description = get_string('typepInscriptionsetting', 'via');
+    $liste = array(2 => get_string('typepInscriptionmember', 'via'),
+        3  => get_string('typepInscriptioncollaborator', 'via'));
+    $settings->add(new admin_setting_configselect('via/via_typepInscription', $name,
+        $description, 2, $liste ));
+
     /****
     Categories
     ****/
