@@ -1,6 +1,9 @@
 This file defines the changes made to Via - Virtual classroom
+- Improvements on user synchronization:
+- User's picture in png are now included
+- First and last names can now be not synchronized 
 
-last update 05/05/2017 (2017030105)
+last update 31/05/2017 (2017030105)
 - Modifications on activity duplication: the old host is now saved
 - Correction on delete issues
 - Bug fixes for downloading documents

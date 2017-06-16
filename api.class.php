@@ -66,17 +66,20 @@ class mod_via_api {
                 $data .= "<Status>".$muser->status."</Status>";
             }
         }
-
-        if ($muser->lastname) {
-            $data .= "<LastName>".$muser->lastname."</LastName>";
-        } else {
-            $data .= "<LastName>Utilisateur</LastName>";
-        }
-        if ($muser->firstname) {
-            $data .= "<FirstName>".$muser->firstname."</FirstName>";
-        } else {
-            $data .= "<FirstName>Temporaire</FirstName>";
-        }
+        // Possibilités de renforcer la synchronisation
+        if (!$edit || get_config('via', 'via_participantsynchronization')) {
+            if ($muser->lastname) {
+                $data .= "<LastName>".$muser->lastname."</LastName>";
+            } else {
+                $data .= "<LastName>Utilisateur</LastName>";
+            }
+        
+			if ($muser->firstname) {
+				$data .= "<FirstName>".$muser->firstname."</FirstName>";
+			} else {
+				$data .= "<FirstName>Temporaire</FirstName>";
+			}
+		}
         $data .= "<Login>".$muser->viausername."</Login>";
         if (!$edit) {
             $data .= "<Password>".via_create_user_password()."</Password>";
@@ -84,7 +87,7 @@ class mod_via_api {
         $data .= "<UniqueID>".$muser->username."</UniqueID>";
         $data .= "<Email>".strtolower($muser->email)."</Email>";
 
-        if ($infoplus) {
+		if ($infoplus && get_config('via', 'via_participantsynchronization')) {
             foreach ($infoplus as $name => $info) {
                 $data .= "<".$name.">".$info."</".$name.">";
             }
@@ -98,6 +101,7 @@ class mod_via_api {
         } else {
             $data .= "<Language>3</Language>";
         }
+
         $data .= "</cApiUsers>";
         $data .= "</soap:Body>";
         $data .= "</soap:Envelope>";
@@ -1488,6 +1492,15 @@ class mod_via_api {
                 'filearea' => 'icon',
                 'itemid' => '0',
                 'filename' => 'f3.png'));
+            // Prise en compte des jpg.
+            if (!$file) {
+                $file = $DB->get_record('files', array('contextid' => $usercontext->id,
+                    'component' => 'user',
+                    'filearea' => 'icon',
+                    'itemid' => '0',
+                    'filename' => 'f3.jpg'));
+            }
+
             if ($file) {
                 $usericon = file_get_contents($CFG->dataroot .'/filedir/'.substr($file->contenthash, 0, 2) . '/'
                     . substr($file->contenthash, 2, 2) .'/' .$file->contenthash);
