@@ -1,4 +1,9 @@
 This file defines the changes made to Via - Virtual classroom
+last update 10/07/2017 (2017030107)
+- Improvement on a new activityType: desactivated. Only availabale with manual operations: ask SVI for more informations
+
+
+last update 06/06/2017 (2017030106)
 - Improvements on user synchronization:
 - User's picture in png are now included
 - First and last names can now be not synchronized 

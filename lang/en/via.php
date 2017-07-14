@@ -90,6 +90,9 @@ $string['creationdate'] = 'Report created on: ';
 
 $string['date'] = 'Activity date';
 $string['delete'] = 'Delete';
+
+$string['desactivatedMessage'] = 'This activity and its associated records or documents have been deleted and are no longer accessible. Please delete this activity from the course';
+
 /* downloadable files */
 $string['df_button_manage'] = 'Manage the content';
 $string['df_header_title'] = 'Title';
@@ -165,6 +168,23 @@ $string['edit'] = 'Modify';
 $string['editrecord'] = 'Recording edit';
 $string['emails_alert_address'] = 'Emails to send alerts';
 $string['emails_alert_addressdesc'] = 'Email addresses for overflow alerts. If more than one, use coma as a separtor.';
+
+/* Settings for the email */
+
+$string['emailheadercolor'] = 'Email title color';
+$string['emailheadercolor_desc'] = 'This will be applied to the Via reminder and invitation emails\' title; the name of your moodle.';
+$string['emailtextcolor'] = 'Email text color';
+$string['emailtextcolor_desc'] = 'This will be applied to Via reminder and invitation emails\' text except for the links and title.';
+$string['email_personnalised_options'] = 'Personnalise your Via reminder and invitation emails';
+$string['emaillinkcolor'] = 'Link color';
+$string['emaillinkcolor_desc'] = 'This will be applied to the links in your Via reminder and invitation emails, we suggest you add the same colors as your theme.';
+$string['emailheaderbgcolor'] = 'Email title background color';
+$string['emailheaderbgcolor_desc'] = 'This will be applied to the Via reminder and invitation emails\' title\'s background and behind the image.';
+$string['emailheaderimage'] = 'Email header image';
+$string['emailheaderimage_desc'] = 'A default image has been added, which you may override at any time. The default image\'s dimensions are 750 x 98 pixels and the right hand side of the image has the same color as the "emailheaderbgcolor" below. IMPORTANT : Emails do not support transperancy.';
+$string['emailaccesslinkcolor'] = 'Email access link color';
+$string['emailaccesslinkcolor_desc'] = 'This will be applied to the access link in your Via reminder and invitation emails. We suggest you use a different color as the other links as this is more important.';
+
 $string['enddate'] = 'Ends on';
 $string['enrolmentheader'] = 'Participant enrolments';
 $string['enrolmenttype'] = 'Enrolment type';
@@ -633,17 +653,4 @@ $string['waitingconfirm'] = 'Waiting for confirmation';
 $string['waitingroomaccessmode'] = 'Waiting room';
 $string['waitingroomaccessmode_help'] = 'The option "Pending Authorization" allows the host to allow individual participants\' access while the option "In the absence of the host" ensures that no user can access the activity until the speaker is not connected. This last option is particularly useful when using permanent activities.';
 
-// New 3.1 - to be translated and displaced!
-$string['emailheadercolor'] = 'Email title color';
-$string['emailheadercolor_desc'] = 'This will be applied to the Via reminder and invitation emails\' title; the name of your moodle.';
-$string['emailtextcolor'] = 'Email text color';
-$string['emailtextcolor_desc'] = 'This will be applied to Via reminder and invitation emails\' text except for the links and title.';
-$string['email_personnalised_options'] = 'Personnalise your Via reminder and invitation emails';
-$string['emaillinkcolor'] = 'Link color';
-$string['emaillinkcolor_desc'] = 'This will be applied to the links in your Via reminder and invitation emails, we suggest you add the same colors as your theme.';
-$string['emailheaderbgcolor'] = 'Email title background color';
-$string['emailheaderbgcolor_desc'] = 'This will be applied to the Via reminder and invitation emails\' title\'s background and behind the image.';
-$string['emailheaderimage'] = 'Email header image';
-$string['emailheaderimage_desc'] = 'A default image has been added, which you may override at any time. The default image\'s dimensions are 750 x 98 pixels and the right hand side of the image has the same color as the "emailheaderbgcolor" below. IMPORTANT : Emails do not support transperancy.';
-$string['emailaccesslinkcolor'] = 'Email access link color';
-$string['emailaccesslinkcolor_desc'] = 'This will be applied to the access link in your Via reminder and invitation emails. We suggest you use a different color as the other links as this is more important.';
+
