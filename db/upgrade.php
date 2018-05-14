@@ -438,7 +438,7 @@ function xmldb_via_upgrade($oldversion = 0) {
         upgrade_mod_savepoint($result, 2016042003, 'via');
     }
 
-	if ($oldversion < 2017030107) {
+    if ($oldversion < 2017030106) {
 
         $table = new xmldb_table('via_params');
         if ($dbman->table_exists($table) && $DB->record_exists('via_params', array('param_type' => 'viaversion'))) {
@@ -470,6 +470,10 @@ function xmldb_via_upgrade($oldversion = 0) {
         }
 
         // Savepoint reached!
-		upgrade_mod_savepoint($result, 2017030107, 'via');
+        upgrade_mod_savepoint($result, 2017030106, 'via');
+    }
+
+    if ($oldversion < 2018042001) {
+        upgrade_mod_savepoint($result, 2018042001, 'via');
     }
 }

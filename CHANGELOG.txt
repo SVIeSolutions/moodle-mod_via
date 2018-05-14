@@ -1,4 +1,22 @@
 This file defines the changes made to Via - Virtual classroom
+last update 14/05/2018 (2018042001)
+- Integration of Moodle 3.4
+- Improvement for Grouping and Group with Moodle 3.X
+- Improvements to delegate activities
+- Bug fixes for user synchronisation when the activity has been deleted from Via
+- Bug fixes for category use (when activated in parameters)
+- you can access to the activity after the end if there is still someone inside
+- Correction of Users SetupState synchronisation
+- Bug fixe for viaassign activity with multiple pages
+- Management of viaassign events: we can attach them to the class or to the activity depending on the parameters.
+- Integration of new release of Chrome ( micro and camera not available during configuration)
+- Activity Completion by grade has been desactivated
+
+last update 14/09/2017 (2017030108)
+- Bug fixes for Grouping and Group
+- Bug fix for activity completion on view
+- Some improvements on the display of Via parameters
+
 last update 10/07/2017 (2017030107)
 - Improvement on a new activityType: desactivated. Only availabale with manual operations: ask SVI for more informations
 

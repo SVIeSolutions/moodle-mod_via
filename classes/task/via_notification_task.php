@@ -25,7 +25,6 @@
  *
  */
 namespace mod_via\task;
-defined('MOODLE_INTERNAL') || die();
 class via_notification_task extends \core\task\scheduled_task
 {
 

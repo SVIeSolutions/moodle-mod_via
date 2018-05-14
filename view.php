@@ -39,10 +39,13 @@ $synch = optional_param('synch', null, PARAM_CLEAN);
 // Modified to come from viaassign, which has a via id but does not have a course module id!
 $id = optional_param('id', null, PARAM_INT);
 $viaid = optional_param('viaid', null, PARAM_INT);
+$viaidpage = optional_param('viaidpage', null, PARAM_INT);
 
 $viaurlparam = 'id';
-
-if ($id) {
+if ($viaidpage) {
+    $viaid = $viaidpage;
+}
+if ($id && !$viaidpage) {
     if (!($cm = get_coursemodule_from_id('via', $id))) {
         print_error("Course module ID is incorrect");
     }
@@ -51,7 +54,7 @@ if ($id) {
     }
 
     $viaurlparamvalue = $cm->id;
-} else if ($viaid) {
+} else if ($viaid || $viaidpage) {
     $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $viaid));
     if (!($cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST))) {
         print_error("Course module ID is incorrect");
@@ -75,6 +78,9 @@ require_login($course->id, false, $cm);
 
 require_capability('mod/via:view', $context);
 
+$completion = new completion_info($course);
+$completion->set_module_viewed($cm);
+
 // SYNC STUFF.
 if (has_capability('mod/via:manage', $context)) {
     if (($via->usersynchronization + 300) < time() && $via->enroltype == 0 &&
@@ -95,7 +101,7 @@ if (has_capability('mod/via:manage', $context)) {
     }
 }
 if (has_capability('mod/via:view', $context) && (is_mobile_phone() == false || $via->isnewvia == 1)
-    && $via->activitytype != 3 && $via->activitytype != 4 && $via->recordingmode != 0) {
+    && $via->activitytype != 3 && $via->activitytype != 4 && $via->recordingmode != 0 && $via->viaactivityid <> null) {
     if ($via->recordingmode == 1) {
         $via->playbacksync = 0;
     }
@@ -187,18 +193,29 @@ try {
     }
 
     $connectedusers = 0;
-    if ($via->activitytype != 4 && $via->activitytype != 3 && strpos($previous, 'modedit') == false && strpos($previous, 'via/view') == false ) {
+    if ($via->activitytype != 4 && $via->activitytype != 3 && strpos($previous, 'modedit') == false
+        && strpos($previous, 'via/view') == false ) {
         // We only check or update if we are not coming directly from the editing page.
-        $api = new mod_via_api();
-        $sviinfos = $api->activity_get($via);
+        if ($via->viaactivityid != null ) {
+            $api = new mod_via_api();
+            $sviinfos = $api->activity_get($via);
 
-        if ($sviinfos == "ACTIVITY_DOES_NOT_EXIST") {
+            if ($sviinfos == "ACTIVITY_DOES_NOT_EXIST") {
+                $deleted = true;
+                // Delete activity associated playbacks.
+                $DB->execute('DELETE {via_playbacks} WHERE activityid = ' . $via->id);
+            } else if (has_capability('mod/via:manage', $context)) {
+                $connectedusers = $sviinfos["NbConnectedUsers"];
+
+                if ( time() > $via->datebegin  && $via->duration != $sviinfos["Duration"]) {
+                    $via->duration = $sviinfos["Duration"];
+                    $updatevia = $DB->update_record('via', $via);
+                }
+                $update = $api->activity_edit($via);
+
+            }
+        } else {
             $deleted = true;
-            // Delete activity associated playbacks.
-            $DB->execute('DELETE {via_playbacks} WHERE activityid = ' . $via->id);
-        } else if (has_capability('mod/via:manage', $context)) {
-            $update = $api->activity_edit($via);
-            $connectedusers = $sviinfos["NbConnectedUsers"];
         }
     }
 
@@ -212,10 +229,20 @@ echo $OUTPUT->header();
 
 echo $OUTPUT->heading(format_string($via->name), 2, 'main');
 
-    echo $OUTPUT->box_start('generalbox intro');
+echo $OUTPUT->box_start('generalbox intro');
 
 if (isset($deleted)) {
     echo '<p>'.get_string('activity_deleted', 'via').'</p>';
+    if (!isset($viaassign)) {
+        echo '<div class="singlebutton via"><form method="post" action="'.
+        $CFG->wwwroot.'/course/mod.php?sesskey='.sesskey().'&delete='.$cm->id.'"><div><input
+            type="submit" value="'.get_string("delete_activity", "via").'" /></div></form></div>';
+    } else {
+
+        echo '<div class="singlebutton via"><form method="post" action="'.
+        $CFG->wwwroot.'/mod/viaassign/view.php?action=confirm_delete_via&id='.$cm->id.'&sesskey='.sesskey().'&viaid='.$via->id.'&userid='.$USER->id.'"><div><input
+            type="submit" value="'.get_string("delete_activity", "via").'" /></div></form></div>';
+    }
     echo $OUTPUT->box_end();
 } else {
     $table = "<table>";
@@ -252,15 +279,15 @@ if (isset($deleted)) {
         }
 
         // Qualité Multimédia.
-			if ($via->activitytype != 4) {
-                $table .= '<tr>';
-                $table .= "<td><b>".get_string("multimediaquality", "via").":</b></td>";
-                $qualityoption = $DB->get_record('via_params', array('param_type' => 'multimediaprofil', 'value' => $via->profilid));
-                if ($qualityoption) {
-                    $table .= "<td style='padding-left:5px;'>".via_get_profilname($qualityoption->param_name)."</td>";
-                }
-                $table .= '</tr>';
+        if ($via->activitytype != 4) {
+            $table .= '<tr>';
+            $table .= "<td><b>".get_string("multimediaquality", "via").":</b></td>";
+            $qualityoption = $DB->get_record('via_params', array('param_type' => 'multimediaprofil', 'value' => $via->profilid));
+            if ($qualityoption) {
+                $table .= "<td style='padding-left:5px;'>".via_get_profilname($qualityoption->param_name)."</td>";
             }
+            $table .= '</tr>';
+        }
     }
 
     // Recordingmode.
@@ -284,7 +311,7 @@ if (isset($deleted)) {
 
     if (has_capability('mod/via:view', $context)) {
         if (is_mobile_phone() == false) {
-            // This is onlye displayed if the user is NOT on a mobile.
+            // This is only displayed if the user is NOT on a mobile.
             echo '<a class="viabtnlink" style="margin-right:10%;" target="configvia" href="' .
             $CFG->wwwroot .'/mod/via/view.assistant.php?redirect=7"
             onclick="this.target=\'configvia\';
@@ -328,7 +355,7 @@ if (isset($deleted)) {
     // Buttons so that students may confirm their precence.
     $host = $DB->get_record('via_participants', array('activityid' => $via->id, 'participanttype' => '2'));
     // Only the host doesn't have to confirm.
-    if ( $host->userid != $USER->id && $via->needconfirmation && get_config('via', 'via_participantmustconfirm')) {
+    if ($host && $host->userid != $USER->id && $via->needconfirmation && get_config('via', 'via_participantmustconfirm')) {
         // If participant must confirm attendance.
         $confirmation = true;
 
@@ -380,82 +407,94 @@ if (isset($deleted)) {
             $cell->text = '<p style="margin-bottom:0px;"><span style="vertical-align:top;" class="title">'.
             get_string('accessactivity', 'via')
             . " </span><span class='viatext' style=\"width: 330px;display: inline-block;text-align: left;word-wrap:break-word;\">";
-            
-            if ($via->activitytype == 4) {
-                $cell->text = '<span style="color:red;">';
-                $cell->text .= get_string('desactivatedMessage', 'via');
-                $cell->text .="</span>";
-                $table->data[] = new html_table_row(array($cell));
-            }
-            else {
-                switch($access) {
-                    case 1:
-                        // Activity is started, user can access it.
-                        if ($via->recordingmode != 0 && !$viaid) {
-                            $cell->text .= get_string('recordwarning', 'via');
-                            $cell->text .= '<br /><input type="checkbox" id="checkbox" />
-                        <label for="checkbox" style="margin-right: 10px;">'.get_string('recordaccept', 'via').'</label>'.
-                            '<span id="error" class="error hide"><br/>'.get_string('mustaccept', 'via').'</span>';
-                            $cell->text .= via_add_button(true, true, $viaurlparamvalue, null, null, $viaurlparam);
-                            // Pas de bouton désactivé pour viaassign.
-                            $cell->text .= via_add_button(true, false);
-                        } else {
-                            $cell->text .= via_add_button(false, false, $viaurlparamvalue, null, null, $viaurlparam);
-                        }
-                        $cell->text .= "</span></p>";
-                        $table->data[] = new html_table_row(array($cell));
-                        break;
-                    case 2:
-                        // Acitivity isn't started yet, but animators and hosts can access it to do some preparation.
-                        $cell->text .= get_string("notstarted", "via").'</span></p><br/>';
-                        if ($via->recordingmode != 0 && !$viaid) {
-                            $cell->text .= get_string('recordwarning', 'via') .'</span></p>';
+
+        if ($via->activitytype == 4) {
+            $cell->text = '<span style="color:red;">';
+            $cell->text .= get_string('desactivatedMessage', 'via');
+            $cell->text .= "</span>";
+            $table->data[] = new html_table_row(array($cell));
+        } else {
+            switch($access) {
+                case 1:
+                    // Activity is started, user can access it.
+                    if ($via->recordingmode != 0) {// && !$viaid) {
+                        $cell->text .= get_string('recordwarning', 'via');
+                        $cell->text .= '<br /><input type="checkbox" id="checkbox" />
+                    <label for="checkbox" style="margin-right: 10px;">'.get_string('recordaccept', 'via').'</label>'.
+                        '<span id="error" class="error hide"><br/>'.get_string('mustaccept', 'via').'</span>';
+                        $cell->text .= via_add_button(true, true, $viaurlparamvalue, null, null, $viaurlparam);
+                        // Pas de bouton désactivé pour viaassign.
+                        $cell->text .= via_add_button(true, false);
+                    } else {
+                        $cell->text .= via_add_button(false, false, $viaurlparamvalue, null, null, $viaurlparam);
+                    }
+                    $cell->text .= "</span></p>";
+                    $table->data[] = new html_table_row(array($cell));
+                    break;
+                case 2:
+                    // Activity isn't started yet, but animators and hosts can access it to do some preparation.
+                    $cell->text .= get_string("notstarted", "via").'</span></p><br/>';
+                    if ($via->recordingmode != 0) {// && !$viaid) {
+                        $cell->text .= get_string('recordwarning', 'via') .'</span></p>';
                             $cell->text .= '<br /><input type="checkbox" id="checkbox" />'.get_string('recordaccept', 'via').'
-                    <span id="error" class="error hide"><br />'.get_string('mustaccept', 'via').'</span>';
-                            $cell->text .= via_add_button(true, true, $viaurlparamvalue, true, null, $viaurlparam);
-                            $cell->text .= via_add_button(true, false, null, true);
-                        } else {
-                            $cell->text .= via_add_button(false, false, $viaurlparamvalue, true, null, $viaurlparam);
-                        }
-                        $cell->text .= "</span></p>";
-                        $table->data[] = new html_table_row(array($cell));
-                        break;
-                    case 3:
-                        // For participants : activity isn't started yet.
-                        $cell->text .= get_string("notstarted", "via").'</span></p>';
-                        $table->data[] = new html_table_row(array($cell));
-                        break;
-                    case 5:
-                        // Acitivity is done.
-                        $cell->text .= get_string("activitydone", "via").'</span></p>';
-                        $table->data[] = new html_table_row(array($cell));
-                        break;
-                    case 6:
-                        // Participant can't access activity, he is not enroled in it.
-                        $cell->text .= get_string("notenrolled", "via").'</span></p>';
-                        $table->data[] = new html_table_row(array($cell));
-                        $viewinfo = false;
-                        break;
-                    case 7;
-                        // Admin user which is not enrolled but can access the activity anyways.
-                        if (($via->activitytype == 1||$via->activitytype == 4) && $via->datebegin + ($via->duration * 60) < time()) {
-                            $cell->text .= get_string("activitydone", "via");
-                        } else {
-                            $cell->text .= get_string("adminnotrenrolled", "via");
-                            $cell->text .= '<br />' . via_add_button(false, true, $viaurlparamvalue, false, true, $viaurlparam);
-                        }
+                <span id="error" class="error hide"><br />'.get_string('mustaccept', 'via').'</span><br />';
+                            $cell->text .= via_add_button(true, true, $viaurlparamvalue, true, true, $viaurlparam);
+                        $cell->text .= via_add_button(true, false, null, true);
+                    } else {
+                            $cell->text .= via_add_button(false, false, $viaurlparamvalue, true, true, $viaurlparam);
+                    }
+                    $cell->text .= "</span></p>";
+                    $table->data[] = new html_table_row(array($cell));
+                    break;
+                case 3:
+                    // For participants : activity isn't started yet.
+                    $cell->text .= get_string("notstarted", "via").'</span></p>';
+                    $table->data[] = new html_table_row(array($cell));
+                    break;
+                case 5:
+                    // Activity is done.
+                    $cell->text .= get_string("activitydone", "via").'</span></p>';
+                    $table->data[] = new html_table_row(array($cell));
+                    break;
+                case 6:
+                    // Participant can't access activity, he is not enroled in it.
+                    $cell->text .= get_string("notenrolled", "via").'</span></p>';
+                    $table->data[] = new html_table_row(array($cell));
+                    $viewinfo = false;
+                    break;
+                case 7;
+                    // Admin user which is not enrolled and activity is done.
+                    $cell->text .= get_string("activitydone", "via");
+                    $cell->text .= '</span></p><br/>';
+                    $table->data[] = new html_table_row(array($cell));
+                    break;
+                case 8;
+                    // Activity not yet planned!
+                    $cell->text .= get_string('unplanned_text', 'via') . '</span></p>';
+                    $table->data[] = new html_table_row(array($cell));
+                    break;
+                case 9;
+                    // Admin user which is not enrolled but can access the activity anyways.
+                    if ($via->recordingmode != 0) {
+                        $cell->text .= get_string("adminnotrenrolled", "via").'<br />';
+                        $cell->text .= get_string('recordwarning', 'via');
+                        $cell->text .= '<br /><input type="checkbox" id="checkbox" />
+                <label for="checkbox" style="margin-right: 10px;">'.get_string('recordaccept', 'via').'</label>'.
+                        '<span id="error" class="error hide"><br/>'.get_string('mustaccept', 'via').'</span>';
+                            $cell->text .= via_add_button(true, true, $viaurlparamvalue, null, true, $viaurlparam);
+                        // Pas de bouton désactivé pour viaassign.
+                        $cell->text .= via_add_button(true, false);
+                    } else {
+                        $cell->text .= get_string("adminnotrenrolled", "via");
+                        $cell->text .= '<br />' . via_add_button(false, true, $viaurlparamvalue, false, true, $viaurlparam);
                         $cell->text .= '</span></p><br/>';
-                        $table->data[] = new html_table_row(array($cell));
+                    }
+                    $table->data[] = new html_table_row(array($cell));
+                    break;
+                default :
                         break;
-                    case 8;
-                        // Activity not yet planned!
-                        $cell->text .= get_string('unplanned_text', 'via') . '</span></p>';
-                        $table->data[] = new html_table_row(array($cell));
-                        break;
-                    default :
-                        break;
-                }
             }
+        }
 
         echo html_writer::table($table); // Print activity info.
 
@@ -474,7 +513,7 @@ if (isset($deleted)) {
         }
 
         // No point validating everthing, the activity is not yet planned, there are no playbacks and no users!
-            if ($via->activitytype != 3 && $via->activitytype != 4) {
+        if ($via->activitytype != 3 && $via->activitytype != 4) {
             // Print recordings list.
             if ($viewinfo && has_capability('mod/via:view', $context) && (is_mobile_phone() == false || $via->isnewvia == 1)) {
                 if (isset($error)) {
@@ -493,8 +532,11 @@ if (isset($deleted)) {
                 if ($connectedusers == 0 && (has_capability('mod/via:viewpresence', $context) || $cancreatevia)) {
                     echo via_report_btn($via->id, $viaid);
 
-                    echo via_get_participants_table($via, $context, true);
-
+                    if ($viaid) {
+                        echo via_get_participants_table($via, $context, true, $viaid);
+                    } else {
+                        echo via_get_participants_table($via, $context, true);
+                    }
                     echo via_report_btn($via->id, $viaid);
 
                     echo "<p style='margin: auto; width: 90%;'>".get_string("presencewarning", "via")."</p>";
@@ -507,11 +549,13 @@ if (isset($deleted)) {
                     } else if ($synch == 2) {
                         echo '<p class="notifysuccess">'.get_string('notifysuccess_synch2', 'via').'</p>';
                     }
-
-                    echo via_get_participants_table($via, $context);
+                    if ($viaid) {
+                        echo via_get_participants_table($via, $context, false, $viaid);
+                    } else {
+                        echo via_get_participants_table($via, $context);
+                    }
                 }
             }
-
              echo $OUTPUT->box_end();
         }
         echo '<hr>';
@@ -520,6 +564,8 @@ if (isset($deleted)) {
         height="33" alt="VIA" /> '.get_string('by', 'via').'&nbsp;&nbsp;<img src = "' .
             $CFG->wwwroot . '/mod/via/pix/logo_svi.png" width="52" height="33" alt="VIA" /></div>';
     }
+
+
 }
 
 echo $OUTPUT->footer();

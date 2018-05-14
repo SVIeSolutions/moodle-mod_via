@@ -63,7 +63,7 @@ $api = new mod_via_api();
 try {
     if ($response = $api->userget_ssotoken($via, $redirect, null, $fa)) {
         echo '<style>body {margin:0;}</style>';
-        echo '<iframe style="border:none;" width="100%" height="100%" scrolling="auto" src="'.$response.'"></iframe>';
+        echo '<iframe style="border:none;" width="100%" height="100%" scrolling="auto" allow="autoplay; microphone; camera" src="'.$response.'"></iframe>';
     } else {
         print_error("You can't access this activity for now.");
     }

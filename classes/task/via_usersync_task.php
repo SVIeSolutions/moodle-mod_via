@@ -25,7 +25,6 @@
  *
  */
 namespace mod_via\task;
-defined('MOODLE_INTERNAL') || die();
 class via_usersync_task extends \core\task\scheduled_task
 {
 
@@ -38,6 +37,9 @@ class via_usersync_task extends \core\task\scheduled_task
 
         require_once($CFG->dirroot.'/mod/via/lib.php');
         require_once($CFG->dirroot.'/config.php');
+
+        // valider si les activités existent, si non, mettre activityID à 0 puis modifier les fonction de via_sync
+        via_synch_activity();
 
         // Delete via user when moodle user deleted.
         via_synch_users();

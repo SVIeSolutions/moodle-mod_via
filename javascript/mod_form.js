@@ -9,7 +9,10 @@ jQuery(document).ready(function () {
     // This is to add a div around the buttons for display purposes!
     // This is for both Via and Viaassign!
     var participants = $("input[id ^= 'id_participants']");
+    if (participants.length == 0) { participants = $("button[id ^= 'id_participants']"); }
+
     $(participants).each(function (i, val) {
+
         // Add class to both inputs.
         $(val).addClass("btn_participants")
     });
@@ -17,6 +20,7 @@ jQuery(document).ready(function () {
 
     // This is to add a div around the buttons for display purposes!
     var animators = $("input[id ^= 'id_animators']");
+    if (animators.length == 0) { animators = $("button[id ^= 'id_animators']"); }
     $(animators).each(function (i, val) {
         // Add class to both inputs.
         $(val).addClass("btn_animators")
@@ -28,9 +32,21 @@ jQuery(document).ready(function () {
         // Automatic enrol and not saved we hide all the user lists.
         $('#fgroup_id_add_hostgroup').addClass('hide');
         $('#fgroup_id_add_users').addClass('hide');
+        if ($("div[data-groupname='add_users']").length > 0) {
+            $("div[data-groupname='add_users']").addClass('hide');
+        }
+        if ($("div[data-groupname='add_hostgroup']").length > 0) {
+            $("div[data-groupname='add_hostgroup']").addClass('hide');
+        }
         $('.viausers').addClass('hide');
-        $('#fitem_id_searchpotentialusers').addClass('hide');
-        $('#fitem_id_searchparticipants').addClass('hide');
+        if ($('#fitem_id_searchpotentialusers').eq(0).length > 0) {
+            $('#fitem_id_searchpotentialusers').addClass('hide');
+            $('#fitem_id_searchparticipants').addClass('hide');
+        } else {
+            $('#id_searchpotentialusers').closest(".search").addClass('hide');
+            $('#id_searchparticipants').closest(".search").addClass('hide');
+        }
+
     } else if ($('#id_enroltype').val() == 0 && $('[name="wassaved"]').val() == 1) {
         // Automatic enrol and was saved we add all the potential users to the participants list.
         var potentialusersselect = $(".viauserlists:not(.hide):first").attr("id");
@@ -44,7 +60,11 @@ jQuery(document).ready(function () {
         // We hide the title too!
         $('.three.potentialusers').addClass('hide');
         $('.three.participants').addClass('element');
-        $('#fitem_id_searchpotentialusers').addClass('hide');
+        if ($('#fitem_id_searchpotentialusers').eq(0).length > 0) {
+            $('#fitem_id_searchpotentialusers').addClass('hide');
+        } else {
+            $('#id_searchpotentialusers').closest(".search").addClass('hide');
+        }
     }
 
     $('#id_searchparticipants').keyup(function () {
@@ -66,8 +86,20 @@ jQuery(document).ready(function () {
                 $('#fgroup_id_add_users').addClass('hide');
                 $('.viausers').addClass('hide');
                 // No user lists are displayed and therefor there are no seaches.
-                $('#fitem_id_searchpotentialusers').addClass('hide');
-                $('#fitem_id_searchparticipants').addClass('hide');
+                if ($('#fitem_id_searchpotentialusers').eq(0).length > 0) {
+                    $('#fitem_id_searchpotentialusers').addClass('hide');
+                    $('#fitem_id_searchparticipants').addClass('hide');
+                } else {
+                    $('#id_searchpotentialusers').closest(".search").addClass('hide');
+                    $('#id_searchparticipants').closest(".search").addClass('hide');
+                }
+
+                if ($("div[data-groupname='add_users']").length > 0) {
+                    $("div[data-groupname='add_users']").addClass('hide');
+                }
+                if ($("div[data-groupname='add_hostgroup']").length > 0) {
+                    $("div[data-groupname='add_hostgroup']").addClass('hide');
+                }
             } else {
                 // Manual enrol!
                 $('#fgroup_id_add_hostgroup').removeClass('hide');
@@ -75,14 +107,32 @@ jQuery(document).ready(function () {
                 $('.viausers').removeClass('hide');
                 // We can search for in both lists.
                 $('#id_participants').removeClass('hide');
-                $('#fitem_id_searchparticipants').removeClass('hide');
-                $('#fitem_id_searchpotentialusers').removeClass('hide');
+                if ($('#fitem_id_searchpotentialusers').eq(0).length > 0) {
+                    $('#fitem_id_searchparticipants').removeClass('hide');
+                    $('#fitem_id_searchpotentialusers').removeClass('hide');
+                } else {
+                    $('#id_searchparticipants').closest(".search").removeClass('hide');
+                    $('#id_searchpotentialusers').closest(".search").removeClass('hide');
+                }
+
+                if ($("div[data-groupname='add_users']").length > 0) {
+                    $("div[data-groupname='add_users']").removeClass('hide');
+                }
+                if ($("div[data-groupname='add_hostgroup']").length > 0) {
+                    $("div[data-groupname='add_hostgroup']").removeClass('hide');
+                }
+
+                $('.viauserlists.participants').removeClass('hide');
+                $('#id_animators_remove_btn').removeClass('hide');
+                $('#id_animators_add_btn').removeClass('hide');
+                // We show the title too!
+                $('.three.participants').removeClass('hide');
             }
         } else {
             // Activity was already saved, we are editing!
             if ($('#id_enroltype').val() == 0) {
                 // Automatic enrol!
-                
+
                 // Move all the potential users to the participants list...
                 var potentialusersselect = $(".viauserlists:not(.hide):first").attr("id");
                 $("#" + potentialusersselect + " option").each(function () {
@@ -96,20 +146,30 @@ jQuery(document).ready(function () {
                 $('.three.potentialusers').addClass('hide');
                 $('.three.participants').addClass('element');
                 // We can search for participants but not in the potential users' list!
-                $('#fitem_id_searchpotentialusers').addClass('hide');
-                $('#fitem_id_searchparticipants').removeClass('hide');
+                if ($('#fitem_id_searchpotentialusers').eq(0).length > 0) {
+                    $('#fitem_id_searchpotentialusers').addClass('hide');
+                    $('#fitem_id_searchparticipants').removeClass('hide');
+                } else {
+                    $('#id_searchpotentialusers').closest(".search").addClass('hide');
+                    $('#id_searchparticipants').closest(".search").removeClass('hide');
+                }
 
             } else {
                 // Manual enrol!
-                $('#id_potentialusers').removeClass('hide');
+                $('.potentialusers').removeClass('hide');
                 $('#id_participants_remove_btn').removeClass('hide');
                 $('#id_participants_add_btn').removeClass('hide');
                 // We hide the title too!
                 $('.three.potentialusers').removeClass('hide');
                 $('.three.participants').removeClass('element');
                 // We can search for in both lists!
-                $('#fitem_id_searchpotentialusers').removeClass('hide');
-                $('#fitem_id_searchparticipants').removeClass('hide');
+                if ($('#fitem_id_searchpotentialusers').eq(0).length > 0) {
+                    $('#fitem_id_searchpotentialusers').removeClass('hide');
+                    $('#fitem_id_searchparticipants').removeClass('hide');
+                } else {
+                    $('#id_searchpotentialusers').closest(".search").removeClass('hide');
+                    $('#id_searchparticipants').closest(".search").removeClass('hide');
+                }
             }
         }
     });
@@ -120,21 +180,21 @@ jQuery(document).ready(function () {
                 // Move all participants to animators!
                 $("#id_participants option").each(function () {
                     $(this).remove().appendTo('#id_animators');
-                    $(this).removeAttr("selected");
+                    $(this).prop("selected", false);
                 });
 
                 // Hide the whole participants list.
-                $('#id_participants').addClass('hide');
+                $('.viauserlists.participants').addClass('hide');
                 $('#id_animators_remove_btn').addClass('hide');
                 $('#id_animators_add_btn').addClass('hide');
                 // We hide the title too!
                 $('.three.participants').addClass('hide');
             } else {
-                // Hide the whole participants list!
-                $('#id_participants').removeClass('hide');
+                // show the whole participants list!
+                $('.viauserlists.participants').removeClass('hide');
                 $('#id_animators_remove_btn').removeClass('hide');
                 $('#id_animators_add_btn').removeClass('hide');
-                // We hide the title too!
+                // We show the title too!
                 $('.three.participants').removeClass('hide');
             }
         }
@@ -143,7 +203,8 @@ jQuery(document).ready(function () {
     // Grouping mode selected; we need to reload with only the users of the group!
     $('#id_groupingid').change(function () {
         $(".fa-spinner.fa-spin").show();
-
+        $("#id_submitbutton").attr('disabled', 'disabled');
+        $("#id_submitbutton2").attr('disabled', 'disabled');
         $("#id_participants").empty();
         $("#id_animators").empty();
 
@@ -170,6 +231,8 @@ jQuery(document).ready(function () {
 
                 $("#id_host").html(host);
                 $(".fa-spinner.fa-spin").hide();
+                $("#id_submitbutton").removeAttr('disabled')
+                $("#id_submitbutton2").removeAttr('disabled')
             }
         });
     });
@@ -208,7 +271,6 @@ jQuery(document).ready(function () {
         var host = $("#id_host option").val();
 
         $("#id_save_participants:text").val(participants);
-        //console.log(participants);
         $("#id_save_animators:text").val(animators);
         $("#id_save_host:text").val(host);
     }
@@ -227,31 +289,32 @@ function replace_host() {
 
     if (selected != 0) {
         if (selected > 1) {
-        $("option:selected").each(function () {
-            $(this).removeAttr("selected");
-        });
-    } else {
-        // Remove the actual host.
-        $("#id_host option").each(function () {
-            $(this).remove().appendTo('#id_animators');
-            $(this).removeAttr("selected");
-        });
-        $("#host option:selected").removeAttr("selected");
-        // Add the new host; it is only possible to add 1.
-        if ($('#id_host option').length === 0) {
-            $('.viauserlists option:selected').remove().appendTo('#id_host');
-            $('.viauserlists option:selected').removeAttr("selected");
+            $(".viauserlists option:selected").each(function () {
+                $(this).prop("selected", false);
+            });
+        } else {
+            // Remove the actual host.
+            $("#id_host option").each(function () {
+                $(this).remove().appendTo('#id_animators');
+                $(this).prop("selected", false);
+            });
+            $("#host option:selected").removeAttr("selected");
+            // Add the new host; it is only possible to add 1.
+            if ($('#id_host option').length === 0) {
+                $('.viauserlists option:selected').remove().appendTo('#id_host');
+                $('.viauserlists option:selected').removeAttr("selected");
+            }
         }
     }
 }
-}
 
 function add_participants() {
-    var potentialusersselect = $(".viauserlists:not(.hide):first").attr("id");
+    var potentialusersselect = $(".viauserlists:not(.hide):first select").attr("id");
+    if (!potentialusersselect) { potentialusersselect = $(".viauserlists:not(.hide):first").attr("id"); }
 
     $("#" + potentialusersselect + " option:selected").each(function () {
         $(this).remove().appendTo('#id_participants');
-        $(this).removeAttr("selected");
+        $(this).prop("selected", false);
     });
 
     $("#" + potentialusersselect + " option").each(function () {
@@ -263,9 +326,11 @@ function add_participants() {
 }
 
 function remove_participants() {
+    var potentialusersselect = $(".viauserlists:not(.hide):first select").attr("id");
+    if (!potentialusersselect) { potentialusersselect = $(".viauserlists:not(.hide):first").attr("id"); }
     $("#id_participants option:selected").each(function () {
-        $(this).remove().appendTo(".viauserlists:not(.hide):first").attr("id");
-        $(this).removeAttr("selected");
+        $(this).remove().appendTo('#' + potentialusersselect);
+        $(this).prop("selected", false);
     });
 
     $("#id_participants option").each(function () {
@@ -279,7 +344,7 @@ function remove_participants() {
 function add_animators() {
     $("#id_participants option:selected").each(function () {
         $(this).remove().appendTo('#id_animators');
-        $(this).removeAttr("selected");
+        $(this).prop("selected", false);
     });
 
     $("#id_participants option").each(function () {
@@ -293,46 +358,73 @@ function add_animators() {
 function remove_animators() {
     $("#id_animators option:selected").each(function () {
         $(this).remove().appendTo('#id_participants');
-        $(this).removeAttr("selected");
+        $(this).prop("selected", false);
     });
 }
 
 function setgroupfunction() {
-// There is probably a better way to improve this function.
-    var Inter = setInterval(function(){  
+    // There is probably a better way to improve this function.
+    var Inter = setInterval(function () {
         if ($('.availability_grouping .availability-group select[name="id"]').length) {
             $('.availability_grouping .availability-group select[name="id"]').attr('onchange', 'groupuserschange()');
         }
-
-    }, 1000);
-    var Inter2 = setInterval(function(){  
         if ($('.availability_group .availability-group select[name="id"]').length) {
             $('.availability_group .availability-group select[name="id"]').attr('onchange', 'groupuserschange()');
         }
+
+        if ($(".availability-item").find(".availability-delete")) {
+            $(".availability-item").find(".availability-delete").each(function () {
+                if ($(this).parent().find('.availability_grouping .availability-group select[name="id"]').length > 0) {
+                    if (!$._data($(this)[0], "events")) {
+                        $(this).click(function (e) {
+                            groupuserschange();
+                        });
+                    }
+                }
+                if ($(this).parent().find('.availability_group .availability-group select[name="id"]').length > 0) {
+
+                    if (!$._data($(this)[0], "events")) {
+                        $(this).click(function (e) {
+                            groupuserschange();
+                        });
+                    }
+                }
+            });
+        }
+
+
     }, 1000);
 }
 
 function groupuserschange() {
+
     $(".fa-spinner.fa-spin").show();
+    $("#id_submitbutton").attr('disabled', 'disabled');
+    $("#id_submitbutton2").attr('disabled', 'disabled');
     $("#id_participants").empty();
     $("#id_animators").empty();
     /*if ($("#availability_addrestriction_group")[0])
         $("#availability_addrestriction_group")[0].disabled = true;
     if ($(".availability-header"))
     $(".availability-header").hide()*/
-    var groupingid = $('.availability_grouping .availability-group select[name="id"]').val();
-    var groupid = $('.availability_group .availability-group select[name="id"]').val();
+
+    var groupingid = 0;
+    var groupid = 0;
+
+    if ($('.availability_grouping .availability-group select[name="id"]')) { groupingid = $('.availability_grouping .availability-group select[name="id"]').val(); }
+    if ($('.availability_group .availability-group select[name="id"]')) { groupid = $('.availability_group .availability-group select[name="id"]').val(); }
+
     var enroltype = $('#id_enroltype option:selected').val();
 
     var link = window.location.href;
-
     $.ajax({
         type: "POST",
         url: link,
         data: {
             groupingid: groupingid,
             enroltype: enroltype,
-            groupid: groupid
+            groupid: groupid,
+            fromjs: true
         },
         success: function (html) {
 
@@ -346,6 +438,8 @@ function groupuserschange() {
 
             var host = $(html).find('#id_host option');
             $("#id_host").html(host);
+            $("#id_submitbutton").removeAttr('disabled')
+            $("#id_submitbutton2").removeAttr('disabled')
             $(".fa-spinner.fa-spin").hide();
         }
     });

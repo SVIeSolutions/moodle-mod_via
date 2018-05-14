@@ -34,7 +34,7 @@ class mod_via_api {
      * @param Array $infoplus additional info when creating/editing user
      * @return Array containing response from Via
      */
-    public function via_user_create($muser, $edit=false, $infoplus=null) {
+    public function via_user_create($muser, $edit=false, $infoplus=null, $viauser=null) {
         global $CFG;
 
         require_once($CFG->dirroot . '/mod/via/lib.php');
@@ -66,20 +66,23 @@ class mod_via_api {
                 $data .= "<Status>".$muser->status."</Status>";
             }
         }
-        // Possibilités de renforcer la synchronisation
+        // Possibilités de renforcer la synchronisation.
         if (!$edit || get_config('via', 'via_participantsynchronization')) {
             if ($muser->lastname) {
                 $data .= "<LastName>".$muser->lastname."</LastName>";
             } else {
                 $data .= "<LastName>Utilisateur</LastName>";
             }
-        
-			if ($muser->firstname) {
-				$data .= "<FirstName>".$muser->firstname."</FirstName>";
-			} else {
-				$data .= "<FirstName>Temporaire</FirstName>";
-			}
-		}
+
+            if ($muser->firstname) {
+                $data .= "<FirstName>".$muser->firstname."</FirstName>";
+            } else {
+                $data .= "<FirstName>Temporaire</FirstName>";
+            }
+        } else if (isset($viauser)) {
+            $data .= "<LastName>".$viauser["LastName"]."</LastName>";
+            $data .= "<FirstName>".$viauser["FirstName"]."</FirstName>";
+        }
         $data .= "<Login>".$muser->viausername."</Login>";
         if (!$edit) {
             $data .= "<Password>".via_create_user_password()."</Password>";
@@ -87,7 +90,7 @@ class mod_via_api {
         $data .= "<UniqueID>".$muser->username."</UniqueID>";
         $data .= "<Email>".strtolower($muser->email)."</Email>";
 
-		if ($infoplus && get_config('via', 'via_participantsynchronization')) {
+        if ($infoplus && get_config('via', 'via_participantsynchronization')) {
             foreach ($infoplus as $name => $info) {
                 $data .= "<".$name.">".$info."</".$name.">";
             }
@@ -263,8 +266,10 @@ class mod_via_api {
         $data .= "<UserID>".get_config('via', 'via_adminid')."</UserID>";
         $data .= "<Title>".$via->name."</Title>";
         $data .= "<ProfilID>".$via->profilid."</ProfilID>";
-        if ($via->category != '0') {
+        if (isset($via->category) && $via->category != '0') {
             $data .= "<CategoryID>".$via->category."</CategoryID>";
+        } else {
+            $data .= "<CategoryID>0</CategoryID>";
         }
         $data .= "<IsReplayAllowed>".$via->isreplayallowed."</IsReplayAllowed>";
         $data .= "<ActivityState>1</ActivityState>";
@@ -371,7 +376,7 @@ class mod_via_api {
         $data .= "<ActivityID>".$via->viaactivityid."</ActivityID>";
         $data .= "<Title>".$via->name."</Title>";
         $data .= "<ProfilID>".$via->profilid."</ProfilID>";
-        if ($via->category != '0') {
+        if (isset( $via->category) && $via->category != '0') {
             $data .= "<CategoryID>".$via->category."</CategoryID>";
         }
         $data .= "<IsReplayAllowed>".$via->isreplayallowed."</IsReplayAllowed>";
@@ -1400,8 +1405,7 @@ class mod_via_api {
             $viauser = $this->via_user_search(strtolower($muser->email), "Login");
             if (!$viauser) {
                 // False = create new user!
-                // $context = context_system::instance();
-                if ( get_config('via', 'via_typepInscription')) {// || !has_capability('moodle/site:config',$context,$muser)) {.
+                if ( get_config('via', 'via_typepInscription')) {
                     $info["UserType"] = get_config('via', 'via_typepInscription'); // Usertype is always 2!
                 } else { // si c'est un admin et qu'on a choisi un autre rôle par défaut que Member.
                         $info["UserType"] = 2;
@@ -1449,7 +1453,17 @@ class mod_via_api {
         }
         if ($validatestatus != 0) {
             $muser->status = 0;// Change status back to active.
-            $viauserdata = $this->via_user_create($muser, true);
+            if (!get_config('via', 'via_participantsynchronization')) {
+                $viauser = new stdClass();
+                // Need to get the lastname and firstNAme of the Via User.
+                $viauser = $this->via_user_get($muser->viauserid);
+                // Ajouter des validations pour éviter les doubles appels.
+                if ($this->via_user_changed($viauser, $muser)) {
+                    $viauserdata = $this->via_user_create($muser, true, null, $viauser);
+                }
+            } else {
+                $viauserdata = $this->via_user_create($muser, true);
+            }
         }
 
         $participant = new stdClass();
@@ -1562,11 +1576,20 @@ class mod_via_api {
 
                         $response = $this->via_user_create($muser, true, $info);
                     } else {
-                        $response = $this->via_user_create($muser, true);
+                        $viauser = new stdClass();
+                        $viauser = $this->via_user_get($muser->viauserid);
+                        // Ajouter des validations pour éviter les doubles appels
+                        if ($this->via_user_changed($viauser, $muser)) {
+                            $response = $this->via_user_create($muser, true, null, $viauser);
+                        }
                     }
-
-                    $DB->set_field('via_users', 'setupstatus', $response['SetupState'],
-                                    array('userid' => $muser->id, 'viauserid' => $muser->viauserid));
+                    if (isset($response)) {
+                        $DB->set_field('via_users', 'setupstatus', $response['SetupState'],
+                            array('userid' => $muser->id, 'viauserid' => $muser->viauserid));
+                    } else if (isset($viauser)) {
+                        $DB->set_field('via_users', 'setupstatus', $viauser['SetupState'],
+                            array('userid' => $muser->id, 'viauserid' => $muser->viauserid));
+                    }
                 } else {
                     // Deleted - we go throught the whole process of creating a user
                     // we try to reassosiate him or create a new user and update his viauserid
@@ -1662,5 +1685,110 @@ class mod_via_api {
         $response['dataxml'] = $dataxml;
 
         return $response;
+    }
+
+    /**
+     *  Get a list of activity depending on some criteria.
+     *
+     * @param timestamp ($lastcron)
+     * @return list of notifications
+     */
+    public function get_activity_search($fromdate, $endate = null) {
+        global $CFG;
+
+        static $resultdata;
+
+        $url = 'ActivitySearch';
+
+        $data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ';
+        $data .= 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        $data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        $data .= '<soap:Body>';
+        $data .= "<cApiActivitySearch>";
+        $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
+        $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
+        $data .= "<DateFrom>".$this->change_date_format($endate)."</DateFrom>";
+        $data .= "<DateTo>".$this->change_date_format(time())."</DateTo>";
+        $data .= "<ActivityType></ ActivityType >";
+        $data .= "<UserID></ UserID >";
+
+        $data .= "</cApiActivitySearch>";
+        $data .= "</soap:Body>";
+        $data .= "</soap:Envelope>";
+        $response = $this->send_saop_enveloppe(null, $data, $url);
+
+        if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivitySearch"]) {
+            throw new Exception("Problem getting activity between these date");
+        }
+
+        if ($resultdata['Result']['ResultState'] == "ERROR") {
+            throw new Exception($resultdata['Result']['ResultDetail']);
+        }
+
+        if ($resultdata['Result']["ResultDetail"]) {
+            return  $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivitySearch"]["ActivitySearch"];
+        } else {
+            return $resultdata;
+        }
+    }
+    /**
+     * Get a list of activity depending on some criteria.
+     *
+     * @param timestamp ($lastcron)
+     * @return list of notifications
+     */
+    public function get_activity_nbconnectedusers($activityid, $userid) {
+        global $CFG;
+
+        static $resultdata;
+
+        $url = 'ActivityGet';
+
+        $data = '<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" ';
+        $data .= 'xmlns:xsd="http://www.w3.org/2001/XMLSchema" ';
+        $data .= 'xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">';
+        $data .= '<soap:Body>';
+        $data .= "<cApiActivityGet>";
+        $data .= "<CieID>".get_config('via', 'via_cleid')."</CieID>";
+        $data .= "<ApiID>".get_config('via', 'via_apiid')."</ApiID>";
+        $data .= "<ActivityID>".$activityid."</ActivityID>";
+        $data .= "<UserID>".$userid."</UserID>";
+
+        $data .= "</cApiActivityGet>";
+        $data .= "</soap:Body>";
+        $data .= "</soap:Envelope>";
+        $response = $this->send_saop_enveloppe(null, $data, $url);
+
+        if (!$resultdata = $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivity"]) {
+            throw new Exception("Problem getting activity between these date");
+        }
+
+        if ($resultdata['Result']['ResultState'] == "ERROR") {
+            throw new Exception($resultdata['Result']['ResultDetail']);
+        }
+
+        if ($resultdata['Result']['ResultState'] == "SUCCESS") {
+            return  $response['dataxml']["soap:Envelope"]["soap:Body"]["cApiActivity"]["NbConnectedUsers"];
+        } else {
+            return 0;
+        }
+    }
+
+    /**
+     * Check if Moodle User is the same as the via user
+     *
+     * @param $viauser (user from Via)
+     * @param $muser (user from Moodle)
+     * @return boolean: are the users exactly the same
+     */
+    protected function via_user_changed ($viauser, $muser) {
+        $alike = true;
+
+        $alike = $alike && $muser->lastname == $viauser["LastName"];
+        $alike = $alike && $muser->firstname == $viauser["FirstName"];
+        $alike = $alike && $muser->email == $viauser["Email"];
+        $alike = $alike && $muser->usertype = $viauser["UserType"];
+
+        return !$alike;
     }
 }

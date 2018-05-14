@@ -91,6 +91,9 @@ $string['creationdate'] = 'Report created on: ';
 $string['date'] = 'Activity date';
 $string['delete'] = 'Delete';
 
+$string['delete_activity'] = 'Delete this activity';
+$string['deleteconfirm'] = 'Do you really want to delete this activity ?';
+
 $string['desactivatedMessage'] = 'This activity and its associated records or documents have been deleted and are no longer accessible. Please delete this activity from the course';
 
 /* downloadable files */
@@ -209,6 +212,7 @@ $string['error:ACTIVITY_ACCESS_FAILED'] = 'ACTIVITY_ACCESS_FAILED - When the use
 $string['error:ACTIVITY_DOES_NOT_EXIST'] = 'ACTIVITY_DOES_NOT_EXIST - Must represent a valid activity.';
 $string['error:ACTIVITYID_EMPTY'] = 'ACTIVITYID_EMPTY - The ActivityID value is empty.';
 $string['error:ACTIVITYID_INVALID'] = 'ACTIVITYID_INVALID - The value passed in the ActivityID is invalid.';
+$string['error:ACTIVITY_EXCEED_MAX_USERS'] = 'Number max of users is reached';
 $string['error:APPLY_PERIODICITY_INVALID'] = 'APPLY_PERIODICITY_INVALID - The value passed must be 0 or 1.';
 $string['error:AUTH_FAILED_BAD_APIID'] = 'AUTH_FAILED_BAD_APIID - The APIID value is not authorised.';
 $string['error:AUTH_FAILED_BAD_CIEID'] = 'AUTH_FAILED_BAD_CIEID - The CieID value is not authorised.';

@@ -46,21 +46,27 @@ class mod_via_mod_form extends moodleform_mod {
         $groupingid = optional_param('groupingid', null, PARAM_INT);
         $enroltype = optional_param('enroltype', null, PARAM_INT);
         $groupid = optional_param('groupid', null, PARAM_INT);
-        if (!isset($groupingid)) {
-            if (isset($this->_cm)) {
-                $groupingid = $this->_cm->groupingid;
+        $fromjs = optional_param('fromjs', null, PARAM_BOOL);
+
+        // We come from a call ajax in this page.
+        $ajax = isset($fromjs) || isset($groupid) || isset($groupingid);
+        if (!isset($groupingid) && !isset($fromjs)) {
+            if ($CFG->version <= 2014111012) {
+                if (isset($this->_cm)) {
+                    $groupingid = $this->_cm->groupingid;
+                }
+            } else {
+                if (!isset($groupid) && isset($this->_cm)) {
+                    $groupsarray = getgroupsfrommodule($this->_cm, $this->_cm->availability);
+                    $groupingid = $groupsarray[0];
+                    $groupid = $groupsarray[1];
+                }
             }
-            $ajax = false;
-            if (isset($groupid)) {
-                $ajax = true;
-            }
-        } else {
-            $ajax = true;
         }
 
         if (isset($_SESSION['ErrMaxSimActMessage'])) {
             $mform->addElement('html', '<div class="mform" style="text-align:center;">
-            <span class="error" sty;e="text-align:left;">' . $_SESSION['ErrMaxSimActMessage'] . '</span></div>');
+            <span class="error" style="text-align:left;">' . $_SESSION['ErrMaxSimActMessage'] . '</span></div>');
             unset($_SESSION['ErrMaxSimActMessage']);
         }
 
@@ -299,7 +305,8 @@ class mod_via_mod_form extends moodleform_mod {
         }
 
         // If we are editing, we have a participants list.
-        if ($this->current->instance != '' || (isset($this->current->activitytype) && $this->current->activitytype == 3)) {
+        if ($this->current->instance != '' && !$ajax|| (isset($this->current->activitytype)
+            && $this->current->activitytype == 3)) {
             $editing = true;
             $vusers = $DB->get_records_sql('SELECT vp.*, u.firstname, u.lastname, u.username
                                             FROM {via_participants} vp
@@ -319,13 +326,16 @@ class mod_via_mod_form extends moodleform_mod {
                     unset($pusers[$u->userid]);
                 }
 
+            }
                 // If there are no users we set to empty rather than null, to avoid php errors.
-                if (!isset($participants)) {
-                    $participants = '';
-                }
-                if (!isset($animators)) {
-                    $animators = '';
-                }
+            if (!isset($participants)) {
+                $participants = '';
+            }
+            if (!isset($animators)) {
+                $animators = '';
+            }
+            if (!isset($host)) {
+                $host[$USER->id] = $USER->lastname . ' ' . $USER->firstname . ' (' . $USER->username .')';
             }
         } else {
             $editing = false;
@@ -356,7 +366,7 @@ class mod_via_mod_form extends moodleform_mod {
                            <p class="three animators">'.get_string('animators', 'via').'</p></div>');
 
         $group = array();
-        $select1 = $mform->createElement('select', 'potentialusers', '', $pusers, array('class' => 'viauserlists'));
+        $select1 = $mform->createElement('select', 'potentialusers', '', $pusers, array('class' => 'viauserlists potentialusers'));
         $select1->setMultiple(true);
         $group[] =& $select1;
         $mform->setType('potentialusers', PARAM_TEXT);
@@ -365,7 +375,7 @@ class mod_via_mod_form extends moodleform_mod {
         $group[] =& $mform->createElement('button', 'participants_add_btn', '>', 'onclick="add_participants()"');
 
         $select2 = $mform->createElement('select', 'participants', get_string('participants', 'via'),
-                    $participants, array('class' => 'viauserlists'));
+                    $participants, array('class' => 'viauserlists participants'));
         $select2->setMultiple(true);
         $group[] =& $select2;
         $mform->setType('participants', PARAM_TEXT);
@@ -374,7 +384,7 @@ class mod_via_mod_form extends moodleform_mod {
         $group[] =& $mform->createElement('button', 'animators_add_btn', '>', 'onclick="add_animators()"');
 
         $select3 = $mform->createElement('select', 'animators', get_string('animators', 'via'),
-                    $animators, array('class' => 'viauserlists'));
+                    $animators, array('class' => 'viauserlists animators'));
         $select3->setMultiple(true);
         $group[] =& $select3;
         $mform->setType('animators', PARAM_TEXT);
@@ -440,11 +450,11 @@ class mod_via_mod_form extends moodleform_mod {
 
         // GROUPS AND VISIBILITY!
         // Standard grouping features.
-        $features = new stdClass();
-        $features->groups = false;
-        $features->groupings = true;
-        $features->groupmembersonly = true;
-        $this->standard_coursemodule_elements($features);
+        // $features = new stdClass();
+        $this->_features->groups = false;
+        $this->_features->groupings = true;
+        $this->_features->groupmembersonly = true;
+        $this->standard_coursemodule_elements();
 
         $this->add_action_buttons();
     }

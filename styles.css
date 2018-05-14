@@ -291,6 +291,23 @@ A.reportbtn:visited {
     margin:0;
     height:0px;
 }
+#id_save_host,
+#id_save_animators,
+#id_save_participants {
+    display:none;
+    margin:0;
+    height:0px;
+}
+.form-inline .form-control .hide {
+        display: none;
+}
+.form-inline .form-group.hide {
+    display: none;
+}
+.form-control.hide {
+        display: none;
+}
+    
 DIV.btns {
     display:inline-block;
 }
@@ -308,11 +325,26 @@ SELECT.viauserlists {
     max-height:250px;
     width:28%;
 }
+.form-group.viauserlists SELECT {
+    min-height:170px;
+    max-height:250px;
+    min-width: 230px;
+}
+
+@media screen and (min-width: 700px) {
+    .viausers {
+        font-weight: bold;
+        margin-bottom: 0;
+        display: block;
+        margin-left: 25%;
+    }
+}
+@media screen and (max-width: 700px) {
 .viausers {
     font-weight:bold;
     margin-bottom:0;
     display: block;
-    margin-left: 265px;
+}
 }
 .viausers .three{
     display:inline-block;
