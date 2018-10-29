@@ -1,5 +1,16 @@
 This file defines the changes made to Via - Virtual classroom
-last update 14/05/2018 (2018042001)
+
+last update 09/10/2018 (2018042004)
+-Bug fix
+
+last update 07/09/2018 (2018042003)
+- Prevent Moodle to overwrite UserData in Via
+- Add option to synchronise immediately playback records with Via
+
+last update 19/07/2018 (2018042002)
+- Bug fixes
+
+last update 20/04/2018 (2018042001)
 - Integration of Moodle 3.4
 - Improvement for Grouping and Group with Moodle 3.X
 - Improvements to delegate activities

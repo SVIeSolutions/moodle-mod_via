@@ -37,7 +37,6 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
         $string = str_replace($CFG->dataroot.'/temp/backup/', '', $basepath);
         $backupid = strstr($string, '/activities/via', true);
 
-        $controller = $DB->get_record('backup_controllers', array('backupid' => $backupid));
 
         if ($controller->type == 'course' && $controller->interactive == 1
             && ($controller->purpose == 10 || $controller->purpose == 20) ||

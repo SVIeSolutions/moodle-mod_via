@@ -496,6 +496,7 @@ $string['playbackaccesstype1'] = 'Visible for those associated to the virtual cl
 $string['playbackaccesstype2'] = 'Visible for those associated to the delegated activity';
 $string['playbackaccesstypelbl'] = 'Access rights for the recording';
 $string['playbackheader'] = 'Playback viewed (h:m:s)';
+$string['playbackSynchronize'] = 'Synchronize playbacks';
 $string['pluginadministration'] = 'Via administration';
 $string['pluginname'] = 'Via - Virtual classroom';
 $string['portalaccess'] = 'Via portal access.';

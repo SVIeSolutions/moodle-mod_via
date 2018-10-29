@@ -323,7 +323,7 @@ function via_update_instance($via) {
         $via->activitytype = $viaactivity->activitytype;
     }
 
-    // Getting the groups from restricted access
+    // Getting the groups from restricted access.
     if ($CFG->version <= 2014111012) {
         $groupingid = $via->groupingid;
         $groupid = $via->groupid;
@@ -360,8 +360,6 @@ function via_update_instance($via) {
     $query = null;
     $queryoldusers = null;
     $callvia = true;
-    // Update roles for all both manual and automatic enrollement!
-    $vusers = array();
 
     $queryoldusers = 'SELECT u.* FROM {via_participants} vp
                         LEFT JOIN {user} u ON u.id = vp.userid
@@ -401,90 +399,93 @@ function via_update_instance($via) {
             $param = array($context->id);
 
         }
+
+        // Update roles for all both manual and automatic enrollement!
+        $vusers = array();
         // We need to add the userid as key!
         foreach ($viausers as $vu) {
             $vusers[$vu->userid] = $vu;
         }
-    }
-    $savedhost = $DB->get_record('via_participants', array('activityid' => $via->id, 'participanttype' => 2));
+        $savedhost = $DB->get_record('via_participants', array('activityid' => $via->id, 'participanttype' => 2));
 
-    // If host is different we need to remove the old host!
-    if ($via->save_host != '') {
-        if (!$savedhost) {
-            $hostadded = via_add_participant($via->save_host, $via->id, 2, true);
-            $oldhostremoved = $api->removeuser_activity($via->viaactivityid, get_config('via', 'via_adminid'), false);
+        // If host is different we need to remove the old host!
+        if ($via->save_host != '') {
+            if (!$savedhost) {
+                $hostadded = via_add_participant($via->save_host, $via->id, 2, true);
+                $oldhostremoved = $api->removeuser_activity($via->viaactivityid, get_config('via', 'via_adminid'), false);
 
-        } else if ( $savedhost->userid != $via->save_host ) {
-            $hostadded = via_add_participant($via->save_host, $via->id, 2, true);
-            $oldhostremoved = via_remove_participant($savedhost->userid, $via->id);
+            } else if ( $savedhost->userid != $via->save_host ) {
+                $hostadded = via_add_participant($via->save_host, $via->id, 2, true);
+                $oldhostremoved = via_remove_participant($savedhost->userid, $via->id);
 
+            } else {
+                // We remove and add again the host to take care of the duplication where the host is not in the API.
+                $oldhostremoved = via_remove_participant($savedhost->userid, $via->id);
+                $hostadded = via_add_participant($savedhost->userid, $via->id, 2, true);
+                $oldhostremoved = $api->removeuser_activity($via->viaactivityid, get_config('via', 'via_adminid'), false);
+
+            }
+            unset($vusers[$via->save_host]);
         } else {
-            // We remove and add again the host to take care of the duplication where the host is not in the API.
-            $oldhostremoved = via_remove_participant($savedhost->userid, $via->id);
-            $hostadded = via_add_participant($savedhost->userid, $via->id, 2, true);
-            $oldhostremoved = $api->removeuser_activity($via->viaactivityid, get_config('via', 'via_adminid'), false);
-
+            unset($vusers[$savedhost->userid]);
         }
-        unset($vusers[$via->save_host]);
-    } else {
-        unset($vusers[$savedhost->userid]);
-    }
 
-    $count = 1;
-    if ($via->save_participants != '') {
-        $participants = explode(', ', $via->save_participants);
-        if ($participants) {
-            foreach ($participants as $p) {
+        $count = 1;
+        if ($via->save_participants != '') {
+            $participants = explode(', ', $via->save_participants);
+            if ($participants) {
+                foreach ($participants as $p) {
 
-                // We only add the 50 first users, the rest will be synched on access.
-                if ($callvia && $count > 50) {
-                    $callvia = false;
+                    // We only add the 50 first users, the rest will be synched on access.
+                    if ($callvia && $count > 50) {
+                        $callvia = false;
+                    }
+
+                    try {
+                        via_add_participant($p, $via->id, 1, $callvia);
+                    } catch (Exception $e) {
+                        echo get_string("error:".$e->getMessage(), "via");
+                    }
+                    $count ++;
+
+                    unset($vusers[$p]);
+
                 }
-
-                try {
-                    via_add_participant($p, $via->id, 1, $callvia);
-                } catch (Exception $e) {
-                    echo get_string("error:".$e->getMessage(), "via");
-                }
-                $count ++;
-
-                unset($vusers[$p]);
-
             }
         }
-    }
 
-    if ($via->save_animators != '') {
-        $animators = explode(', ', $via->save_animators);
-        if ($animators) {
-            foreach ($animators as $a) {
+        if ($via->save_animators != '') {
+            $animators = explode(', ', $via->save_animators);
+            if ($animators) {
+                foreach ($animators as $a) {
 
-                // We only add the 50 first users, combined participants and animators the rest will be synched on access.
-                if ($callvia && $count > 50) {
-                    $callvia = false;
+                    // We only add the 50 first users, combined participants and animators the rest will be synched on access.
+                    if ($callvia && $count > 50) {
+                        $callvia = false;
+                    }
+
+                    try {
+                        via_add_participant($a, $via->id, 3, $callvia);
+                    } catch (Exception $e) {
+                        echo get_string("error:".$e->getMessage(), "via");
+                    }
+                    $count ++;
+
+                    unset($vusers[$a]);
+
                 }
-
-                try {
-                    via_add_participant($a, $via->id, 3, $callvia);
-                } catch (Exception $e) {
-                    echo get_string("error:".$e->getMessage(), "via");
-                }
-                $count ++;
-
-                unset($vusers[$a]);
-
             }
         }
-    }
 
-    if ($vusers) {
-        foreach ($vusers as $v) {
-            // We need to remove these users!
-            // Wish automatic enrolement; we shouldn't need/be able to remove anyone!
-            try {
-                via_remove_participant($v->userid, $via->id);
-            } catch (Exception $e) {
-                print_error(get_string("error:".$e->getMessage(), "via"));
+        if ($vusers) {
+            foreach ($vusers as $v) {
+                // We need to remove these users!
+                // Wish automatic enrolement; we shouldn't need/be able to remove anyone!
+                try {
+                    via_remove_participant($v->userid, $via->id);
+                } catch (Exception $e) {
+                    print_error(get_string("error:".$e->getMessage(), "via"));
+                }
             }
         }
     }
@@ -625,7 +626,7 @@ function via_delete_instance($id) {
             $recyclebin = false;
         }
 
-        if ( isset($via->viaactivityid) && $via->viaactivityid != '0') {
+        if ($via->viaactivityid != '0') {
             // No point calling to delete, no activity was created!
             if (get_config('via', 'via_activitydeletion') || $recyclebin) {
 
@@ -890,7 +891,7 @@ function via_access_activity($via) {
         return 8;
     }
     $nbconnectedusers = 0;
-    // If the activity has ended less than 6 hours ago, we check if there still are someone online
+    // If the activity has ended less than 6 hours ago, we check if there still are someone online.
     if ( $via->activitytype != 2  && time() > ( $via->datebegin + ($via->duration * 60) ) && time() <= ( $via->datebegin + ($via->duration * 60) + 360)) {
         $user = $DB->get_record('via_users', array('userid' => $USER->id));
         $api = new mod_via_api();

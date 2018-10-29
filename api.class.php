@@ -94,6 +94,14 @@ class mod_via_api {
             foreach ($infoplus as $name => $info) {
                 $data .= "<".$name.">".$info."</".$name.">";
             }
+        } else if (isset($viauser)) {
+            $data .= "<PhoneHome>". $viauser["PhoneHome"]."</PhoneHome>";
+            $data .= "<PhoneBus>". $viauser["PhoneBus"]."</PhoneBus>";
+            $data .= "<PhoneCel>". $viauser["PhoneCel"]."</PhoneCel>";
+            $data .= "<CompanyName>". $viauser["CompanyName"]."</CompanyName>";
+            $data .= "<FunctionTitle>". $viauser["FunctionTitle"]."</FunctionTitle>";
+            $data .= "<Gender>". $viauser["Gender"]."</Gender>";
+            $data .= "<ImageData>". $viauser["ImageData"]."</ImageData>";
         }
         if ($muser->lang == "en" || $muser->lang == "en_us" || $muser->lang == "en_utf8") {
             $data .= "<Language>2</Language>";
@@ -1573,12 +1581,17 @@ class mod_via_api {
                         $info["PhoneHome"] = $muser->phone1;
                         $usericon = $this->via_get_user_picture($muser->id);
                         $info["ImageData"] = base64_encode($usericon);
+                        $info["PhoneBus"] = $viau["PhoneBus"];
+                        $info["PhoneCel"] = $viau["PhoneCel"];
+                        $info["FunctionTitle"] = $viau["FunctionTitle"];
+                        $info["Gender"] = $viau["Gender"];
 
                         $response = $this->via_user_create($muser, true, $info);
                     } else {
                         $viauser = new stdClass();
                         $viauser = $this->via_user_get($muser->viauserid);
-                        // Ajouter des validations pour éviter les doubles appels
+
+                        // Ajouter des validations pour éviter les doubles appels.
                         if ($this->via_user_changed($viauser, $muser)) {
                             $response = $this->via_user_create($muser, true, null, $viauser);
                         }

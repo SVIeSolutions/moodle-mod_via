@@ -539,7 +539,7 @@ function via_get_list_profils() {
                         if ($exists->value != $info['ProfilID']) {
                             // If the profile has changed we need to update all vias using the old id.
                             $vias = $DB->get_records_sql('SELECT * FROM {via}
-                                                        WHERE viaactivityid is not NULL profilid = ? AND datebegin > ' . time() .'
+                                                        WHERE viaactivityid is not NULL AND profilid = ? AND datebegin > ' . time() .'
                                                         OR activitytype = 2', array($exists->value));
                             foreach ($vias as $via) {
                                 $via->profilid = $info['ProfilID'];
@@ -624,7 +624,7 @@ function via_delete_recylebin_instances() {
     return $return;
 }
 /**
- * Get all the playbacks for an acitivity
+ * Get all the playbacks for an activity
  *
  * @param object $via the via object
  * @return obejct list of playbacks
@@ -714,10 +714,13 @@ function via_sync_activity_playbacks($via) {
             }
         }
     }
-
     $param = new stdClass();
     $param->id = $via->id;
-    $param->playbacksync = (time() - 300);
+    if ($via->activitytype != 2) { // If not permanent.
+        $param->playbacksync = 0;
+    } else {
+        $param->playbacksync = (time() - 300);
+    }
     $DB->update_record('via', $param);
 }
 
@@ -1871,7 +1874,7 @@ function via_get_profilname($profilnameorig) {
 function via_synch_activity() {
     global $DB, $CFG;
 
-    // On vérifie qu'il n'y ai pas eu d'activités supprimées de Via
+    // On vérifie qu'il n'y ai pas eu d'activités supprimées de Via.
     $result = true;
 
     $activitylist = $DB->get_records_sql('SELECT * FROM {via} u
@@ -1880,7 +1883,7 @@ function via_synch_activity() {
     $api = new mod_via_api();
     foreach ($activitylist as $via) {
         $infosvi = $api->activity_get($via);
-        if ($infosvi == "ACTIVITY_DOES_NOT_EXIST") {
+        if ($infosvi == "ACTIVITY_DOES_NOT_EXIST" || $infosvi == "INVALID_ACTIVITYID") {
             $via->viaactivityid = null;
             $result = $result && $DB->update_record('via', $via);
             mtrace("activity ". $via->id ." tagged as deleted");

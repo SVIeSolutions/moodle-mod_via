@@ -35,6 +35,7 @@ global $DB, $CFG, $USER;
 $action = optional_param('action', null, PARAM_CLEAN);
 $error = optional_param('error', null, PARAM_TEXT);
 $synch = optional_param('synch', null, PARAM_CLEAN);
+$pbsync = optional_param('pbsync', null, PARAM_CLEAN);
 
 // Modified to come from viaassign, which has a via id but does not have a course module id!
 $id = optional_param('id', null, PARAM_INT);
@@ -102,7 +103,7 @@ if (has_capability('mod/via:manage', $context)) {
 }
 if (has_capability('mod/via:view', $context) && (is_mobile_phone() == false || $via->isnewvia == 1)
     && $via->activitytype != 3 && $via->activitytype != 4 && $via->recordingmode != 0 && $via->viaactivityid <> null) {
-    if ($via->recordingmode == 1) {
+    if ($via->recordingmode == 1 || (isset($pbsync) && has_capability('mod/via:manage', $context))) { // Si on est en mode unifié
         $via->playbacksync = 0;
     }
     via_sync_activity_playbacks($via);
@@ -203,11 +204,11 @@ try {
             if ($sviinfos == "ACTIVITY_DOES_NOT_EXIST") {
                 $deleted = true;
                 // Delete activity associated playbacks.
-                $DB->execute('DELETE {via_playbacks} WHERE activityid = ' . $via->id);
+                    $DB->execute('DELETE FROM {via_playbacks} WHERE activityid = ' . $via->id);
             } else if (has_capability('mod/via:manage', $context)) {
                 $connectedusers = $sviinfos["NbConnectedUsers"];
 
-                if ( time() > $via->datebegin  && $via->duration != $sviinfos["Duration"]) {
+                if ( time() > $via->datebegin  && $via->duration != $sviinfos["Duration"] && $via->duration != 0) {
                     $via->duration = $sviinfos["Duration"];
                     $updatevia = $DB->update_record('via', $via);
                 }
@@ -342,8 +343,18 @@ if (isset($deleted)) {
         echo "<a class='viabtnlink' href='send_invite.php?".$viaurlparam."=".$via->id."'><i class='fa fa-envelope via'></i>".
         get_string("sendinvitation", "via")."</a>";
     }
-    echo '</div>';
-    echo '<br /><br />';
+    echo '</div><br />';
+    if ($cancreatevia) {
+        if (isset($viaid)) {
+            echo "<a class='viabtnlink' href='view.php?viaid=".$viaid."&pbsync=1'><i class='fa fa-link via'></i>".
+            get_string("playbackSynchronize", "via")."</a><br /><br />";
+        } else {
+            echo "<a class='viabtnlink' href='view.php?id=".$id."&pbsync=1'><i class='fa fa-link via'></i>".
+            get_string("playbackSynchronize", "via")."</a><br /><br />";
+        }
+    } else {
+        echo '</div><br />';
+    }
 
     $table = new html_table();
     $table->align = array('center', 'center');
