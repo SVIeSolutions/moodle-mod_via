@@ -112,6 +112,7 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                 $data->datebegin = 0;
                 $data->playbacksynch = 0;
                 $data->viaactivityid = 0;
+                $data->course = $controller->itemid;
                 // We no not want to have a group mode imposed on the unplanned activity!
                 if ($data->groupingid != 0 || $data->groupid != 0) {
                     $data->groupingid = 0;

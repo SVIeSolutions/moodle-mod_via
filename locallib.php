@@ -102,7 +102,8 @@ function via_synch_participants($userid, $activityid) {
         left join {context} c on c.instanceid = e.courseid
         left join {role_assignments} ra on ra.contextid = c.id AND ue.userid = ra.userid';
     $where = 'where (vp.activityid is null OR ra.timemodified > ? )
-            and v.viaactivityid is not NULL and c.contextlevel = 50 and v.enroltype = 0 and e.status = 0 and v.enroltype = 0 and v.groupingid = 0 and v.groupid = 0';
+            and v.viaactivityid is not NULL and c.contextlevel = 50 and v.enroltype = 0 and
+             e.status = 0 and v.enroltype = 0 and v.groupingid = 0 and v.groupid = 0';
     $array = array($viatask->lastruntime);
 
     if ($activityid <> null) {

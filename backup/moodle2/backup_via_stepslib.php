@@ -56,7 +56,7 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
         }
 
         // Define each element separated.
-        $via = new backup_nested_element('via', array('id'), array('course', 'name', 'intro', 'introformat', 'creator',
+        $via = new backup_nested_element('via', array('id'), array('name', 'intro', 'introformat', 'creator',
             'viaactivityid', 'datebegin', 'duration', 'presence', 'audiotype', 'recordingmode', 'recordmodebehavior',
             'isreplayallowed', 'profilid', 'activitytype', 'remindertime', 'needconfirmation', 'roomtype',
             'waitingroomaccessmode', 'activitystate', 'enroltype', 'isnewvia', 'showparticipants', 'mailed', 'sendinvite',

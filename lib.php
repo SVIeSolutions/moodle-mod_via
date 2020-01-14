@@ -327,12 +327,16 @@ function via_update_instance($via) {
     if ($CFG->version <= 2014111012) {
         $groupingid = $via->groupingid;
         $groupid = $via->groupid;
-    } else {
+    } else if (!$isviaassign) {
         $groupsarray = getgroupsfrommodule($via->id, $cm->availability);
         $groupingid = $groupsarray[0];
         $groupid = $groupsarray[1];
         $via->groupingid = $groupingid;
         $via->groupid = $groupid;
+    } else { // If viaassign : there could be only group, no grouping.
+        $groupingid = 0;
+        $groupid = $via->groupid;
+        $via->groupingid = $groupingid;
     }
 
     $via->viaactivityid = $viaactivity->viaactivityid;
@@ -539,7 +543,8 @@ function via_update_instance($via) {
         $viadelegate = $DB->get_field('viaassign_submission', 'viaassignid', array('viaid' => $via->viaid));
         $event = new stdClass();
         $viaassignevent = $DB->get_record('viaassign_event', array('viaid' => $via->viaid));
-        if ($viaassignevent && $event->id = $DB->get_field('event', 'id', array('modulename' => $modulename, 'instance' => $viadelegate, 'id' => $viaassignevent->eventid))) {
+        if ($viaassignevent && $event->id = $DB->get_field('event', 'id',
+             array('modulename' => $modulename, 'instance' => $viadelegate, 'id' => $viaassignevent->eventid))) {
             $event->name        = $via->name;
             $event->intro       = $via->intro;
             $event->timestart   = $via->datebegin;
@@ -632,7 +637,8 @@ function via_delete_instance($id) {
 
                 // Deactivates activities only, they will be deleted later!
                 $activitystate = '3';
-                if ( $via->activitytype != 4 && $via->viaactivityid <> null && $api->activity_get($via) != "ACTIVITY_DOES_NOT_EXIST") {
+                if ( $via->activitytype != 4 && $via->viaactivityid <> null
+                    && $api->activity_get($via) != "ACTIVITY_DOES_NOT_EXIST") {
                     $response = $api->activity_edit($via, $activitystate);
                 }
 
@@ -892,7 +898,8 @@ function via_access_activity($via) {
     }
     $nbconnectedusers = 0;
     // If the activity has ended less than 6 hours ago, we check if there still are someone online.
-    if ( $via->activitytype != 2  && time() > ( $via->datebegin + ($via->duration * 60) ) && time() <= ( $via->datebegin + ($via->duration * 60) + 360)) {
+    if ( $via->activitytype != 2  && time() > ( $via->datebegin + ($via->duration * 60) ) &&
+         time() <= ( $via->datebegin + ($via->duration * 60) + 360)) {
         $user = $DB->get_record('via_users', array('userid' => $USER->id));
         $api = new mod_via_api();
         $nbconnectedusers = $api->get_activity_nbconnectedusers($via->viaactivityid, $user->viauserid);
@@ -905,7 +912,8 @@ function via_access_activity($via) {
                 || $via->activitytype == 2) {
                 // If activity is hapening right now, show link to the activity.
             if (!$participant && has_capability('moodle/site:approvecourse', via_get_system_instance())) {
-                if (($via->activitytype == 1 || $via->activitytype == 4) && ($via->datebegin + ($via->duration * 60) < time()) ||$nbconnectedusers > 0) {
+                if (($via->activitytype == 1 || $via->activitytype == 4) &&
+                     ($via->datebegin + ($via->duration * 60) < time()) ||$nbconnectedusers > 0) {
                     return 7;
                 } else {
                     return 9;
@@ -915,10 +923,12 @@ function via_access_activity($via) {
             }
         } else if (time() < $via->datebegin) {
             // Activity hasn't started yet.
-            if ( $participant && $participant->participanttype == 1 && !has_capability('moodle/site:approvecourse', via_get_system_instance())) {
+            if ( $participant && $participant->participanttype == 1 &&
+                 !has_capability('moodle/site:approvecourse', via_get_system_instance())) {
                 // If participant, user can't access activity.
                 return 3;
-            } else if ( has_capability('moodle/site:approvecourse', via_get_system_instance()) || ($participant && $participant->participanttype != 1) ) {
+            } else if ( has_capability('moodle/site:approvecourse', via_get_system_instance()) ||
+                 ($participant && $participant->participanttype != 1) ) {
                 // If participant is animator or host, show link to prepare activity.
                 return 2;
             } else {
@@ -931,7 +941,8 @@ function via_access_activity($via) {
         }
 
     } else if (!$participant && has_capability('moodle/site:approvecourse', via_get_system_instance())) {
-        if (($via->activitytype == 1 || $via->activitytype == 4) && ($via->datebegin + ($via->duration * 60) < time()) || $nbconnectedusers > 0) {
+        if (($via->activitytype == 1 || $via->activitytype == 4) &&
+             ($via->datebegin + ($via->duration * 60) < time()) || $nbconnectedusers > 0) {
             return 7;
         } else {
             return 9;
@@ -946,7 +957,8 @@ function via_access_activity($via) {
                 $cangrade = false;
             }
             if (has_capability('moodle/site:approvecourse', via_get_system_instance()) || $cangrade) {
-                if (($via->activitytype == 1 || $via->activitytype == 4) && ($via->datebegin + ($via->duration * 60) < time()) || $nbconnectedusers > 0) {
+                if (($via->activitytype == 1 || $via->activitytype == 4) &&
+                     ($via->datebegin + ($via->duration * 60) < time()) || $nbconnectedusers > 0) {
                     return 7;
                 } else {
                     return 9;

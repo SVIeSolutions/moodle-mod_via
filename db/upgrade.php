@@ -473,7 +473,7 @@ function xmldb_via_upgrade($oldversion = 0) {
         upgrade_mod_savepoint($result, 2017030106, 'via');
     }
 
-    if ($oldversion < 2018042004) {
-        upgrade_mod_savepoint($result, 2018042004, 'via');
+    if ($oldversion < 2018042005) {
+        upgrade_mod_savepoint($result, 2018042005, 'via');
     }
 }
