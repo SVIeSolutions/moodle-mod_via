@@ -1,4 +1,7 @@
 This file defines the changes made to Via - Virtual classroom
+last update 04/02/2020 2020011401
+-Fix authentification from Via app
+
 last update 19/02/2019 (2018042005)
 -The courseID is no more stored during backup /restore
 -Bug fixes for compatibiliy with viaassign
