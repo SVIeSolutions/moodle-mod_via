@@ -852,7 +852,16 @@ function via_remove_participant($userid, $viaid, $synched = null) {
         if ($synched == true) {
             // Now we update it on via!
             $api = new mod_via_api();
-            $response = $api->removeuser_activity($via->viaactivityid, $userid);
+            try {
+                $response = $api->removeuser_activity($via->viaactivityid, $userid);
+            } catch (Exception $exception) {
+                if ($exception->getMessage() === 'INVALID_ACTIVITYID') {
+						mtrace(strftime('%c').' '.$exception->getMessage(). ' data : '.$via->viaactivityid);
+                } else {
+                    mtrace(strftime('%c').' '.$exception->getMessage().' file '.__FILE__.', line '.__LINE__.', data '.json_encode(array($via, $userid)));
+                    throw $exception;
+                }
+            }
         }
         if ($synched == false || isset($response)) {
             return $DB->delete_records('via_participants', array('userid' => $userid, 'activityid' => $viaid));

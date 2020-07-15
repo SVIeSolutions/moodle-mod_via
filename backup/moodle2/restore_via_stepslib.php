@@ -160,7 +160,13 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
 
                     // Creates new activity in Via too!
                     $api = new mod_via_api();
-                    $newactivityid = $api->activity_duplicate($data);
+                    if ($data->viaactivityid != null) {
+                        try {
+                            $newactivityid = $api->activity_duplicate($data);
+                        } catch (Exception $exception) {
+                            mtrace(strftime('%c').' '.$exception->getMessage().' file '.__FILE__.', line '.__LINE__.', data '.json_encode($data));
+                        }
+                    }
 
                     $data->id = "";
                     $data->viaactivityid = $newactivityid;
@@ -168,10 +174,16 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                     // If it is an unplanned activity, there's no reason to plan it!
                     if ($data->activitytype != 3) {
                         $api = new mod_via_api();
-                        $newactivityid = $api->activity_edit($data, 1); // Activitystate = 1 (Active)!
-                        // Empty via_recyclebin table if it's there!
-                        $DB->delete_records('via_recyclebin', array('viaid' => $data->id, 'viaactivityid' => $data->viaactivityid));
+                        if (isset($data->viaactivityid) && $data->viaactivityid > 0) {
+                            try {
+                                $newactivityid = $api->activity_edit($data, 1); // Activitystate = 1 (Active)!
+                            } catch (Exception $exception) {
+                                mtrace(strftime('%c').' '.$exception->getMessage().' file '.__FILE__.', line '.__LINE__.', data '.json_encode($data));
+                            }
+                        }
                     }
+                    // Empty via_recyclebin table if it's there!
+                    $DB->delete_records('via_recyclebin', array('viaid' => $data->id, 'viaactivityid' => $data->viaactivityid));
                 }
             }
 
@@ -202,8 +214,9 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
         $data->activityid = $this->get_new_parentid('via');
         $data->timemodified = time();
         $data->timesynched = time();
-
-        $newitemid = $DB->insert_record('via_participants', $data);
+        if (isset($data->activityid) && $data->activityid > 0) {
+            $newitemid = $DB->insert_record('via_participants', $data);
+        }
     }
 
     /**
