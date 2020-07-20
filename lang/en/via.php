@@ -58,9 +58,9 @@ $string['automaticenrol'] = 'Automatic enrolment';
 $string['availabledate'] = 'Available from';
 $string['awaitingauthorization'] = 'Awaiting authorization (manual)';
 
-$string['backup'] = 'Incude whiteboard and survey information in course backups';
+$string['backup'] = 'Incude survey information in course backups';
 $string['backup_options'] = 'Activity backup and duplication options';
-$string['backupdesc'] = 'If checked whiteboard and survey information from an activity will be included in the new activty produced durning the course backup and restoration process. Documents are always included in this process. Including user ifomation is optional.';
+$string['backupdesc'] = 'If checked survey information from an activity will be included in the new activty produced during the course backup and restoration process. Documents are always included in this process. Including user infomation is optional.';
 $string['basedon'] = 'The presence status is based on {$a} minutes.';
 $string['by'] = 'by';
 
@@ -162,8 +162,8 @@ $string['donousewaitingroom'] = 'Do not use (deactivated)';
 $string['downloadablefiles'] = 'Downloadable content';
 $string['downloadplaybacks'] = 'Download Recordings';
 $string['downloadplaybacksdesc'] = 'If checked, users with editing roles will be permitted to download Via recordings. Before checking this option, please contact SVIesolutions to validate that your server permits it.';
-$string['duplication'] = 'Incude whiteboard and survey information in activity duplication';
-$string['duplicationdesc'] = 'If checked whiteboard and survey information from an activity will be included in the new activty produced durning the duplication process. User infomation and documents are always included in this process.';
+$string['duplication'] = 'Incude survey information in activity duplication';
+$string['duplicationdesc'] = 'If checked survey information from an activity will be included in the new activty produced during the duplication process. User infomation and documents are always included in this process.';
 $string['duration'] = 'Duration (minutes)';
 $string['durationheader'] = 'Duration';
 
@@ -621,6 +621,9 @@ $string['unified'] = 'Unified';
 $string['unplanned'] = 'Unplanned';
 $string['unplanned_error'] = 'You can only save your modifications if it is a planned activity!';
 $string['unplanned_text'] = 'This activiy has not yet been planned.';
+$string['unplannedsettings'] = 'Use unplanned activities';
+$string['unplannedsettings_desc'] = 'If this box is checked, the restored activities will be "unplanned" by default. To activate them, you must modify their parameters and assign them a date or define them as permanent. Regardless of the other duplication options, users and documents will not be copied.<br/>If the box is not checked, the restored activities will be set to one month later by default.';
+
 $string['updatethisvia'] = 'Update this Via';
 $string['userishost'] = 'This user is the host, chose a new one in order to give this user a new role.';
 $string['users_search'] = 'Search potential users';

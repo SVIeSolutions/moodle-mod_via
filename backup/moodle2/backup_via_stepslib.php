@@ -39,20 +39,25 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
 
         $controller = $DB->get_record('backup_controllers', array('backupid' => str_replace("/", "", $backupid)));
 
-        if ($controller->type == 'course' && $controller->interactive == 1
-            && ($controller->purpose == 10 || $controller->purpose == 20) ||
-            ( $controller->purpose == 40 && $controller->interactive == 0)|| // For the web service!
-            ($controller->type == 'activity' && $controller->purpose == 20 && $controller->interactive == 0)) {
-            // This is the RESTORE of a course OR DUPLICATION OR an IMPORT.
-            // We do not create a viaactiviyid!
-            // We change the activity type!
-            // There is no start date!
-            // And no users!
-            $userinfo = 0;
+        if ( get_config('via', 'via_unplanned')) {
+            if ($controller->type == 'course' && $controller->interactive == 1
+                && ($controller->purpose == 10 || $controller->purpose == 20) ||
+                ( $controller->purpose == 40 && $controller->interactive == 0)|| // For the web service!
+                ($controller->type == 'activity' && $controller->purpose == 20 && $controller->interactive == 0)) {
+                // This is the RESTORE of a course OR DUPLICATION OR an IMPORT.
+                // We do not create a viaactiviyid!
+                // We change the activity type!
+                // There is no start date!
+                // And no users!
+                $userinfo = 0;
+            } else {
+                // If we come from recycle bin, we keep userInfo
+                $userinfo = 1;
+            }
+        } else if ($controller->type == "activity") {
+            $userinfo = 1;
         } else {
-            // We never keep all participants, only the host because of an Moodle error with restore from recycle bin.
-            // Change to 1 to keep the users
-            $userinfo = 0;
+            $userinfo = $this->get_setting_value('userinfo');
         }
 
         // Define each element separated.
@@ -77,7 +82,7 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
             $participant->set_source_sql('SELECT * FROM {via_participants} WHERE activityid = ?', array(backup::VAR_PARENTID));
         } else {
             $participant->set_source_sql('SELECT * FROM {via_participants} WHERE activityid = ? AND participanttype = 2',
-             array(backup::VAR_PARENTID));
+                array(backup::VAR_PARENTID));
         }
 
         // Define id annotations.

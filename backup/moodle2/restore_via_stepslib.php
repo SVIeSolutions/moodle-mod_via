@@ -59,16 +59,20 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
         global $CFG;
 
         $controller = $this->get_controller();
-
-        if ( $controller->type == "activity") {
-            $userinfo = 1;
+        
+        if( get_config('via', 'via_unplanned') && ($controller->type == 'course' && $controller->interactive == 1
+                && ($controller->purpose == 10 || $controller->purpose == 20) ||
+                ( $controller->purpose == 40 && $controller->interactive == 0)|| // For the web service.
+                ($controller->type == 'activity' && $controller->purpose == 20 && $controller->interactive == 0))) {
+            $userinfo = 0;
         } else {
-            $userinfo = $this->get_setting_value('userinfo');
+            $userinfo = 1;
         }
-
+        
         $paths = array();
         $paths[] = new restore_path_element('via', '/activity/via');
-        if ($userinfo) {
+        
+        if ($userinfo) { 
             $paths[] = new restore_path_element('via_participant', '/activity/via/participants/participant');
         }
 
@@ -89,18 +93,18 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
         $data = (object)$data;
 
         try {
-
             $controller = $this->get_controller();
-            if ($controller->type == 'course' && $controller->interactive == 1
-                && ($controller->purpose == 10 || $controller->purpose == 20) ||
-                ( $controller->purpose == 40 && $controller->interactive == 0)|| // For the web service.
-                ($controller->type == 'activity' && $controller->purpose == 20 && $controller->interactive == 0)) {
-                // This is the RESTORE of a course OR DUPLICATION OR an IMPORT.
+
+            $data->course = $controller->itemid;
+            if ( get_config('via', 'via_unplanned') && ($controller->type == 'course' && $controller->interactive == 1
+                    && ($controller->purpose == 10 || $controller->purpose == 20) ||
+                    ( $controller->purpose == 40 && $controller->interactive == 0)|| // For the web service.
+                    ($controller->type == 'activity' && $controller->purpose == 20 && $controller->interactive == 0))) {
+                // This is the RESTORE of a course OR DUPLICATION OR an IMPORT.) {
                 // We do not create a viaactiviyid!
                 // We change the activity type!
                 // There is no start date!
                 // And no users!
-
                 if (strpos($data->name, get_string('unplanned', 'via')) == false) {
                     $data->name = $data->name . ' - ' . get_string('unplanned', 'via');
                 } else {
@@ -112,8 +116,7 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                 $data->datebegin = 0;
                 $data->playbacksynch = 0;
                 $data->viaactivityid = 0;
-                $data->course = $controller->itemid;
-                // We no not want to have a group mode imposed on the unplanned activity!
+                // We do not want to have a group mode imposed on the unplanned activity!
                 if ($data->groupingid != 0 || $data->groupid != 0) {
                     $data->groupingid = 0;
                     $data->groupid = 0;
@@ -136,7 +139,7 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                 // we assume we are coming from the recylebin and therefore restore as is!
                 $exists = $DB->get_record('via', array('id' => $data->id, 'viaactivityid' => $data->viaactivityid));
 
-                // If it exists we are duplicating or restoring a course and therefor create a new id!
+                // If it exists we are duplicating or restoring a course and therefore create a new id!
                 if ($exists) {
 
                     if ( $controller->type == "activity") {
@@ -144,7 +147,7 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                         $data->include_surveyandwboards = get_config('via', 'via_duplicatecontent');
                     } else {
                         // Course backup/restore.
-                        $data->include_userInfo = $this->get_setting_value('userinfo');
+                        $data->include_userInfo = 1;
                         $data->include_surveyandwboards = get_config('via', 'via_backupcontent');
                         $data->course = $controller->itemid;
 
@@ -156,7 +159,7 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                         }
                     }
 
-                    $data->datebegin = time() + (3600 * 24 * 30);// We add a month to now.
+                    $data->datebegin = strtotime("+1 month", time());
 
                     // Creates new activity in Via too!
                     $api = new mod_via_api();
@@ -174,7 +177,7 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                     // If it is an unplanned activity, there's no reason to plan it!
                     if ($data->activitytype != 3) {
                         $api = new mod_via_api();
-                        if (isset($data->viaactivityid) && $data->viaactivityid > 0) {
+                        if (isset($data->viaactivityid)) {
                             try {
                                 $newactivityid = $api->activity_edit($data, 1); // Activitystate = 1 (Active)!
                             } catch (Exception $exception) {

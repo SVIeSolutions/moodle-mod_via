@@ -1,4 +1,7 @@
 This file defines the changes made to Via - Virtual classroom
+last update 07/07/2020 2020011403
+-New option to disable unplanned activities
+
 last update 05/06/2020 2020011402
 -Fix restore course whith deleted activity
 -Fix remove participants from invalid activity

@@ -184,6 +184,12 @@ if ($ADMIN->fulltree) {
     <strong>'.get_string('backup_options', 'via').'</strong>', ''));
 
     /****
+       Unplanned Activity settings
+       ****/
+    $settings->add(new admin_setting_configcheckbox('via/via_unplanned',
+        get_string('unplannedsettings', 'via'), get_string('unplannedsettings_desc', 'via'), 1));
+
+    /****
     Activity duplication settings
     ****/
     $settings->add(new admin_setting_configcheckbox('via/via_duplicatecontent',
