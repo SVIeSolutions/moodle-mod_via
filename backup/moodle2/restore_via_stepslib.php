@@ -60,7 +60,7 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
 
         $controller = $this->get_controller();
         
-        if( get_config('via', 'via_unplanned') && ($controller->type == 'course' && $controller->interactive == 1
+        if (get_config('via', 'via_unplanned') && ($controller->type == 'course' && $controller->interactive == 1
                 && ($controller->purpose == 10 || $controller->purpose == 20) ||
                 ( $controller->purpose == 40 && $controller->interactive == 0)|| // For the web service.
                 ($controller->type == 'activity' && $controller->purpose == 20 && $controller->interactive == 0))) {

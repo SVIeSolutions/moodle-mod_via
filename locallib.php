@@ -63,7 +63,7 @@ function via_synch_users() {
             $DB->delete_records('via_participants', array('userid' => $vuser->id));
             $DB->delete_records('via_users', array('userid' => $vuser->id));
         } catch (Exception $e) {
-            print_error(get_string("error:".$e->getMessage(), "via"));
+            mtrace(get_string("error:".$e->getMessage(), "via"));
             $result = false;
             continue;
         }
@@ -127,14 +127,14 @@ function via_synch_participants($userid, $activityid) {
         try {
             $type = via_user_type($add->userid, $add->courseid, $add->noparticipants);
         } catch (Exception $e) {
-            print_error("error:".$e->getMessage());
+            mtrace("error:".$e->getMessage());
         }
         try {
             if ($type != 2) { // Only add participants and animators.
                 via_add_participant($add->userid, $add->viaactivity, $type, false);
             }
         } catch (Exception $e) {
-            print_error("error:".$e->getMessage());
+            mtrace("error:".$e->getMessage(). ' data : '.$activityid);
         }
     }
 
@@ -167,14 +167,14 @@ function via_synch_participants($userid, $activityid) {
         try {
                 $type = via_user_type($add->userid, $add->course, $add->noparticipants);
         } catch (Exception $e) {
-            print_error("error:".$e->getMessage());
+            mtrace("error:".$e->getMessage());
         }
         try {
             if ($type != 2) { // Only add participants and animators.
                 via_add_participant($add->userid, $add->activityid, $type, false);
             }
         } catch (Exception $e) {
-            print_error("error:".$e->getMessage());
+            mtrace("error:".$e->getMessage());
             $result = false;
         }
     }
@@ -215,7 +215,7 @@ function via_synch_participants($userid, $activityid) {
                 via_remove_participant($remove->userid, $remove->activityid, $synch);
             }
         } catch (Exception $e) {
-            print_error("error:".$e->getMessage());
+            mtrace("error:".$e->getMessage());
             $result = false;
         }
     }
@@ -618,7 +618,7 @@ function via_delete_recylebin_instances() {
                 }
             } catch (Exception $e) {
                 $return = false;
-                print_error(get_string("error:".$e->getMessage(), "via"));
+                mtrace(get_string("error:".$e->getMessage(), "via"));
             }
         }
     }
@@ -637,7 +637,7 @@ function via_sync_activity_playbacks($via) {
     try {
         $playbacks = $api->list_playback($via);
     } catch (Exception $e) {
-        print_error(get_string("error:".$e->getMessage(), "via"));
+        mtrace(get_string("error:".$e->getMessage(), "via"));
     }
 
     if (isset($playbacks['Playback']) && count($playbacks) == 1) {
