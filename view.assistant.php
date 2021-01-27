@@ -41,15 +41,15 @@ if ($id) {
     $cm = get_coursemodule_from_id('via', $id);
 
     if (! $via = $DB->get_record('via', array('id' => $cm->instance))) {
-        error('Activity ID was incorrect');
+        print_error('Activity ID was incorrect');
     }
 } else if ($viaid) {
     $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $viaid));
     if (!($cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST))) {
-        error("Course module ID is incorrect");
+        print_error("Course module ID is incorrect");
     }
     if (!($via = $DB->get_record('via', array('id' => $viaid)))) {
-        error("Via ID is incorrect");
+        print_error("Via ID is incorrect");
     }
 
 }

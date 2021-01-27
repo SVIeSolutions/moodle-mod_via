@@ -1,4 +1,7 @@
 This file defines the changes made to Via - Virtual classroom
+last update 26/01/2021 2020102202
+-remove deprecated functions
+
 last update 22/10/2020 2020102201
 -Plugin for Moodle 3.9
 -Keep tasks running after exception

@@ -35,10 +35,10 @@ $group = optional_param('group', 0, PARAM_INT); // Change of group.
 $participanttype  = optional_param('t', 1, PARAM_INT); // Participant type we are editing (participants, animators, host).
 
 if (!$via = $DB->get_record('via', array('id' => $id))) {
-    error("Via ID is incorrect");
+    print_error("Via ID is incorrect");
 }
 if (!$course = $DB->get_record('course', array('id' => $via->course))) {
-    error("Could not find this course!");
+    print_error("Could not find this course!");
 }
 if (! $cm = get_coursemodule_from_instance("via", $via->id, $course->id)) {
     $cm->id = 0;
@@ -65,7 +65,7 @@ if (isguestuser()) {
 }
 
 if (!has_capability('mod/via:manage', $context)) {
-    error('You do not have the permission to view via participants');
+    print_error('You do not have the permission to view via participants');
 }
 
 $strparticipants = get_string("participants", "via");

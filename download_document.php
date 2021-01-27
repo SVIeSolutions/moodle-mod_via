@@ -35,7 +35,7 @@ $viaid = required_param('viaid', PARAM_INT);
 $fid = required_param('fid', PARAM_TEXT);// Edit via recording.
 
 if (! $via = $DB->get_record('via', array('id' => $viaid))) {
-    error('Activity ID was incorrect');
+    print_error('Activity ID was incorrect');
 }
 
 

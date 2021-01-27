@@ -54,25 +54,25 @@ if ($fa) {
 // Modified to access via from a normal via activity or a delegated via activity!
 if ($id) {
     if (!($cm = get_coursemodule_from_id('via', $id))) {
-        error("Course module ID is incorrect");
+        print_error("Course module ID is incorrect");
     }
     if (!($via = $DB->get_record('via', array('id' => $cm->instance)))) {
-        error("Via ID is incorrect");
+        print_error("Via ID is incorrect");
     }
     $PAGE->set_url('/mod/via/view.php', array('id' => $id));
 } else if ($viaid) {
     $viaassign = $DB->get_record('viaassign_submission', array('viaid' => $viaid));
     if (!($cm = get_coursemodule_from_instance('viaassign', $viaassign->viaassignid, null, false, MUST_EXIST))) {
-        error("Course module ID is incorrect");
+        print_error("Course module ID is incorrect");
     }
     if (!($via = $DB->get_record('via', array('id' => $viaid)))) {
-        error("Via ID is incorrect");
+        print_error("Via ID is incorrect");
     }
     $PAGE->set_url('/mod/via/view.php', array('viaid' => $viaid));
 }
 
 if (! $course = $DB->get_record('course', array('id' => $cm->course))) {
-    error('Incorrect course id');
+    print_error('Incorrect course id');
 }
 
 require_login($course, false, $cm);
