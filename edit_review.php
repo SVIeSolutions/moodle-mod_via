@@ -103,9 +103,15 @@ if ($edit == get_string('delete', 'via')) {
         // If this setting is false, then delete the playback for real!
         try {
             $api = new mod_via_api();
-            $result = $api->delete_playback($via->viaactivityid, $playbackid);
+            if ($via->activityversion == 0) {
+                $result = $api->delete_playback($via->viaactivityid, $playbackid);
+            } else {
+                $result = $api->delete_playback_html5($playbackid);
+            }
             if ($result) {
                 $DB->delete_records('via_playbacks', array('playbackid' => $playbackid));
+                // Delete breakouts aswell otherwise they stay in UI but aren't accessible at all.
+                $DB->delete_records('via_playbacks', array('playbackidref' => $playbackid));
                 redirect("view.php?".$viaurlparam."=".$viaurlparamvalue);
             }
 
@@ -150,7 +156,12 @@ if ($edit == get_string('delete', 'via')) {
         if ($ispublic) {
             $playback->accesstype = 1;
         }
-        $result = $api->edit_playback($via, $playbackid, $playback);
+        if ($via->activityversion == 0) {
+            $result = $api->edit_playback($via, $playbackid, $playback);
+        } else {
+            $result = $api->edit_playback_html5($playbackid, $playback);
+        }
+
         if ($result) {
             if ($ispublic) {
                 $playback->accesstype = 2;
@@ -212,7 +223,7 @@ if ($edit == 'del') {
     $form .= '</td></tr>';
 
     // If the option is activated in the settings!
-    if (get_config('via', 'via_downloadplaybacks')) {
+    if (get_config('via', 'via_downloadplaybacks') && $via->activityversion == 0) {
         $form .= '<tr><td align="right"><label for="isdownloadable">'.get_string("recordingisdownloadable", "via").'</label>';
         $form .= '</td>';
         if ($playback->isdownloadable == 1) {

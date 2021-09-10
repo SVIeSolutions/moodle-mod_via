@@ -59,7 +59,7 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
         global $CFG;
 
         $controller = $this->get_controller();
-        
+
         if (get_config('via', 'via_unplanned') && ($controller->type == 'course' && $controller->interactive == 1
                 && ($controller->purpose == 10 || $controller->purpose == 20) ||
                 ( $controller->purpose == 40 && $controller->interactive == 0)|| // For the web service.
@@ -68,11 +68,11 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
         } else {
             $userinfo = 1;
         }
-        
+
         $paths = array();
         $paths[] = new restore_path_element('via', '/activity/via');
-        
-        if ($userinfo) { 
+
+        if ($userinfo) {
             $paths[] = new restore_path_element('via_participant', '/activity/via/participants/participant');
         }
 
@@ -165,7 +165,11 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                     $api = new mod_via_api();
                     if ($data->viaactivityid != null) {
                         try {
-                            $newactivityid = $api->activity_duplicate($data);
+                            if ($data->activityversion == 0) {
+                                $newactivityid = $api->activity_duplicate($data);
+                            } else {
+                                $newactivityid = $api->activity_duplicate_html5($data);
+                            }
                         } catch (Exception $exception) {
                             mtrace(strftime('%c').' '.$exception->getMessage().' file '.__FILE__.', line '.__LINE__.', data '.json_encode($data));
                         }
@@ -179,7 +183,12 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                         $api = new mod_via_api();
                         if (isset($data->viaactivityid)) {
                             try {
-                                $newactivityid = $api->activity_edit($data, 1); // Activitystate = 1 (Active)!
+                                // Activitystate = 1 (Active)!
+                                if ($data->activityversion == 0) {
+                                    $newactivityid = $api->activity_edit($data, 1);
+                                } else {
+                                    $newactivityid = $api->activity_edit_html5($data, 1);
+                                }
                             } catch (Exception $exception) {
                                 mtrace(strftime('%c').' '.$exception->getMessage().' file '.__FILE__.', line '.__LINE__.', data '.json_encode($data));
                             }

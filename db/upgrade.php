@@ -473,7 +473,41 @@ function xmldb_via_upgrade($oldversion = 0) {
         upgrade_mod_savepoint($result, 2017030106, 'via');
     }
 
-    if ($oldversion < 2020102202) {
-        upgrade_mod_savepoint($result, 2020102202, 'via');
+    if ($oldversion < 2021011101) {
+        $table = new xmldb_table('via');
+
+        $field = new xmldb_field('activityversion', XMLDB_TYPE_INTEGER, '4', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0', 'name');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $table = new xmldb_table('via_recyclebin');
+        $field = new xmldb_field('activityversion', XMLDB_TYPE_INTEGER, '4', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, '0', 'expiry');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint($result, 2021011101, 'via');
+    }
+    if ($oldversion < 2021011106) {
+        $table = new xmldb_table('via');
+
+        $field = new xmldb_field('branchid', XMLDB_TYPE_CHAR, '200', XMLDB_UNSIGNED, null, null, null, 'playbacksync');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        $table = new xmldb_table('via_users');
+
+        $field = new xmldb_field('branchid', XMLDB_TYPE_CHAR, '200', XMLDB_UNSIGNED, null, null, null, 'timemodified');
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint($result, 2021011106, 'via');
+    }
+
+    if ($oldversion < 2021011107) {
+        upgrade_mod_savepoint($result, 2021011107, 'via');
     }
 }

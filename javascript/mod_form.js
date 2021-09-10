@@ -6,6 +6,11 @@ jQuery(document).ready(function () {
         $("#id_minpresence").val(Math.round(duration / 2));
     });
 
+    //We lock the version in editing mode
+    if ($('[name="wassaved"]').val() == 1) {
+        $("#id_activityversion").attr('disabled', 'disabled');
+    }
+
     // This is to add a div around the buttons for display purposes!
     // This is for both Via and Viaassign!
     var participants = $("input[id ^= 'id_participants']");
@@ -281,7 +286,38 @@ jQuery(document).ready(function () {
     if (window.location.href.indexOf("#id_enrolmentheader") != -1) {
         setTimeout(function () { $("a[aria-controls='id_enrolmentheader']")[0].click(); }, 1000);
     }
+
+    $('#id_activityversion').change(function () 
+    {
+        toggle_html5($(this).val() == "0");
+    });
+
+    if ($("#id_activityversion").val() == "1")
+    {
+        toggle_html5(false);
+    }
 });
+
+function toggle_html5(show)
+{
+    // Other options are handled with function hideIf.
+    $('#id_categoriesheader').toggle(show);
+      
+    if (!show) {
+        if (document.getElementsByName('pastevent')[0].value == "0") {
+            $('#id_recordmodebehavior').removeAttr('disabled');
+        }
+        $('#id_isreplayallowed').removeAttr('disabled');
+    } else {
+        if ($('#id_recordingmode').val() == "0" || document.getElementsByName('pastevent')[0].value == "1") {
+            $('#id_recordmodebehavior').attr('disabled', 'disabled');
+        }
+        if ($('#id_recordingmode').val() == "0") {
+            $('#id_isreplayallowed').attr('disabled', 'disabled');
+        }
+    }
+
+}
 
 function replace_host() {
     // Only one can be picked.

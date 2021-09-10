@@ -16,78 +16,49 @@
 
 /**
  *
- * Permits admin to test the API connection information.
- * As well as the API version.
+ * via restore task that provides all the settings and steps to perform one
+ * complete restore of the activity
  *
- * @package    mod
- * @subpackage via
- * @copyright  SVIeSolutions <support@sviesolutions.com>
+ * @package    mod_via
+ * @subpackage synctemplate
+ * @copyright  SVIeSolutions <jasmin.giroux@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
 
 require_once('../../config.php');
 require_once('lib.php');
+
+$PAGE->requires->js('/mod/via/javascript/list.js');
+
 global $CFG, $DB;
+
 
 require_login();
 
 if ($site = get_site()) {
     if (function_exists('require_capability')) {
         require_capability('moodle/site:config', via_get_system_instance());
-    } else if (!isadmin) {
+    } else if (!isadmin()) {
         print_error("You need to be admin to use this page");
     }
 }
 
 $PAGE->set_context(via_get_system_instance());
 
-$site = get_site();
-
-$apiurl = required_param('apiurl', PARAM_NOTAGS);
-$cleid  = required_param('cleid', PARAM_NOTAGS);
-$apiid  = required_param('apiid', PARAM_NOTAGS);
-
-// Initialize $PAGE!
-$PAGE->set_url('/mod/via/conntest.php');
+// Initialize $PAGE.
+$PAGE->set_url('/mod/via/viausersreset.php');
 $PAGE->set_heading("$site->fullname");
 $PAGE->set_pagelayout('popup');
-
-// New with version 20140861.
-// We validate the version.
-$required = '8.7.0.0';
 
 // Print the page header.
 echo $OUTPUT->header();
 
 echo $OUTPUT->box_start('center', '100%');
 
-$result = true;
-$api = new mod_via_api();
+$DB->delete_records('via_users');
 
-try {
-    $response = $api->testconnection($apiurl, $cleid, $apiid);
-
-} catch (Exception $e) {
-    $result = false;
-    print_error(get_string("error:".$e->getMessage(), "via"));
-}
-
-if ($result) {
-
-    echo '<div class="alert alert-block alert-info">'. get_string('connectsuccess', 'via'). '</div>';
-    if (isset($response['BuildVersion'])) {
-        $version = $response['BuildVersion'];
-    } else {
-        $version = 0;
-    }
-    if (via_validate_api_version($required, $version)) {
-        echo '<div class="alert alert-block alert-info">'.get_string('versionscompatible', 'via').'</div>';
-    } else {
-        echo '<div class="alert alert-block alert-error">'.get_string('versions_not_compatible', 'via').$required.'</div>';
-    }
-
-}
+echo '<div class="alert alert-block alert-info">' . get_string("viausersresetend", 'via') .'</div>';
 
 echo '<center><input type="button" onclick="self.close();" value="' . get_string('closewindow') . '" /></center>';
 

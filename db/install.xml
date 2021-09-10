@@ -7,7 +7,8 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
       <FIELDS>
         <FIELD NAME="id" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="true" NEXT="course" />
         <FIELD NAME="course" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="id" NEXT="name" />
-        <FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="course" NEXT="intro" />
+		<FIELD NAME="name" TYPE="char" LENGTH="100" NOTNULL="false" UNSIGNED="false" SEQUENCE="false" PREVIOUS="course" NEXT="activityversion" />
+		<FIELD NAME="activityversion" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="name" NEXT="intro" />
         <FIELD NAME="intro" TYPE="text" NOTNULL="true" UNSIGNED="false" SEQUENCE="false" PREVIOUS="name" NEXT="introformat" />
         <FIELD NAME="introformat" TYPE="int" LENGTH="4" NOTNULL="true" UNSIGNED="false" DEFAULT="1" SEQUENCE="false" PREVIOUS="intro" NEXT="creator" />
         <FIELD NAME="creator" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="introformat" NEXT="viaactivityid" />
@@ -40,7 +41,8 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
         <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timecreated" NEXT="noparticipants" />
         <FIELD NAME="noparticipants" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timemodified"  NEXT="ish264" />
         <FIELD NAME="ish264" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="1" SEQUENCE="false" PREVIOUS="noparticipants" NEXT="playbacksync" />
-        <FIELD NAME="playbacksync" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="ish264" />
+        <FIELD NAME="playbacksync" TYPE="int" LENGTH="10" NOTNULL="false" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="ish264" NEXT="branchid" />
+		<FIELD NAME="branchid" TYPE="char" LENGTH="200" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="playbacksync" />
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via" />
@@ -71,7 +73,8 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
         <FIELD NAME="setupstatus" TYPE="int" LENGTH="1" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="username" NEXT="usertype" />
         <FIELD NAME="usertype" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" PREVIOUS="setupstatus" NEXT="timecreated" />
         <FIELD NAME="timecreated" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="usertype" NEXT="timemodified" />
-        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timecreated" />
+        <FIELD NAME="timemodified" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="timecreated" NEXT="branchid" />
+		<FIELD NAME="branchid" TYPE="char" LENGTH="200" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" PREVIOUS="timemodified" />
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_users" />
@@ -165,7 +168,8 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
         <FIELD NAME="viaactivityid" TYPE="char" LENGTH="50" NOTNULL="false" UNSIGNED="true" SEQUENCE="false" NEXT="recyclebinid" PREVIOUS="viaid" />;
         <FIELD NAME="recyclebinid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" NEXT="recyclebintype" PREVIOUS="viaactivityid" />;
         <FIELD NAME="recyclebintype" TYPE="char" LENGTH="50" NOTNULL="true" SEQUENCE="false" NEXT="expiry" PREVIOUS="recyclebinid" />;
-        <FIELD NAME="expiry" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" PREVIOUS="recyclebintype" />;
+        <FIELD NAME="expiry" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" NEXT ="activityversion" PREVIOUS="recyclebintype" />;
+		<FIELD NAME="activityversion" TYPE="int" LENGTH="1" NOTNULL="true" UNSIGNED="true" DEFAULT="0" SEQUENCE="false" PREVIOUS="expiry"/>
       </FIELDS>
       <KEYS>
         <KEY NAME="primary" TYPE="primary" FIELDS="id" COMMENT="Primary key for via_recyclebin" />

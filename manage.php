@@ -75,9 +75,6 @@ $PAGE->set_url('/mod/via/manage.php', array('id' => $cm->id));
 $PAGE->set_title($course->shortname . ': ' . format_string($via->name));
 $PAGE->set_heading($course->fullname);
 
-$button = $OUTPUT->update_module_button($cm->id, 'via');
-$PAGE->set_button($button);
-
 // Print the page header!
 echo $OUTPUT->header();
 echo '<a class="returnvia" href="'.$CFG->wwwroot.'/mod/via/view.php?id='.$cm->id.'">'.get_string('return', 'via').'</a>';

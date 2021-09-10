@@ -1,6 +1,29 @@
 This file defines the changes made to Via - Virtual classroom
-last update 26/01/2021 2020102202
--remove deprecated functions
+
+last update 09/09/2021 2021011107
+- Fix bug of users becoming animators unexpectedly.
+- Fix diplay of record options
+- Options for ViaHTML5 are shown if company is in VRoomOnly mode
+
+last update 26/07/2021 2021011106
+- New parameter to link activities and users to a Lära branch.
+- Apply this new settings to activity and users
+- Fix for data not synchronized between Lära and Moodle
+- Show record options for ViaHTML5.
+
+last update 22/07/2021 2021011105
+- fix : prevent removing subscription of Host even if no change.
+- Users unsubscribed from a course remain the host of activities in that course.
+
+last update 20/05/2021 2021011104
+- New option for Via HTML5 to use presence tracking
+
+last update 13/05/2021 2021011103
+-Fixes in users and subscriptions synchronisation
+-New options in plugin settings for Via HTML5 API + button to test it
+-New option to clean up Via users
+-New option to create Via HTML5 activities instead of Via9
+-New capability to allow access to via even if not subscribed
 
 last update 22/10/2020 2020102201
 -Plugin for Moodle 3.9

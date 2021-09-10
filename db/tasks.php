@@ -65,5 +65,14 @@ array(
     'day' => '*',
     'dayofweek' => '*',
     'month' => '*'
+    ),
+array(
+    'classname' => 'mod_via\task\via_branchsync_task',
+    'blocking' => 0,
+    'minute' => '*/10',
+    'hour' => '*',
+    'day' => '*',
+    'dayofweek' => '*',
+    'month' => '*'
     )
 );

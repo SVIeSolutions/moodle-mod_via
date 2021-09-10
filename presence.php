@@ -38,6 +38,7 @@ $id    = required_param('id', PARAM_INT);// Via!
 $showemail = optional_param('e', 0, PARAM_INT);
 
 $via = $DB->get_record('via', array('id' => $id));
+$ishtml5 = $via->activityversion == 1;
 
 $cm = get_coursemodule_from_instance('via', $id, $via->course);
 
@@ -65,6 +66,11 @@ $table->head  = array (get_string("role", "via"),
 $table->align = array ('left', 'left', 'left', 'center');
 $table->width = '100%';
 
+if ($ishtml5) {
+    $api = new mod_via_api();
+    $vroomLogData =  $api->via_get_user_logs_html5($via->viaactivityid);
+}
+
 $participants = $DB->get_records_sql("SELECT v.id, v.userid, v.activityid, vu.viauserid, u.lastname, u.firstname,
                                       u.email, v.participanttype, vp.status, via.presence, via.recordingmode,
                                       via.viaactivityid,vp.connection_duration, vp.playback_duration
@@ -78,7 +84,7 @@ $participants = $DB->get_records_sql("SELECT v.id, v.userid, v.activityid, vu.vi
 foreach ($participants as $participant) {
     if (!isset($participant->connection_duration)) {
         if (isset($participant->viauserid)) {
-            $userlogs = via_userlogs($participant);
+            $userlogs = via_userlogs($participant, $vroomLogData);
             $completestring = explode('(', $userlogs['0']);
             $string = $completestring['0'];
         } else {

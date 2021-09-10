@@ -57,10 +57,49 @@ if ($ADMIN->fulltree) {
         $settings->add(new admin_setting_heading('via_testconn',  '<input type="button"
         onclick="testConnection(document.getElementById(\'adminsettings\'));" value="'.
             get_string('testconnection', 'via').'"/>', ''));
+
+        /****
+        Via HTML5 activation
+         ****/
+        try {
+            $api = new mod_via_api();
+            $cieinforesponse = $api->cieinfo();
+        } catch (Exception $e) {
+            // Do Nothing.
+        }
+
+        // 0 = Via6And9.
+        // 1 = Via6.
+        // 2 = Via9.
+        // 3 = VroomAndVia.
+        // 4 = VRoomOnly.
+        if (isset($cieinforesponse) && ($cieinforesponse["ViaVersionRestriction"] == 3 || $cieinforesponse["ViaVersionRestriction"] == 4)) {
+            $settings->add(new admin_setting_configcheckbox('via/via_html5activation',
+                get_string('html5activation', 'via'), get_string('html5activationdesc', 'via'), 0));
+
+            /****
+            API HTML5 infos
+                ****/
+            if (isset($config->via_html5activation) && $config->via_html5activation == "1") {
+                $settings->add(new admin_setting_configtext('via/via_apiurlhtml5', get_string('apiurl', 'via'),
+                    get_string('apiurlsetting', 'via'), "", PARAM_TEXT));
+
+                $settings->add(new admin_setting_configtext('via/via_apiidhtml5', get_string('apiid', 'via'),
+                    get_string('apiidsetting', 'via'), "", PARAM_TEXT));
+
+                $settings->add(new admin_setting_configtext('via/lara_branch', get_string('apibranch', 'via'),
+                   get_string('apibranchsetting', 'via'), "", PARAM_TEXT));
+
+                $settings->add(new admin_setting_heading('via_testconnhtml5',  '<input type="button"
+                onclick="testhtml5Connection(document.getElementById(\'adminsettings\'));" value="'.
+                    get_string('testconnectionhtml5', 'via').'"/>', ''));
+            }
+        }
     }
 
+
     /****
-    API info - clÃ© moodle
+    API info - clé moodle
     ****/
     $settings->add(new admin_setting_heading('moodle_admin', '<hr>
     <strong>'.get_string('moodle_config', 'via').'</strong>', ''));
@@ -80,6 +119,17 @@ if ($ADMIN->fulltree) {
         3  => get_string('typepInscriptioncollaborator', 'via'));
     $settings->add(new admin_setting_configselect('via/via_typepInscription', $name,
         $description, 2, $liste ));
+
+    /****
+    Reset Table Via_Users
+     ****/
+
+    $settings->add(new admin_setting_heading('viauserresetbutton', '<hr><strong>'.get_string('viauserreset', 'via').'</strong>',
+        get_string('viauserresetdesc', 'via'). '<br /><br /><input
+    id="viauserresetbutton" type="button"
+    onclick="return openpopup(null, { url: \'/mod/via/viausersreset.php\', name: \'viauserresetbutton\',
+    options: \'scrollbars=yes,resizable=no,width=760,height=400\' });" value="'.
+        get_string('viauserresetbutton', 'via').'" />'));
 
     /****
     Categories

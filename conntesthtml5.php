@@ -35,7 +35,7 @@ require_login();
 if ($site = get_site()) {
     if (function_exists('require_capability')) {
         require_capability('moodle/site:config', via_get_system_instance());
-    } else if (!isadmin) {
+    } else if (!isadmin()) {
         print_error("You need to be admin to use this page");
     }
 }
@@ -45,17 +45,13 @@ $PAGE->set_context(via_get_system_instance());
 $site = get_site();
 
 $apiurl = required_param('apiurl', PARAM_NOTAGS);
-$cleid  = required_param('cleid', PARAM_NOTAGS);
 $apiid  = required_param('apiid', PARAM_NOTAGS);
+$branchid  = required_param('branchid', PARAM_NOTAGS);
 
 // Initialize $PAGE!
-$PAGE->set_url('/mod/via/conntest.php');
+$PAGE->set_url('/mod/via/conntesthtml5.php');
 $PAGE->set_heading("$site->fullname");
 $PAGE->set_pagelayout('popup');
-
-// New with version 20140861.
-// We validate the version.
-$required = '8.7.0.0';
 
 // Print the page header.
 echo $OUTPUT->header();
@@ -66,26 +62,30 @@ $result = true;
 $api = new mod_via_api();
 
 try {
-    $response = $api->testconnection($apiurl, $cleid, $apiid);
+
+    $response = $api->testconnectionhtml5($apiurl, $apiid);
+    // Try to create user to see if we get customfields errors.
+    $user = new stdClass();
+    $user->viausername = via_create_user_password();
+    $user->email = 'email@email.com';
+    $user->firstname = 'test';
+    $user->lastname = 'test';
+    $user->lang = '2';
+    $response = $api->via_user_create_html5($user);
+    $response = $api->via_user_delete_html5($response["id"]);
+
+    if ($branchid != null && $branchid != '') {
+        $response = $api->get_branch($branchid);
+    }
 
 } catch (Exception $e) {
     $result = false;
-    print_error(get_string("error:".$e->getMessage(), "via"));
+    print_error($e->getMessage());
 }
 
 if ($result) {
 
     echo '<div class="alert alert-block alert-info">'. get_string('connectsuccess', 'via'). '</div>';
-    if (isset($response['BuildVersion'])) {
-        $version = $response['BuildVersion'];
-    } else {
-        $version = 0;
-    }
-    if (via_validate_api_version($required, $version)) {
-        echo '<div class="alert alert-block alert-info">'.get_string('versionscompatible', 'via').'</div>';
-    } else {
-        echo '<div class="alert alert-block alert-error">'.get_string('versions_not_compatible', 'via').$required.'</div>';
-    }
 
 }
 

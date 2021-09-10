@@ -35,6 +35,8 @@ $string['activitytemplateheader'] = "Activity template";
 $string['activitytemplatebutton'] = "Synchronize activity template values";
 $string['activitytemplatedesc'] = "The default values(recording mode, waiting room, multimedia profile, etc.) applied to the creation of a new virtual classe are the values that are set by default in the Via portal. You must connect to the portal and access the Activity Template section on the left side to validate the default values.";
 $string['activitytitle'] = 'Activity title';
+$string['activityversion'] = 'Version';
+$string['activityversion_help'] = 'You can choose between Classic Via and Via HTML5. You can not change the version in edition mode.';
 $string['activitywaserased'] = 'Could not find this activity on SVI server. It seems to have been erased.';
 $string['add'] = 'Add';
 $string['adminid_nosuccess'] = 'The mooodle key provided is not valid.';
@@ -44,6 +46,8 @@ $string['adminnotrenrolled'] = 'As administrator you may access the activity alt
 $string['and'] = 'and';
 $string['animator'] = 'Animator';
 $string['animators'] = 'Animators';
+$string['apibranch'] = 'Lära branch';
+$string['apibranchsetting'] = 'API identifier of the associated branch in Lära. Activities and users will be associated with this branch.';
 $string['apiconfig'] = 'API configuration - Step 1';
 $string['apiid'] = 'Via API ID (ApiID)';
 $string['apiidsetting'] = 'Via API unique ID';
@@ -308,6 +312,8 @@ $string['hasconfirmednot'] = 'You have confirmed that you won\'t attend this act
 $string['headerduration'] = 'Duration';
 $string['hidelist'] = 'Hide';
 $string['highquality'] = 'High quality';
+$string['html5activation'] = 'Use Via HTML5';
+$string['html5activationdesc'] = 'If this box is checked, you will have an option to choose between Via or Via HTML5 when creating a virtual class';
 $string['host'] = 'Host';
 $string['host_replace'] = 'Replace host';
 
@@ -346,6 +352,23 @@ To go to the activity, follow this link : {$a->activitylink}
 ---------------------------------------------------------------------
 
 Attention : This activity can be recorded. Please do not access this activity if you do not want to be recorded. This email contains personnal connection informations. Those informations must not be shared';
+$string['inviteemail_viahtml5'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
+---------------------------------------------------------------------
+{$a->datesend}
+---------------------------------------------------------------------
+
+Hello {$a->username},
+
+Moodle invites you to participate in the activity &quot; {$a->title} &quot; that will take place on {$a->datebegin} between {$a->hourbegin} and {$a->hourend}
+
+{$a->invitemsg}
+
+---------------------------------------------------------------------
+Web access
+
+To go to the activity, follow this link : {$a->activitylink}
+
+---------------------------------------------------------------------';
 $string['inviteemailhtml'] = '<p>Hello {$a->username},</p>
 <p>Moodle invites you to participate in the activity &laquo; {$a->title} &raquo; that will take place on <b>{$a->datebegin}</b> between <b>{$a->hourbegin}</b> and <b>{$a->hourend}</b>.</p><p>{$a->invitemsg}</p>';
 
@@ -373,6 +396,21 @@ To go to the activity, follow this link : {$a->activitylink}
 ---------------------------------------------------------------------
 
 Attention : This activity can be recorded. Please do not access this activity if you do not want to be recorded. This email contains personnal connection informations. Those informations must not be shared';
+$string['inviteemailpermanent_viahtml5'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
+---------------------------------------------------------------------
+{$a->datesend}
+---------------------------------------------------------------------
+
+Hello {$a->username},
+
+{$a->invitemsg}
+
+---------------------------------------------------------------------
+Web access
+
+To go to the activity, follow this link : {$a->activitylink}
+
+---------------------------------------------------------------------';
 $string['inviteemailhtmlpermanent'] = '<p>Hello {$a->username},</p>
 <p>{$a->invitemsg}</p>';
 $string['invitewarninghtml'] = 'Attention : This activity can be recorded. Please do not access this activity if you do not want to be recorded. This email contains personnal connection informations. Those informations must not be shared.';
@@ -542,7 +580,7 @@ $string['reminderemail'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
 {$a->datesend}
 ---------------------------------------------------------------------
 
-Hello {$a->username},reminderemail
+Hello {$a->username},
 
 Moodle invites you to participate in the activity &quot; {$a->title} &quot; that will take place on {$a->datebegin} between {$a->hourbegin} and {$a->hourend}
 
@@ -560,6 +598,21 @@ To go to the activity, follow this link : {$a->activitylink}
 ---------------------------------------------------------------------
 
 Attention : This activity can be recorded. Please do not access this activity if you do not want to be recorded. This email contains personnal connection informations. Those informations must not be shared';
+$string['reminderemail_viahtml5'] = '{$a->coursename} -> {$a->modulename} -> {$a->title}
+---------------------------------------------------------------------
+{$a->datesend}
+---------------------------------------------------------------------
+
+Hello {$a->username},
+
+Moodle invites you to participate in the activity &quot; {$a->title} &quot; that will take place on {$a->datebegin} between {$a->hourbegin} and {$a->hourend}
+
+---------------------------------------------------------------------
+Web access
+
+To go to the activity, follow this link : {$a->activitylink}
+
+---------------------------------------------------------------------';
 
 $string['reminderemailhtml'] = '<p>Hello {$a->username}reminderemailhtml,</p>
 <p>This is a reminder for an activity coming soon:</p>
@@ -608,6 +661,7 @@ $string['technicalassist_url'] = 'Use a personalised technical support page.';
 $string['technicalassist_urldesc'] = 'By default the technical support page will display the information provided in Via. You may add a personalised support page by calling the URL directly. This may be a page created in moodle or another site all together.';
 $string['testadminid'] = 'Test the moodle key';
 $string['testconnection'] = 'Test API connection';
+$string['testconnectionhtml5'] = 'Test HTML5 API connection';
 $string['title_exists'] = 'The title already exists, please try again.';
 $string['timeduration'] = 'Duration :';
 
@@ -640,6 +694,7 @@ $string['via_typepInscription'] = 'Default right in Via';
 
 /* permissions */
 $string['via:addinstance'] = 'Add a new via activity';
+$string['via:access'] = 'Access Via without being associated';
 $string['via:manage'] = 'Manage Via Activities';
 $string['via:viewpresence'] = 'View Presence Reports for Via Activities';
 $string['via:view'] = 'View Via Activities';
@@ -648,17 +703,24 @@ $string['via_ciesettings_task'] = "Synchronisation settings VIA";
 $string['via_mail_task'] = "VIA mail sending";
 $string['via_usersync_task'] = "Via Moodle user synchronisation";
 $string['via_notification_task'] = "Via activity notifications";
+$string['via_branchsync_task'] = "Via branches update";
 
 /* */
 $string['viaaccessed'] = 'Via accessed';
 $string['viaaudiotypes'] = 'Select audio mode that you want to keep.';
 $string['viacategoriesdesc'] = 'If checked, categories created in Via may be added to the activity.';
 
+$string['viauserreset'] = 'Cleanup Via users';
+$string['viauserresetbutton'] = 'Cleanup Via users';
+$string['viauserresetdesc'] = 'If your users are experiencing problems logging in, this removes link between Moodle users and Via users. New links will be created with no visible difference for users. Your site may appear slower until all links are created again';
+$string['viausersresetend'] = 'Cleanup successfull';
+
+$string['via9'] = 'Via';
 $string['viausers'] = 'Users:';
 $string['view'] = 'View';
+
+$string['vroom'] = 'Via HTML5';
 
 $string['waitingconfirm'] = 'Waiting for confirmation';
 $string['waitingroomaccessmode'] = 'Waiting room';
 $string['waitingroomaccessmode_help'] = 'The option "Pending Authorization" allows the host to allow individual participants\' access while the option "In the absence of the host" ensures that no user can access the activity until the speaker is not connected. This last option is particularly useful when using permanent activities.';
-
-

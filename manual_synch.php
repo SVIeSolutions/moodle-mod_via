@@ -37,21 +37,32 @@ $via = $DB->get_record('via', array('id' => $id));
 $module = $DB->get_record('modules', array('name' => 'via'));
 $cm = $DB->get_record('course_modules', array('instance' => $id, 'course' => $via->course, 'module' => $module->id));
 $string = null;
+$ishtml5 = $via->activityversion == 1;
+$usertosubscribe = new ArrayObject();
 
 $notsynched = $DB->get_records('via_participants',  array('activityid' => $id, 'synchvia' => 0));
 
-foreach ($notsynched as $s) {
+try {
+    foreach ($notsynched as $s) {
 
-    $type = via_user_type($s->userid, $via->course, $via->noparticipants);
-    try {
-        $added = via_add_participant($s->userid, $id, $type, true);
-        if (!$added) {
-            $string = '1';
+        $type = via_user_type($s->userid, $via->course, $via->noparticipants);
+
+        $added = via_add_participant($s->userid, $id, $type, !$ishtml5);
+        if ($ishtml5) {            
+            $usertosubscribe->append(array($s->userid, $type));
         }
-    } catch (Exception $e) {
+
+    }
+    if ($ishtml5) {
+        $api = new mod_via_api();
+        $api->set_users_activity_html5($usertosubscribe, $via, true);
+        $added = true;
+    }
+    if (!$added) {
         $string = '1';
     }
-
+} catch (Exception $e) {
+    $string = '1';
 }
 
 if (!$string) {

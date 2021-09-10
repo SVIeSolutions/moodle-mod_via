@@ -44,23 +44,16 @@ class mod_via_mod_form extends moodleform_mod {
         $mform =& $this->_form;
 
         $groupingid = optional_param('groupingid', null, PARAM_INT);
-        $enroltype = optional_param('enroltype', null, PARAM_INT);
         $groupid = optional_param('groupid', null, PARAM_INT);
         $fromjs = optional_param('fromjs', null, PARAM_BOOL);
 
         // We come from a call ajax in this page.
         $ajax = isset($fromjs) || isset($groupid) || isset($groupingid);
         if (!isset($groupingid) && !isset($fromjs)) {
-            if ($CFG->version <= 2014111012) {
-                if (isset($this->_cm)) {
-                    $groupingid = $this->_cm->groupingid;
-                }
-            } else {
-                if (!isset($groupid) && isset($this->_cm)) {
-                    $groupsarray = getgroupsfrommodule($this->_cm, $this->_cm->availability);
-                    $groupingid = $groupsarray[0];
-                    $groupid = $groupsarray[1];
-                }
+            if (!isset($groupid) && isset($this->_cm)) {
+                $groupsarray = getgroupsfrommodule($this->_cm, $this->_cm->availability);
+                $groupingid = $groupsarray[0];
+                $groupid = $groupsarray[1];
             }
         }
 
@@ -78,12 +71,39 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->setType('name', PARAM_CLEANHTML);
         $mform->addRule('name', null, 'required', null, 'client');
 
-        // Description!
-        if ($CFG->version >= 2015051100) {
-            $this->standard_intro_elements();
-        } else {
-            $this->add_intro_editor(true);
+
+        //Via HTML5.
+        if (get_config('via', 'via_html5activation') == 1) {
+
+            $versionoptions = array( 0 => get_string('via9', 'via'));
+            try {
+                $api = new mod_via_api();
+                $cieinforesponse = $api->cieinfo();
+                // 0 = Via6And9.
+                // 1 = Via6.
+                // 2 = Via9.
+                // 3 = VroomAndVia.
+                // 4 = VRoomOnly.
+                if (isset($cieinforesponse) && ($cieinforesponse["ViaVersionRestriction"] == 3 || $cieinforesponse["ViaVersionRestriction"] == 4)) {
+                    switch ($cieinforesponse["ViaVersionRestriction"]) {
+                        case 3:
+                            $versionoptions = array( 0 => get_string('via9', 'via'),
+                                   1 => get_string('vroom', 'via'));
+                            break;
+                        case 4:
+                            $versionoptions = array(1 => get_string('vroom', 'via'));
+                            break;
+                    }
+                }
+            } catch (Exception $e) {
+                // Do Nothing.
+            }
+            $mform->addElement('select', 'activityversion', get_string('activityversion', 'via'), $versionoptions);
+            $mform->setDefault('activityversion', 0);
+            $mform->addHelpButton('activityversion', 'activityversion', 'via');
         }
+
+        $this->standard_intro_elements();
 
         // DURATION!
         $mform->addElement('header', 'activityduration', get_string('durationheader', 'via'));
@@ -92,6 +112,7 @@ class mod_via_mod_form extends moodleform_mod {
         if (get_config('via', 'via_permanentactivities') == 1) {
             $mform->addElement('advcheckbox', 'activitytype', get_string("permanent", "via"), '', array('group' => 0), array(0, 1));
             $mform->disabledif ('activitytype', 'pastevent', 'eq', 1);
+            $mform->disabledif ('activitytype', 'wassaved', 'eq', 1);
             $mform->addHelpButton('activitytype', 'permanent', 'via');
         }
 
@@ -119,7 +140,7 @@ class mod_via_mod_form extends moodleform_mod {
             $mform->addHelpButton('presence', 'presence', 'via');
             $mform->setType('presence', PARAM_INT);
             $mform->setDefault('presence', '30');
-            $mform->disabledif ('presence', 'activitytype', 'checked');
+            $mform->hideIf('presence', 'activitytype', 'checked');
         } else {
             $mform->addElement('hidden', 'presence', get_string('presence', 'via'), array('size' => 4, 'maxlength' => 4));
             $mform->setType('presence', PARAM_INT);
@@ -157,6 +178,8 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->disabledif ('roomtype', 'nowevent', 'eq', 1);
         $mform->disabledif ('roomtype', 'pastevent', 'eq', 1);
         $mform->addHelpButton('roomtype', 'roomtype', 'via');
+        // If HTML5.
+        $mform->hideIf('roomtype', 'activityversion', 'eq', 1);
 
         // Show Participants!
         $showoptions = array( 0 => get_string('hidelist', 'via'),
@@ -165,6 +188,8 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->setDefault('showparticipants', 1);
         $mform->disabledif ('showparticipants', 'roomtype', 'eq', 1);
         $mform->addHelpButton('showparticipants', 'showparticipants', 'via');
+        // If HTML5.
+        $mform->hideIf('showparticipants', 'activityversion', 'eq', 1);
 
         $qualityoptions = $DB->get_records('via_params', array('param_type' => 'multimediaprofil'));
         if (!$qualityoptions) {
@@ -179,6 +204,8 @@ class mod_via_mod_form extends moodleform_mod {
             $mform->addElement('select', 'profilid', get_string('multimediaquality', 'via'), $options);
             $mform->disabledif ('profilid', 'pastevent', 'eq', 1);
             $mform->addHelpButton('profilid', 'multimediaquality', 'via');
+            // If HTML5.
+            $mform->hideIf('profilid', 'activityversion', 'eq', 1);
         }
 
         // Session recordings!
@@ -189,6 +216,8 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->setDefault('recordingmode', 0);
         $mform->disabledif ('recordingmode', 'pastevent', 'eq', 1);
         $mform->addHelpButton('recordingmode', 'recordingmode', 'via');
+        // If HTML5.
+        $mform->hideIf('recordingmode', 'activityversion', 'eq', 1);
 
         $recordbehavioroptions = array( 1 => get_string('automatic', 'via'), 2 => get_string('manual', 'via'));
         $mform->addElement('select', 'recordmodebehavior', get_string('recordmodebehavior', 'via'), $recordbehavioroptions);
@@ -210,6 +239,8 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->setDefault('waitingroomaccessmode', 0);
         $mform->disabledif ('waitingroomaccessmode', 'pastevent', 'eq', 1);
         $mform->addHelpButton('waitingroomaccessmode', 'waitingroomaccessmode', 'via');
+        // If HTML5.
+        $mform->hideIf('waitingroomaccessmode', 'activityversion', 'eq', 1);
 
         if (get_config('via', 'via_participantmustconfirm')) {
             $mform->addElement('selectyesno', 'needconfirmation', get_string('needconfirmation', 'via'));
@@ -217,6 +248,8 @@ class mod_via_mod_form extends moodleform_mod {
             $mform->setDefault('needconfirmation', 0);
             $mform->disabledif ('needconfirmation', 'pastevent', 'eq', 1);
             $mform->addHelpButton('needconfirmation', 'needconfirmation', 'via');
+            // If HTML5.
+            $mform->hideIf('needconfirmation', 'activityversion', 'eq', 1);
         } else {
             $mform->addElement('hidden', 'needconfirmation', 0);
             $mform->setType('needconfirmation', PARAM_BOOL);
@@ -227,6 +260,8 @@ class mod_via_mod_form extends moodleform_mod {
         $mform->setType('ish264', PARAM_INT);
         $mform->disabledif ('ish264', 'pastevent', 'eq', 1);
         $mform->addHelpButton('ish264', 'ish264', 'via');
+        // If HTML5.
+        $mform->hideIf('ish264', 'activityversion', 'eq', 1);
 
         // Categories!
         if (get_config('via', 'via_categories')) {
@@ -247,6 +282,8 @@ class mod_via_mod_form extends moodleform_mod {
                 }
             }
             $mform->addElement('select', 'category', get_string('category', 'via'), $catgeories);
+            // If HTML5.
+            $mform->hideIf('category', 'activityversion', 'eq', 1);
         }
 
         // Enrolment!
@@ -265,7 +302,7 @@ class mod_via_mod_form extends moodleform_mod {
 
         $mform->addElement('checkbox', 'noparticipants',  get_string('noparticipantscheckbox', 'via'));
         $mform->setDefault('noparticipants', 0);
-        $mform->disabledif ('noparticipants', 'enroltype', 'eq', 1);
+        $mform->disabledif('noparticipants', 'enroltype', 'eq', 1);
         $mform->addHelpButton('noparticipants', 'noparticipants', 'via');
 
         // Enrolled users lists.
@@ -327,7 +364,7 @@ class mod_via_mod_form extends moodleform_mod {
                 }
 
             }
-                // If there are no users we set to empty rather than null, to avoid php errors.
+            // If there are no users we set to empty rather than null, to avoid php errors.
             if (!isset($participants)) {
                 $participants = '';
             }
@@ -343,8 +380,16 @@ class mod_via_mod_form extends moodleform_mod {
             $host[$USER->id] = $USER->lastname . ' ' . $USER->firstname . ' (' . $USER->username .')';
             $participants = '';
             $animators = '';
-            if ($ajax) {
-                unset($pusers[$USER->id]);
+        }
+        if (key($host)) {
+            if ($pusers != '') {
+                unset($pusers[key($host)]);
+            }
+            if ($participants != '') {
+                unset($participants[key($host)]);
+            }
+            if ($animators != '') {
+                unset($animators[key($host)]);
             }
         }
 
@@ -355,8 +400,8 @@ class mod_via_mod_form extends moodleform_mod {
                     get_string('host_replace', 'via'), 'onclick="replace_host()"');
         $mform->addGroup($group, 'add_hostgroup', get_string('host', 'via'), array(' '), false);
         if (!$editing) {
-            $mform->disabledif ('host', 'enroltype', 'eq', 0);
-            $mform->disabledif ('add_host', 'enroltype', 'eq', 0);
+            $mform->disabledif('host', 'enroltype', 'eq', 0);
+            $mform->disabledif('add_host', 'enroltype', 'eq', 0);
         }
 
         $mform->addElement('html', '<div class="fitem viausers">
@@ -470,7 +515,7 @@ class mod_via_mod_form extends moodleform_mod {
         global $DB;
 
         if (isset($defaultvalues['viaactivityid']) && $defaultvalues['viaactivityid']) {
-            if ($sviinfos = $DB->get_record('via', array('viaactivityid' => $defaultvalues['viaactivityid']))) {
+            if ($sviinfos = $DB->get_record('via', array('id' => $defaultvalues['id']))) {
                 foreach ($sviinfos as $key => $svi) {
                     $defaultvalues[$key] = $svi;
                 }
@@ -606,7 +651,8 @@ class mod_via_mod_form extends moodleform_mod {
         if (isset($data['activitytype'])
                 && $data['activitytype'] == 1
                 && isset($data['recordingmode'])
-                && $data['recordingmode'] == 1 ) {
+                && $data['recordingmode'] == 1
+                && $data['activityversion'] == 0) {
             $errors['recordingmode'] = get_string('nounifiedrecordpermanent', 'via');
         }
 

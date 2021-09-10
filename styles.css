@@ -268,10 +268,11 @@ A.reportbtn:visited {
 
 .usersynch {
     padding: 10px;
-    width: 35%;
     border: #c4c4c4 1px solid;
-    display: inline-block;
-    float: right;
+    display: block;
+}
+.usersynch a {
+    padding-left: 10px;
 }
 .usersynch P{
     margin-bottom:0;
@@ -375,8 +376,12 @@ SELECT.viauserlists {
     padding-left: 5px;
 }
 
+.viabtnlink.html5 {
+    padding-left: 10px;
+}
+
 .tdcenter {
-    text-align :center !important;
+    text-align: center !important;
 }
 .fa.via {
     padding-right:4px
@@ -385,4 +390,11 @@ SELECT.viauserlists {
 .notifysuccess {
     width:100%;
     margin:0;
+}
+
+a.btn-primary.dimmed_text {
+    background-color: transparent;
+    border: 1px solid #212529;
+    color: #212529 !important;
+    padding: 6px 12px;
 }

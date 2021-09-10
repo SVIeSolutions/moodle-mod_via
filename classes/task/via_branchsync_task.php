@@ -16,22 +16,29 @@
 
 /**
  *
- * Code fragment to define the version of the via module
+ * via task
  *
- * @package    mod
- * @subpackage via
- * @copyright  SVIeSolutions <support@sviesolutions.com>
+ * @package    mod_via
+ * @subpackage task
+ * @copyright  SVIeSolutions <thomas.fauquignon@sviesolutions.com>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  *
  */
+namespace mod_via\task;
+class via_branchsync_task extends \core\task\scheduled_task
+{
 
-defined('MOODLE_INTERNAL') || die();
+    public function get_name() {
+        return get_string('via_branchsync_task', 'via');
+    }
 
-global $CFG;
+    public function execute() {
+        global $CFG, $DB;
 
-$plugin->component = 'mod_via';
-$plugin->version = 2021011107;
-$plugin->requires = 2020061500;
-$plugin->cron     = 300;
-$plugin->maturity = MATURITY_STABLE; // Not ready for production
-$plugin->release = 'v3.9-r7';
+        require_once($CFG->dirroot.'/mod/via/lib.php');
+        require_once($CFG->dirroot.'/config.php');
+
+        // Update Branch when settings is edited
+        via_synch_branches();
+    }
+}

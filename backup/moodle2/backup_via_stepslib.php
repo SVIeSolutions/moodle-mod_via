@@ -51,7 +51,7 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
                 // And no users!
                 $userinfo = 0;
             } else {
-                // If we come from recycle bin, we keep userInfo
+                // If we come from recycle bin, we keep userInfo.
                 $userinfo = 1;
             }
         } else if ($controller->type == "activity") {
@@ -65,7 +65,8 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
             'viaactivityid', 'datebegin', 'duration', 'presence', 'audiotype', 'recordingmode', 'recordmodebehavior',
             'isreplayallowed', 'profilid', 'activitytype', 'remindertime', 'needconfirmation', 'roomtype',
             'waitingroomaccessmode', 'activitystate', 'enroltype', 'isnewvia', 'showparticipants', 'mailed', 'sendinvite',
-            'invitemsg', 'timecreated', 'timemodified', 'category', 'groupingid', 'groupid', 'ish264', 'playbacksync'));
+            'invitemsg', 'timecreated', 'timemodified', 'category', 'groupingid', 'groupid', 'ish264', 'playbacksync',
+            'activityversion'));
 
         // Define sources.
         $via->set_source_table('via', array('id' => backup::VAR_ACTIVITYID));
@@ -89,7 +90,7 @@ class backup_via_activity_structure_step extends backup_activity_structure_step 
         $participant->annotate_ids('user', 'userid');
 
         // Define file annotations.
-        $via->annotate_files('mod_via', 'intro', null); // This file areas haven't itemid
+        $via->annotate_files('mod_via', 'intro', null); // This file areas haven't itemid.
         $via->annotate_files('mod_via', 'content', null); // This file areas haven't itemid.
 
         // Return the root element (via), wrapped into standard activity structure.

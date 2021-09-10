@@ -53,6 +53,17 @@ $capabilities = array(
                 )
             ),
 
+        // Ability to access Via if not associated.
+        'mod/via:access' => array(
+
+            'captype' => 'read',
+            'contextlevel' => CONTEXT_MODULE,
+            'archetypes' => array(
+                'editingteacher' => CAP_ALLOW,
+                'manager' => CAP_ALLOW
+                )
+            ),
+
         // Ability to view presence report.
         'mod/via:viewpresence' => array(
 

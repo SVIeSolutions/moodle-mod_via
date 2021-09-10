@@ -92,13 +92,14 @@ if (isguestuser()) {
 }
 
 $api = new mod_via_api();
+$ishtml5 = $via->activityversion == 1;
 
 // In case the user still has not been added.
 // If user_participants field timesynched is not null we add him.
 // Otherwise we check if he is in the activity if he isn't we add him.
 
 $viaparticipant = $DB->get_record('via_participants', array('userid' => $USER->id, 'activityid' => $via->id));
-if (!has_capability('moodle/site:approvecourse', via_get_system_instance())) {
+if (!has_capability('mod/via:access', $context) && !has_capability('moodle/site:approvecourse', via_get_system_instance())) {
     // Only users with a lower role are added.
     if (isset($viaparticipant->synchvia) && $viaparticipant->synchvia == 1) {
         $connexion = true;
@@ -107,7 +108,7 @@ if (!has_capability('moodle/site:approvecourse', via_get_system_instance())) {
         // The user doesn't exists yet. We need to create it.
         if (!$viauser) {
             try {
-                $uservalidated = $api->validate_via_user($USER);
+                $uservalidated = $api->validate_via_user($USER, $ishtml5);
                 $viauser = $DB->get_record('via_users', array('viauserid' => $uservalidated));
             } catch (Exception $e) {
                 print_error('error:'.$e->getMessage(), 'via'). $muser->firstname.' '.$muser->lastname;
@@ -115,8 +116,13 @@ if (!has_capability('moodle/site:approvecourse', via_get_system_instance())) {
         }
         try {
             $type = via_user_type($viauser->userid, $course->id, $via->noparticipants);
+            $added = via_add_participant($viauser->userid, $via->id, $type, $via->activityversion == 0);
 
-            $added = via_add_participant($viauser->userid, $via->id, $type, true);
+            if ($ishtml5) {
+                $userarray = new ArrayObject();
+                $userarray->append(array($viauser->userid, $type));
+                $added = $api->set_users_activity_html5($userarray, $via, true);
+            }
             $connexion = true;
         } catch (Exception $e) {
             print_error('error:'.$e->getMessage(), 'via'). $muser->firstname.' '.$muser->lastname;
@@ -131,9 +137,18 @@ if (!has_capability('moodle/site:approvecourse', via_get_system_instance())) {
 try {
     if ($connexion == 'true') {
         if (!$review) {
-            $response = $api->userget_ssotoken($via, 3, null, $forcedaccess);
+            if ($via->activityversion == 0) {
+                $response = $api->userget_ssotoken($via, 3, null, $forcedaccess);
+            } else {
+                $response = $api->userget_ssotoken_html5($via, 8, null, $forcedaccess);
+            }
+
         } else {
-            $response = $api->userget_ssotoken($via, 3, $playbackid, $forcedaccess, $forcededit);
+            if ($via->activityversion == 0) {
+                $response = $api->userget_ssotoken($via, 3, $playbackid, $forcedaccess, $forcededit);
+            } else {
+                $response = $api->userget_ssotoken_html5($via, 8, $playbackid, $forcedaccess);
+            }
         }
     }
 

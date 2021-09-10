@@ -47,7 +47,7 @@ function via_synch_users() {
                                      WHERE u.deleted = 1 AND vu.id IS NOT null');
 
     foreach ($deleted as $vuser) {
-        $activities = $DB->get_records_sql('SELECT v.id, v.viaactivityid FROM {via_participants} vp
+        $activities = $DB->get_records_sql('SELECT v.id, v.viaactivityid, vp.synchvia, vp.timesynched FROM {via_participants} vp
                                             LEFT JOIN {via} v ON v.id = vp.activityid
                                             WHERE v.viaactivityid is not NULL and vp.userid = ?', array($vuser->id));
 
@@ -58,12 +58,12 @@ function via_synch_users() {
                 } else {
                     $synch = false;
                 }
-                $response = via_remove_participant($vuser->id, $via->viaid, $synch);
+                $response = via_remove_participant($vuser->id, $via->id, $synch);
             }
             $DB->delete_records('via_participants', array('userid' => $vuser->id));
             $DB->delete_records('via_users', array('userid' => $vuser->id));
         } catch (Exception $e) {
-            mtrace(get_string("error:".$e->getMessage(), "via"));
+            mtrace(get_error_message($e));
             $result = false;
             continue;
         }
@@ -167,14 +167,14 @@ function via_synch_participants($userid, $activityid) {
         try {
                 $type = via_user_type($add->userid, $add->course, $add->noparticipants);
         } catch (Exception $e) {
-            mtrace("error:".$e->getMessage());
+            mtrace(get_error_message($e));
         }
         try {
             if ($type != 2) { // Only add participants and animators.
                 via_add_participant($add->userid, $add->activityid, $type, false);
             }
         } catch (Exception $e) {
-            mtrace("error:".$e->getMessage());
+            mtrace(get_error_message($e));
             $result = false;
         }
     }
@@ -187,7 +187,7 @@ function via_synch_participants($userid, $activityid) {
     $oldenrollments = $DB->get_records_sql('SELECT vp.id, vp.activityid, vp.userid, vp.timesynched, vp.synchvia
                                         FROM {via_participants} vp
                                         LEFT JOIN {user_enrolments} ue ON ue.enrolid = vp.enrolid and ue.userid = vp.userid
-                                        WHERE ue.enrolid is null AND vp.userid != 2 and vp.enrolid != 0');
+                                        WHERE ue.enrolid is null AND vp.userid != 2 and vp.enrolid != 0 AND vp.participanttype != 2');
     // 2== admin user which is never enrolled.
 
     // If we are using groups.
@@ -195,16 +195,16 @@ function via_synch_participants($userid, $activityid) {
                                         FROM {via_participants} vp
                                         LEFT JOIN {via} v ON v.id = vp.activityid
                                         LEFT JOIN {groupings_groups} gg ON gg.groupingid = v.groupingid
-                                        LEFT JOIN {groups} g ON gg.groupid = g.id AND v.course = g.courseid
+                                        LEFT JOIN {groups} g ON (gg.groupid = g.id AND v.course = g.courseid) OR g.id = v.groupid
                                         LEFT JOIN {groups_members} gm ON vp.userid = gm.userid
                                         WHERE  ( gm.id is null OR g.id is null ) and v.viaactivityid is not NULL
-                                        AND vp.participanttype = 1 AND v.groupingid != 0');
+                                        AND vp.participanttype = 1 AND ((v.groupingid != 0  AND gg.id is not null) OR v.groupid != 0)');
 
     $totalmerge = array_merge($oldenrollments, $oldgroupmembers);
     $total = array_unique($totalmerge, SORT_REGULAR);
     foreach ($total as $remove) {
         try {
-            // If user is not mananger, we remove him.
+            // If user is not manager, we remove him.
             if (!$DB->get_record('role_assignments', array('userid' => $remove->userid, 'contextid' => 1, 'roleid' => 1))) {
                 // By adding the info here, we are cutting on calls to the DB later on.
                 if ($remove->synchvia == 1 || $remove->timesynched && is_null($remove->synchvia)) {
@@ -212,10 +212,11 @@ function via_synch_participants($userid, $activityid) {
                 } else {
                     $synch = false;
                 }
+
                 via_remove_participant($remove->userid, $remove->activityid, $synch);
             }
         } catch (Exception $e) {
-            mtrace("error:".$e->getMessage());
+            mtrace(get_error_message($e));
             $result = false;
         }
     }
@@ -229,7 +230,11 @@ function via_synch_participants($userid, $activityid) {
  * @param object $via An object from the form in mod_form.php
  */
 function via_data_postprocessing(&$via) {
-    $via->profilid = $via->profilid;
+    if ($via->activityversion == 0) {
+        $via->profilid = $via->profilid;
+    } else {
+        $via->profilid = 0;
+    }
 
     if (isset($via->activitytype)) {
         switch($via->activitytype) {
@@ -279,7 +284,7 @@ function via_get_categories() {
     try {
         $response = $api->via_get_categories();
     } catch (Exception $e) {
-        print_error(get_string("error:".$e->getMessage(), "via"));
+        mtrace(get_error_message($e));
     }
 
     return $response;
@@ -341,7 +346,7 @@ function via_update_info_database($values) {
         if ($e->getMessage() == "ACTIVITY_DOES_NOT_EXIST") {
             $error = get_string("activitywaserased", "via");
         } else {
-            $error = get_string("error:".$e->getMessage(), "via");
+            $error = get_error_message($e);
         }
         $result = false;
     }
@@ -582,7 +587,7 @@ function via_get_list_profils() {
             $result = true;
         }
     } catch (Exception $e) {
-        print_error(get_string("error:".$e->getMessage(), "via"));
+        print_error(get_error_message($e));
     }
 
     return $result;
@@ -600,7 +605,7 @@ function via_delete_recylebin_instances() {
 
     // Join to see if null, just in case the activity has been restored!
     // It should have been redeleted from the via_recycleboin table at the restoration, but we validate anyways, just to be sure!
-    $todelete = $DB->get_records_sql('SELECT vr.id, vr.viaid, vr.viaactivityid, vr.recyclebinid, vr.recyclebintype, vr.expiry
+    $todelete = $DB->get_records_sql('SELECT vr.id, vr.viaid, vr.viaactivityid, vr.recyclebinid, vr.recyclebintype, vr.expiry, vr.activityversion
                                       FROM {via_recyclebin} vr
                                       LEFT JOIN {via} v ON v.viaactivityid = vr.viaactivityid
                                       WHERE v.viaactivityid IS NULL AND expiry < ' . time());
@@ -611,14 +616,23 @@ function via_delete_recylebin_instances() {
         foreach ($todelete as $d) {
             try {
                 // We delete the activity in Via, for this we need the viaactivityid.
-                $response = $api->via_activity_delete($d->viaactivityid);
-                if (isset($response['Result']) && $response['Result']["ResultState"] == 'SUCCESS') {
-                    $deleted = $DB->delete_records('via_recyclebin', array('id' => $d->id));
-                    $return = $deleted;
+                if (isset($d->viaactivityid)) {
+                    if ($d->activityversion == "0") {
+                        $response = $api->via_activity_delete($d->viaactivityid);
+                    } else {
+                        // Delete.
+                        $return = $api->activity_edit_html5($d, 2) == $d->viaactivityid;
+                    }
+                    if ((isset($response['Result']) && $response['Result']["ResultState"] == 'SUCCESS') || $d->activityversion == "1") {
+                        $return = $DB->delete_records('via_recyclebin', array('id' => $d->id));
+                    }
+                } else {
+                    $DB->delete_records('via_recyclebin', array('id' => $d->id));
                 }
+
             } catch (Exception $e) {
                 $return = false;
-                mtrace(get_string("error:".$e->getMessage(), "via"));
+                mtrace(get_error_message($e));
             }
         }
     }
@@ -634,83 +648,116 @@ function via_sync_activity_playbacks($via) {
     global $DB;
     $api = new mod_via_api();
 
-    try {
-        $playbacks = $api->list_playback($via);
-    } catch (Exception $e) {
-        mtrace(get_string("error:".$e->getMessage(), "via"));
-    }
+    if ($via->activityversion == 0) {
+        try {
+            $playbacks = $api->list_playback($via);
+        } catch (Exception $e) {
+            mtrace(get_error_message($e));
+        }
 
-    if (isset($playbacks['Playback']) && count($playbacks) == 1) {
-        $aplaybacks = $playbacks['Playback'];
-    } else {
-        $aplaybacks = $playbacks;
-    }
+        if (isset($playbacks['Playback']) && count($playbacks) == 1) {
+            $aplaybacks = $playbacks['Playback'];
+        } else {
+            $aplaybacks = $playbacks;
+        }
 
-    if (gettype($aplaybacks == "array") && count($aplaybacks) > 1) {
-        foreach ($aplaybacks as $playback) {
-            if (gettype($playback) == "array") {
-                if (isset($playback['BreackOutPlaybackList'])) {
-                    foreach ($playback['BreackOutPlaybackList'] as $breakout) {
-                        if (gettype($breakout) == "array") {
-                            if (isset($breakout['PlaybackID'])) {
-                                if (!$DB->record_exists('via_playbacks', array("playbackid" => $breakout['PlaybackID']))) {
-                                    $param = new stdClass();
-                                    $param->playbackid = $breakout['PlaybackID'];
-                                    $param->title = $breakout['Title'];
-                                    $param->duration = $breakout['Duration'];
-                                    $param->creationdate = strtotime($breakout['CreationDate']);
-                                    $param->accesstype = $via->isreplayallowed;
-                                    // In old version = $breakout['IsPublic']; not sure which is correct!
-                                    $param->isdownloadable = $breakout['IsDownloadable'];
-                                    $param->hasfullvideorecord = $breakout['HasFullVideoRecord'];
-                                    $param->hasmobilevideorecord = $breakout['HasMobileVideoRecord'];
-                                    $param->hasaudiorecord = $breakout['HasAudioRecord'];
-                                    $param->activityid = $via->id;
-                                    $param->playbackidref = $breakout['PlaybackRefID'];
-                                    $param->deleted = "0";
-                                    $newparam = $DB->insert_record('via_playbacks', $param);
-                                }
-                            } else {
-                                foreach ($breakout as $bkout) {
-                                    if (gettype($bkout) == "array") {
-                                        if (!$DB->record_exists('via_playbacks', array("playbackid" => $bkout['PlaybackID']))) {
-                                            $param = new stdClass();
-                                            $param->playbackid = $bkout['PlaybackID'];
-                                            $param->title = $bkout['Title'];
-                                            $param->duration = $bkout['Duration'];
-                                            $param->creationdate = strtotime($bkout['CreationDate']);
-                                            $param->accesstype = $via->isreplayallowed;
-                                            $param->isdownloadable = $bkout['IsDownloadable'];
-                                            $param->hasfullvideorecord = $bkout['HasFullVideoRecord'];
-                                            $param->hasmobilevideorecord = $bkout['HasMobileVideoRecord'];
-                                            $param->hasaudiorecord = $bkout['HasAudioRecord'];
-                                            $param->activityid = $via->id;
-                                            $param->playbackidref = $bkout['PlaybackRefID'];
-                                            $param->deleted = "0";
-                                            $newparam = $DB->insert_record('via_playbacks', $param);
+        if (gettype($aplaybacks) == "array" && count($aplaybacks) > 1) {
+            foreach ($aplaybacks as $playback) {
+                if (gettype($playback) == "array") {
+                    if (isset($playback['BreackOutPlaybackList'])) {
+                        foreach ($playback['BreackOutPlaybackList'] as $breakout) {
+                            if (gettype($breakout) == "array") {
+                                if (isset($breakout['PlaybackID'])) {
+                                    if (!$DB->record_exists('via_playbacks', array("playbackid" => $breakout['PlaybackID']))) {
+                                        $param = new stdClass();
+                                        $param->playbackid = $breakout['PlaybackID'];
+                                        $param->title = $breakout['Title'];
+                                        $param->duration = $breakout['Duration'];
+                                        $param->creationdate = strtotime($breakout['CreationDate']);
+                                        $param->accesstype = $via->isreplayallowed;
+                                        // In old version = $breakout['IsPublic']; not sure which is correct!
+                                        $param->isdownloadable = $breakout['IsDownloadable'];
+                                        $param->hasfullvideorecord = $breakout['HasFullVideoRecord'];
+                                        $param->hasmobilevideorecord = $breakout['HasMobileVideoRecord'];
+                                        $param->hasaudiorecord = $breakout['HasAudioRecord'];
+                                        $param->activityid = $via->id;
+                                        $param->playbackidref = $breakout['PlaybackRefID'];
+                                        $param->deleted = "0";
+                                        $newparam = $DB->insert_record('via_playbacks', $param);
+                                    }
+                                } else {
+                                    foreach ($breakout as $bkout) {
+                                        if (gettype($bkout) == "array") {
+                                            if (!$DB->record_exists('via_playbacks', array("playbackid" => $bkout['PlaybackID']))) {
+                                                $param = new stdClass();
+                                                $param->playbackid = $bkout['PlaybackID'];
+                                                $param->title = $bkout['Title'];
+                                                $param->duration = $bkout['Duration'];
+                                                $param->creationdate = strtotime($bkout['CreationDate']);
+                                                $param->accesstype = $via->isreplayallowed;
+                                                $param->isdownloadable = $bkout['IsDownloadable'];
+                                                $param->hasfullvideorecord = $bkout['HasFullVideoRecord'];
+                                                $param->hasmobilevideorecord = $bkout['HasMobileVideoRecord'];
+                                                $param->hasaudiorecord = $bkout['HasAudioRecord'];
+                                                $param->activityid = $via->id;
+                                                $param->playbackidref = $bkout['PlaybackRefID'];
+                                                $param->deleted = "0";
+                                                $newparam = $DB->insert_record('via_playbacks', $param);
+                                            }
                                         }
                                     }
                                 }
                             }
                         }
+                    } else {
+                        if (!$DB->record_exists('via_playbacks', array("playbackid" => $playback['PlaybackID']))) {
+                            $param = new stdClass();
+                            $param->playbackid = $playback['PlaybackID'];
+                            $param->title = $playback['Title'];
+                            $param->duration = $playback['Duration'];
+                            $param->creationdate = strtotime($playback['CreationDate']);
+                            $param->accesstype = $via->isreplayallowed;
+                            $param->isdownloadable = $playback['IsDownloadable'];
+                            $param->hasfullvideorecord = $playback['HasFullVideoRecord'];
+                            $param->hasmobilevideorecord = $playback['HasMobileVideoRecord'];
+                            $param->hasaudiorecord = $playback['HasAudioRecord'];
+                            $param->activityid = $via->id;
+                            $param->playbackidref = null;
+                            $param->deleted = "0";
+                            $newparam = $DB->insert_record('via_playbacks', $param);
+                        }
                     }
-                } else {
-                    if (!$DB->record_exists('via_playbacks', array("playbackid" => $playback['PlaybackID']))) {
-                        $param = new stdClass();
-                        $param->playbackid = $playback['PlaybackID'];
-                        $param->title = $playback['Title'];
-                        $param->duration = $playback['Duration'];
-                        $param->creationdate = strtotime($playback['CreationDate']);
-                        $param->accesstype = $via->isreplayallowed;
-                        $param->isdownloadable = $playback['IsDownloadable'];
-                        $param->hasfullvideorecord = $playback['HasFullVideoRecord'];
-                        $param->hasmobilevideorecord = $playback['HasMobileVideoRecord'];
-                        $param->hasaudiorecord = $playback['HasAudioRecord'];
-                        $param->activityid = $via->id;
-                        $param->playbackidref = null;
-                        $param->deleted = "0";
-                        $newparam = $DB->insert_record('via_playbacks', $param);
-                    }
+                }
+            }
+        }
+    } else {
+        // HTML5.
+        try {
+            $playbacklist = $api->playback_getlist_html5($via);
+        } catch (Exception $e) {
+            mtrace(get_error_message($e));
+        }
+        if (gettype($playbacklist) == "array" && count($playbacklist) > 0) {
+            foreach ($playbacklist as $playback) {
+                $param = new stdClass();
+                $param->playbackid = $playback['id'];
+                $param->title = get_localized_text($playback, 'title');
+                $param->duration = $playback['duration'];
+                $param->accesstype = $via->isreplayallowed;
+                $param->activityid = $via->id;
+                if (isset($playback['parentId'])) {
+                    $param->playbackidref = $playback['parentId'];
+                }
+                if (isset($playback['startDate'])) {
+                    $param->creationdate = strtotime($playback['startDate']);
+                }
+                $param->deleted = "0";
+                $param->isdownloadable = 0;
+                $param->hasfullvideorecord = 0;
+                $param->hasmobilevideorecord = 0;
+                $param->hasaudiorecord = 0;
+                if (!$DB->record_exists('via_playbacks', array("playbackid" => $playback['id']))) {
+                    $newparam = $DB->insert_record('via_playbacks', $param);
                 }
             }
         }
@@ -763,35 +810,41 @@ function via_get_table_head($via, $presence = null) {
     $table->tablealign = 'center';
     $table->cellpadding = 5;
     $table->cellspacing = 0;
+    $ishtml5 = ($via->activityversion == 1);
 
     // Common values to both tables!
     $table->head  = array();
     $table->head[] = get_string("role", "via");
     $table->head[] = get_string("lastname").', '.get_string("firstname");
 
-    if ($presence) {
-        $table->id = 'viapresence';
-        $table->head[] = get_string("presenceheader", "via");
-        $table->align = array ('left', 'left', 'center');
+    if (!$ishtml5) {
+        if ($presence) {
+            $table->id = 'viapresence';
+            $table->head[] = get_string("presenceheader", "via");
+            $table->align = array ('left', 'left', 'center');
 
-        if ($via->recordingmode != 0) {
-            $table->head[] = get_string("playbackheader", "via");
-            $table->align[] = 'center';
-        }
-        if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation) {
-            $table->head[] = get_string("confirmationstatus", "via");
-            $table->align[] = 'center';
-        }
+            if ($via->recordingmode != 0) {
+                $table->head[] = get_string("playbackheader", "via");
+                $table->align[] = 'center';
+            }
+            if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation) {
+                $table->head[] = get_string("confirmationstatus", "via");
+                $table->align[] = 'center';
+            }
 
+        } else {
+            $table->id = 'viaparticipants';
+            $table->head[] = get_string("config", "via");
+            $table->align = array ('left', 'left', 'center');
+
+            if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation) {
+                $table->head[] = get_string("confirmationstatus", "via");
+                $table->align[] = 'center';
+            }
+        }
     } else {
         $table->id = 'viaparticipants';
-        $table->head[] = get_string("config", "via");
-        $table->align = array ('left', 'left', 'center');
-
-        if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation) {
-            $table->head[] = get_string("confirmationstatus", "via");
-            $table->align[] = 'center';
-        }
+        $table->align = array ('left', 'left');
     }
 
     return $table;
@@ -803,10 +856,13 @@ function via_get_table_head($via, $presence = null) {
  * @param object $via
  * @param object $conext
  * @param integer $presence
+ * @param integer $viaidpage
  * @return populated table
  */
 function via_get_participants_table($via, $context, $presence = null, $viaidpage = null) {
     global $DB, $CFG;
+
+    $ishtml5 = $via->activityversion == 1;
 
     if ($presence) {
         $string = get_string("presencetable", "via");
@@ -824,15 +880,6 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
     }
 
     echo $partbtn . "<h2 class='main' style='vertical-align: top;'>".$string." (".$total.")</h2>";
-
-    if ($via->enroltype == 1) {
-        $enroltype  = get_string('manualenrol', 'via');
-    } else {
-        $enroltype  = get_string('automaticenrol', 'via');
-    }
-    echo '<p style="display: inline;">'.$enroltype.'</p>';
-
-    $table = via_get_table_head($via, $presence);
 
     $limit = 50; // How many items to list per page?
     $pages = ceil($total / $limit); // How many pages will there be?
@@ -860,6 +907,15 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
         }
     }
 
+    if ($via->enroltype == 1) {
+        $enroltype  = get_string('manualenrol', 'via');
+    } else {
+        $enroltype  = get_string('automaticenrol', 'via');
+    }
+    echo '<p style="display: inline;">'.$enroltype.'</p>';
+
+    $table = via_get_table_head($via, $presence);
+
     echo '<div class="viapaging">Page : ';
     for ($i = 1; $i <= $pages; ++$i) {
         if ($page == ($i)) {
@@ -875,7 +931,6 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
     echo '</div>';
 
     // Prepare the paged query.
-    $where = 'WHERE activityid = ' . $via->id .' ORDER BY (participanttype+1)%3 , u.lastname ASC ';
     if ($presence) {
         $sql = 'SELECT vpp.userid, v.id as activityid, vu.viauserid, u.lastname, u.firstname,
                 u.email, vpp.participanttype, vp.status, v.presence, v.recordingmode, v.viaactivityid,
@@ -898,7 +953,16 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
     try {
         $participantslist = $DB->get_records_sql($sql, array($via->id), $offset * $limit, $limit);
 
+        // Load all activity data in 1 shot and pass it to the old function to parse the presence.
+        if ($presence && $ishtml5) {
+            $api = new mod_via_api();
+            $vroomlogdata = $api->via_get_user_logs_html5($via->viaactivityid);
+        } else {
+            $vroomlogdata = null;
+        }
+
         if ($participantslist) {
+             $usertosubscribe = new ArrayObject();
             foreach ($participantslist as $participant) {
                 $role = via_get_role($participant->participanttype);
 
@@ -910,7 +974,7 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
                 }
 
                 if ($presence) {
-                    $userlogs = via_userlogs($participant);
+                    $userlogs = via_userlogs($participant, $vroomlogdata);
 
                     $i = 1;
                     // Values; $info2 = live time, $info1 = playback time!
@@ -921,25 +985,31 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
                 } else {
                     if (is_null($participant->synchvia) || $participant->synchvia == 0 ||is_null($participant->timesynched)) {
                         try {
-                            via_add_participant($participant->userid, $via->id, $participant->participanttype, true);
+                            if (!$ishtml5) {
+                                via_add_participant($participant->userid, $via->id, $participant->participanttype, true);
+                            } else {
+                                $usertosubscribe->append(array($participant->userid, $participant->participanttype));
+                            }
                         } catch (Exception $e) {
                             echo $e->getMessage();
                         }
                     }
-                    if (isset($participant->setupstatus)) {
-                        if ($participant->setupstatus == "0") {
-                            $info1 = '<span class="viagreen" >'.get_string("finish", "via"). '</span>';
-                        } else if ($participant->setupstatus == "1") {
-                            $info1 = '<span class="viayellow" >'. get_string("incomplete", "via"). '</span>';
+                    if (!$ishtml5) {
+                        if (isset($participant->setupstatus)) {
+                            if ($participant->setupstatus == "0") {
+                                $info1 = '<span class="viagreen" >'.get_string("finish", "via"). '</span>';
+                            } else if ($participant->setupstatus == "1") {
+                                $info1 = '<span class="viayellow" >'. get_string("incomplete", "via"). '</span>';
+                            } else {
+                                $info1 = '<span class="viared" >'.get_string("neverbegin", "via"). '</span>';
+                            }
                         } else {
                             $info1 = '<span class="viared" >'.get_string("neverbegin", "via"). '</span>';
                         }
-                    } else {
-                        $info1 = '<span class="viared" >'.get_string("neverbegin", "via"). '</span>';
                     }
                 }
 
-                if ($via->needconfirmation && get_config('via', 'via_participantmustconfirm')) {
+                if (!$ishtml5 && $via->needconfirmation && get_config('via', 'via_participantmustconfirm')) {
                     $info3 = via_get_confirmationstatus($participant->confirmationstatus);
                 }
 
@@ -950,11 +1020,21 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
                         $table->data[] = array ($role, $userlink, $info1, $info2);
                     }
                 } else {
-                    if (isset($info3)) {
+                    if (isset($info3) && isset($info1)) {
                         $table->data[] = array ($role, $userlink, $info1, $info3);
-                    } else {
+                    } else if (isset($info1)) {
                         $table->data[] = array ($role, $userlink, $info1);
+                    } else {
+                        $table->data[] = array ($role, $userlink);
                     }
+                }
+            }
+            if (count($usertosubscribe) > 0) {
+                try {
+                    $api = new mod_via_api();
+                    $api->set_users_activity_html5($usertosubscribe, $via, true);
+                } catch (Exception $e) {
+                    mtrace(get_error_message($e));
                 }
             }
         } else {
@@ -971,9 +1051,10 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
  * Get user logs from via.
  *
  * @param object $participant
- * @return string presence and playback times.
+ * @param array $vroomlogdata VRoomSession array of all activity's users logs
+ * @return array presence and playback times.
  */
-function via_userlogs($participant) {
+function via_userlogs($participant, $vroomlogdata) {
     global $DB;
 
     $playback = "";
@@ -982,26 +1063,40 @@ function via_userlogs($participant) {
     // that we don't need to update the recording information!
     if (!isset($participant->status) || $participant->recordingmode != 0) {
         if ($participant->viauserid) {
-            $api = new mod_via_api();
-            $userlog = $api->via_get_user_logs($participant->viauserid, $participant->viaactivityid);
 
-            if (isset($userlog["Result"]["ResultState"])) {
-                if ($userlog['ConnectionDuration'] >= $participant->presence) {
+            if (!isset($vroomlogdata)) {
+                $api = new mod_via_api();
+                $userlog = $api->via_get_user_logs($participant->viauserid, $participant->viaactivityid);
+            } else {
+                // array_search returns false if nothing is found. Otherwise an integer value of the index in the array.
+                $arraysearchreturn = array_search($participant->viauserid, array_column($vroomlogdata, 'userId'));
+                if (gettype($arraysearchreturn) == 'boolean') {
+                    $userlog = null;
+                } else {
+                    $userlog = $vroomlogdata[$arraysearchreturn];
+                }
+            }
+
+            if (isset($userlog["Result"]["ResultState"]) || (isset($vroomlogdata) && isset($userlog))) {
+                $connectionduration = (isset($vroomlogdata) ? $userlog['connectionDuration'] : $userlog['ConnectionDuration']);
+                $playbackduration = (isset($vroomlogdata) ? $userlog['playbackDuration'] : $userlog['PlaybackDuration']);
+
+                if ($connectionduration >= $participant->presence) {
                     $status = 1;
-                    $duration = via_get_converted_time($userlog['ConnectionDuration']);
+                    $duration = via_get_converted_time($connectionduration);
                     $live = get_string('present', 'via') .' (<span class="viagreen">'.$duration.'</span>)';
                 } else {
                     $status = 0;
-                    if ($userlog['ConnectionDuration']) {
-                        $duration = via_get_converted_time($userlog['ConnectionDuration']);
+                    if ($connectionduration) {
+                        $duration = via_get_converted_time($connectionduration);
                     } else {
                         $duration = '00:00';
                     }
                     $live = get_string('absent', 'via') .' (<span class="viared">'.$duration.'</span>)';
                 }
 
-                if ($participant->recordingmode != 0 && $userlog['PlaybackDuration']) {
-                    $duration = via_get_converted_time($userlog['PlaybackDuration']);
+                if ($participant->recordingmode != 0 && $playbackduration) {
+                    $duration = via_get_converted_time($playbackduration);
                     $playback = '<span class="viagreen">'.$duration. '</span>';
                 } else {
                     $playback = "";
@@ -1012,8 +1107,8 @@ function via_userlogs($participant) {
 
                 // Insert OR update via_presence table!
                 $presence = new stdClass();
-                $presence->connection_duration = str_replace(',', '.', $userlog['ConnectionDuration']);
-                $presence->playback_duration = str_replace(',', '.', $userlog['PlaybackDuration']);
+                $presence->connection_duration = str_replace(',', '.', $connectionduration);
+                $presence->playback_duration = str_replace(',', '.', $playbackduration);
                 $presence->status = $status;
                 $presence->timemodified = time();
 
@@ -1082,12 +1177,13 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
     global $CFG, $DB;
 
     $cmid = $context->instanceid;
+    $ishtml5 = ($via->activityversion == 1);
     if ($viaurlparam == 'viaid') {
         $cmid = $via->id;
     }
     $playbacks = $DB->get_records_sql('SELECT * FROM {via_playbacks}
                                     WHERE activityid = ? AND deleted = 0
-                                    ORDER BY playbackidref asc, creationdate asc',
+                                    ORDER BY creationdate asc, playbackidref asc, title asc',
         array($via->id));
 
     if (count($playbacks) == 0) {
@@ -1160,7 +1256,7 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
                 $table .= "</td>";
             }
 
-            if (get_config('via', 'via_downloadplaybacks')) {
+            if (!$ishtml5 && get_config('via', 'via_downloadplaybacks')) {
                 if ($playback->isdownloadable) {
                     $privaterecord = "";
                     $fa = '';
@@ -1201,7 +1297,7 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
             $table .= "<td class='review $private'>";
             if ($cancreatevia) {
                 $param = '&fa=1';
-                if (get_config('via', 'via_downloadplaybacks')) {
+                if (!$ishtml5 && get_config('via', 'via_downloadplaybacks')) {
                     $text = get_string("export", "via");
                 } else {
                     $text = get_string("view", "via");
@@ -1211,12 +1307,20 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
                 $text = get_string("view", "via");
             }
             if ($via->activitytype != 4) {
-                $table .= '<input type="button" target="viewplayback" href="view.via.php"
-                        onclick="this.target=\'viewplayback\';
-                        return openpopup(null, {url:\'/mod/via/view.via.php?'.$viaurlparam.'='.$cmid.'&playbackid='.
-                    urlencode($playback->playbackid).'&review=1'.$param.'\',
-                        name:\'viewplayback\', options:\'menubar=0,location=0,scrollbars=yes,resizable=yes\'});"
+                $url = '/mod/via/view.via.php?'.$viaurlparam.'='.$cmid.'&playbackid='.urlencode($playback->playbackid).'&review=1'.$param;
+                if ($via->activityversion == 0) {
+                    // Via9.
+                    $script = ' this.target=\'viewplayback\';
+                        return openpopup(null, {url:\''. $url.'\',
+                        name:\'viewplayback\', options:\'menubar=0,location=0,scrollbars=yes,resizable=yes\'});';
+
+                    $table .= '<input type="button" target="viewplayback" href="view.via.php"
+                        onclick="'.$script.'"
                         value="'.$text.'"/>';
+                } else {
+                    // ViaHtml5.
+                    $table .= "<a href='$url' referrerpolicy='origin' target='_blank' class='btn btn-primary $private'>$text</a>";
+                }
             }
             $table .= "</td>";
             $table .= "</tr>";
@@ -1480,39 +1584,41 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
     }
     $posthtml .= '</td></tr>';
 
-    $posthtml .= '<tr><td style="border:1px solid #c5c5c5; margin-top:10px; padding:10px;">';
-    $posthtml .= "<span style='font-weight:bold;'>".get_string("invitepreparationhtml", "via")."</span>";
-    $posthtml .= "<div style='text-align:center;margin:10px;'>";
-    $posthtml .= "
+    if ($via->activityversion == 0) {
+        $posthtml .= '<tr><td style="border:1px solid #c5c5c5; margin-top:10px; padding:10px;">';
+        $posthtml .= "<span style='font-weight:bold;'>".get_string("invitepreparationhtml", "via")."</span>";
+        $posthtml .= "<div style='text-align:center;margin:10px;'>";
+        $posthtml .= "
         <a href='" . $CFG->wwwroot ."/mod/via/view.assistant.php?redirect=7&".$viaurlparam."=". $viaurlparamvalue ."&courseid=".
-        $via->course ."' style='background:".$linkcolor."; color:#fff; font-size:1.2em; text-decoration:none;
+            $via->course ."' style='background:".$linkcolor."; color:#fff; font-size:1.2em; text-decoration:none;
         border:8px solid ".$linkcolor."; margin-right:20px;'>
         <img src='" . $CFG->wwwroot ."/mod/via/pix/config.png' align='top'
         height='25px' width='25px' style='border:none; margin-right:5px;'>".
-        get_string("configassist", "via")."</a>";
+            get_string("configassist", "via")."</a>";
 
-    $posthtml .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
-    if (get_config('via', 'via_technicalassist_url') == null) {
-        $posthtml .= "
+        $posthtml .= "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;";
+        if (get_config('via', 'via_technicalassist_url') == null) {
+            $posthtml .= "
             <a href='" . $CFG->wwwroot ."/mod/via/view.assistant.php?redirect=6&".$viaurlparam."=". $viaurlparamvalue .
-            "&courseid=". $via->course ."'
+                "&courseid=". $via->course ."'
             style='background:".$linkcolor."; color:#fff; font-size:1.2em;
             text-decoration:none; border:8px solid ".$linkcolor.";'>
             <img src='" . $CFG->wwwroot . "/mod/via/pix/assistance.png'
             align='top' height='25px' width='25px' style='border:0;  margin-right:5px;'>".
-            get_string("technicalassist", "via")."</a>";
-    } else {
-        $posthtml .= "
+                get_string("technicalassist", "via")."</a>";
+        } else {
+            $posthtml .= "
             <a href='" . get_config('via', 'via_technicalassist_url')."?redirect=6&".$viaurlparam."=". $viaurlparamvalue .
-            "&courseid=". $via->course ."'
+                "&courseid=". $via->course ."'
             style='background:".$linkcolor."; color:#fff; font-size:1.2em;
             text-decoration:none; border:8px solid ".$linkcolor.";'>
             <img src='" . $CFG->wwwroot . "/mod/via/pix/assistance.png'
             align='top' height='25px' width='25px' style='border:0; margin-right:5px;'>".
-            get_string("technicalassist", "via")."</a>";
+                get_string("technicalassist", "via")."</a>";
+        }
+        $posthtml .= "</div>";
+        $posthtml .= '</td><td>';
     }
-    $posthtml .= "</div>";
-    $posthtml .= '</td><td>';
 
     $posthtml .= '<tr><td  style="border:1px solid #c5c5c5; margin-top:10px; padding:10px;">';
     $posthtml .= "<span style='font-weight:bold;'>".get_string("invitewebaccesshtml", "via")."</span>
@@ -1535,9 +1641,10 @@ function via_make_invitation_reminder_mail_html($courseid, $via, $muser, $remind
     $posthtml .= "</div>";
     $posthtml .= '</td><td>';
 
-    $posthtml .= '<tr><td>';
-    $posthtml .= get_string("invitewarninghtml", "via");
-
+    if ($via->activityversion == 0) {
+        $posthtml .= '<tr><td>';
+        $posthtml .= get_string("invitewarninghtml", "via");
+    }
     $posthtml .= '</table>'."\n\n";
 
     $posthtml .= '</body>';
@@ -1702,14 +1809,15 @@ function via_validate_api_version($required, $buildversion) {
  * @param interger $cmid context id
  * @param boolean $preperation
  * @param boolean $forceaccess
- * @return html link
+ * @return array link
  */
 function via_add_button($recordingmode,
     $active = null,
     $cmid = null,
     $preperation = null,
     $forceaccess = null,
-    $viaurlparam = 'id') {
+    $viaurlparam = 'id',
+    $ishtml5 = false) {
     global $CFG;
 
     if ($forceaccess) {
@@ -1719,14 +1827,25 @@ function via_add_button($recordingmode,
         $fa = '';
     }
 
+    if ($preperation) {
+        $text = get_string("prepareactivity", "via");
+    } else {
+        $text = get_string("gotoactivity", "via");
+    }
+
     if ($recordingmode) {
         if ($active) {
             $id = 'id="active"';
             $class = "active hide";
             $url = '/mod/via/view.via.php?'.$viaurlparam.'='. $cmid . $fa;
-            $script = 'target="viaaccess" onclick="this.target=\'viaaccess\';
-            return openpopup(null, {url:\''.$url.'\',
-            name:\'viaaccess\', options:\'menubar=0,location=0,,resizable=1,scrollbars\'});"';
+            if ($ishtml5) {
+                return '<a href="'.$url.'" referrerpolicy="origin" target="_blank" class="btn btn-primary">'.$text.'</a>';
+
+            } else {
+                $script = 'target="viaaccess" onclick="this.target=\'viaaccess\';
+                return openpopup(null, {url:\''.$url.'\',
+                name:\'viaaccess\', options:\'resizable=1,status=0,scrollbars=1,titlebar=0,toolbar=0,location=0,menubar=0\'});"';
+            }
         } else {
             $id = 'id="inactive"';
             $class = "inactive";
@@ -1737,16 +1856,16 @@ function via_add_button($recordingmode,
         $id = '';
         $class = '';
         $url = '/mod/via/view.via.php?'.$viaurlparam.'='. $cmid . $fa;
-        $script = 'target="viaaccess" onclick="this.target=\'viaaccess\';
-        return openpopup(null, {url:\''.$url.'\', name:\'viaaccess\', options:\'menubar=0,location=0,,resizable=1,scrollbars\'});"';
-    }
-    if ($preperation) {
-        $text = get_string("prepareactivity", "via");
-    } else {
-        $text = get_string("gotoactivity", "via");
+        if ($ishtml5) {
+            return '<a href="'.$url.'" referrerpolicy="origin" target="_blank" class="btn btn-primary">'.$text.'</a>';
+        } else {
+            $script = 'target="viaaccess" onclick="this.target=\'viaaccess\';
+            return openpopup(null, {url:\''.$url.'\',
+            name:\'viaaccess\', options:\'resizable=1,status=0,scrollbars=1,titlebar=0,toolbar=0,location=0,menubar=0\'});"';
+        }
     }
 
-    $link = '<input type="button" '.$id.' '.$class.'" href="'.$url.'" '.$script.' value="'.$text.'" />';
+    $link = '<input type="button" '.$id.' '.$class.' '.$script .' value="'.$text.'" />';
 
     return $link;
 }
@@ -1849,11 +1968,15 @@ function via_get_profilname($profilnameorig) {
 
         $str = preg_replace('#&([A-za-z])(?:acute|cedil|caron|circ|grave|orn|ring|slash|th|tilde|uml);#', '\1', $str);
         $str = preg_replace('#&([A-za-z]{2})(?:lig);#', '\1', $str); // Pour les ligatures e.g. '&oelig;' !
-        $str = preg_replace('#&[^;]+;#', '', $str); // Supprime les autres caractères.
+        $str = preg_replace('#&[^;]+;#', '', $str); // Supprime les autres caractÃ¨res.
 
         $str = str_replace(' ', '', $str);
 
-        $profilname = get_string($str, 'via');
+        $stringmanager = get_string_manager();
+        if ($stringmanager->string_exists($str, 'via')) {
+            $profilname = get_string($str, 'via');
+        }
+
         if ( $profilname[0] == '[' &&  $profilname[ strlen($profilname) - 1] == ']' ) {
             $profilname = $profilnameorig;
         }
@@ -1875,15 +1998,22 @@ function via_get_profilname($profilnameorig) {
 function via_synch_activity() {
     global $DB, $CFG;
 
-    // On vérifie qu'il n'y ai pas eu d'activités supprimées de Via.
+    // On vÃ©rifie qu'il n'y ait pas eu d'activitÃ©s supprimÃ©es de Via.
     $result = true;
 
-    $activitylist = $DB->get_records_sql('SELECT * FROM {via} u
-                                    WHERE viaactivityid IS NOT null and activitytype <> 4');
+    // On valide uniquement les activitÃ©s permanentes et celles encore en cours.
+    $via9activitylist = $DB->get_records_sql('SELECT * FROM {via} v
+                                    WHERE viaactivityid IS NOT null  AND (v.activitytype = 2
+                                   OR (v.activitytype = 1 AND (v.datebegin + v.duration * 60) > ' . time() . '))');
 
     $api = new mod_via_api();
-    foreach ($activitylist as $via) {
-        $infosvi = $api->activity_get($via);
+    foreach ($via9activitylist as $via) {
+        if ($via->activityversion == 0) {
+            $infosvi = $api->activity_get($via);
+        } else {
+            $infosvi = $api->via_activity_get_html5($via->viaactivityid);
+        }
+
         if ($infosvi == "ACTIVITY_DOES_NOT_EXIST" || $infosvi == "INVALID_ACTIVITYID") {
             $via->viaactivityid = null;
             $result = $result && $DB->update_record('via', $via);
@@ -1891,4 +2021,165 @@ function via_synch_activity() {
         }
     }
     return $result;
+}
+
+/**
+ * Used to get info on error message
+ *
+ *
+ * @return Error message
+ */
+function get_error_message(Exception $e) {
+    global $DB, $CFG;
+    $stringmanager = get_string_manager();
+    $str = "error:".$e->getMessage();
+    if ($stringmanager->string_exists($str, 'via')) {
+        $str = get_string($str, 'via');
+    } else {
+        $str = $e->getMessage();
+    }
+    return $str;
+}
+
+/**
+ * Get Via language from Moodle language
+ *
+ * @param Array $lang language from Moodle user.
+ * @return Array containing corresponding Via language.
+ */
+function get_via_language($lang) {
+    if ($lang == "en" || $lang == "en_us" || $lang == "en_utf8") {
+        return '2';
+    } else if ($lang == "fr_ca" ) {
+        return '1';
+    } else if ($lang == "es" || $lang == "es_mx" || $lang == "es_ve") {
+        return '4';
+    } else {
+        return '3';
+    }
+}
+
+/**
+ * Get localized Text
+ *
+ * @param Array $data data including localized text.
+ * @param Array $name name of property.
+ * @param Array $lang language of user.
+ * @param boolean $isfallback prevent function being called twice.
+ * @return Array containing corresponding Via language.
+ */
+function get_localized_text($data, $name, $lang = null, $isfallback = false) {
+    if (!isset($mlang)) {
+        // Fr_ca by default.
+        $mlang = "1";
+    }
+
+    $id = array_search($lang, array_column($data[$name]['texts'], 'languageId'));
+    if (isset($id)) {
+        if (isset( $data[$name]['texts'][$id]['text'])) {
+            $text = $data[$name]['texts'][$id]['text'];
+        }
+        if (isset($text)) {
+            return $text;
+        } else if (!$isfallback) {
+            return get_localized_text($data, $name, $lang == 1 ? 2 : 1, true);
+        }
+    }
+    return "";
+}
+
+/**
+ * Called by via_cron to sync branches for users and activities
+ *
+ * @return true or false
+ */
+function via_synch_branches() {
+
+    $branchid = get_config('via', 'lara_branch');
+
+    if ($branchid == null || $branchid == '') {
+        return true;
+    }
+
+    if (get_config('via', 'via_html5activation') == 1) {
+
+        try {
+            $api = new mod_via_api();
+            $larabranchid = $api->get_branch($branchid);
+
+            if (gettype($larabranchid) == "string") {
+                via_synch_branches_users($branchid);
+                via_synch_branches_activity($branchid);
+            }
+
+        } catch (Exception $e) {
+            mtrace(get_error_message($e));
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * Function to update branches for all users
+ * @param Array $branchid id of branch.
+ *
+ * @return true or false
+ */
+function via_synch_branches_users($branchid) {
+    global $DB;
+
+    $api = new mod_via_api();
+
+    try {
+        $userslist = $DB->get_records_sql("SELECT * FROM {via_users}
+                                        WHERE branchid IS null OR branchid <> '".$branchid."'");
+
+        foreach ($userslist as $user) {
+            try {
+                $api->user_add_branch($user->viauserid, $branchid);
+                $user->branchid = $branchid;
+                $DB->update_record('via_users', $user);
+            } catch (Exception $e) {
+                mtrace(get_error_message($e));
+            }
+        }
+    } catch (Exception $e) {
+        mtrace(get_error_message($e));
+        return false;
+    }
+
+    return true;
+}
+
+/**
+ * Function to update branches for all activities
+ * @param Array $branchid id of branch.
+ *
+ * @return true or false
+ */
+function via_synch_branches_activity($branchid) {
+    global $DB;
+
+    $api = new mod_via_api();
+
+    try {
+        $activitylist = $DB->get_records_sql("SELECT * FROM {via}
+                                   WHERE viaactivityid IS NOT NULL AND activitytype IN (1,2) AND branchid IS null OR branchid <> '".$branchid."'");
+
+        foreach ($activitylist as $activity) {
+            try {
+                $api->add_activity_branch($activity->viaactivityid, $branchid, $activity->activityversion == 1);
+                $activity->branchid = $branchid;
+                $DB->update_record('via', $activity);
+            } catch (Exception $e) {
+                mtrace(get_error_message($e));
+            }
+        }
+    } catch (Exception $e) {
+        mtrace(get_error_message($e));
+        return false;
+    }
+    return true;
 }
