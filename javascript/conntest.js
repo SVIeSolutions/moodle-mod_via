@@ -28,6 +28,7 @@ function testhtml5Connection() {
     queryString += "apiurl=" + escape(document.getElementById('id_s_via_via_apiurlhtml5').value);
     queryString += "&apiid=" + escape(document.getElementById('id_s_via_via_apiidhtml5').value);
     queryString += "&branchid=" + escape(document.getElementById('id_s_via_lara_branch').value);
+    queryString += "&pid=" + escape(document.getElementById('id_s_via_lara_portal').value);
 
     return openpopup(null, { url: '/mod/via/conntesthtml5.php?' + queryString, name: 'conntesthtml5', options: 'scrollbars=yes,resizable=no,width=760,height=400' });
 }

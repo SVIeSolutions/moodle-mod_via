@@ -948,7 +948,12 @@ function via_add_participant($userid, $viaid, $type, $callvia = null, $confirmat
         if ($sub->id) {
             $added = $DB->update_record("via_participants", $sub);
         } else {
-            $added = $DB->insert_record("via_participants", $sub);
+            if (!isset($sub->userid)) {
+                // TODO: remove after investigations.
+                 mtrace("via_add_participant - userid empty in via_participant : ".json_encode($sub));
+            } else {
+                $added = $DB->insert_record("via_participants", $sub);
+            }
         }
 
         return $added;
@@ -1002,7 +1007,19 @@ function via_remove_participant($userid, $viaid, $synched = null) {
             } else {
                 $userarray = new ArrayObject();
                 $userarray->append(array($userid));
-                $response = $api->remove_users_activity_html5($userarray, $via->viaactivityid);
+                try {
+                    $response = $api->remove_users_activity_html5($userarray, $via->viaactivityid);
+
+                }
+                catch (Exception $e) {
+                    // Error = Invalid id.
+                    if ($e->getCode() == 1701) {
+                        $response = true;
+                    } else {
+                        mtrace(viahtml_get_error_message($e));
+                        return false;
+                    }
+                }
             }
         }
         if ($synched == false || isset($response)) {
@@ -1475,7 +1492,7 @@ function via_send_moodle_reminders($r, $muser, $from) {
 
     $bodyhtml = via_make_invitation_reminder_mail_html($r->course, $r, $muser, true);
 
-    if (!isset($user->emailstop) || !$user->emailstop) {
+    if (!isset($muser->emailstop) || !$muser->emailstop) {
         if (true !== email_to_user($muser, $from, $subject, $body, $bodyhtml)) {
             echo "    Could not send email to <{$muser->email}> (unknown error!)\n";
             $result = false;

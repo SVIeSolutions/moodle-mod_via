@@ -38,6 +38,12 @@ class via_usersync_task extends \core\task\scheduled_task
         require_once($CFG->dirroot.'/mod/via/lib.php');
         require_once($CFG->dirroot.'/config.php');
 
+        $viaapiurl = get_config('via', 'via_apiurl');
+
+        if (!isset($viaapiurl) || $viaapiurl == '') {
+            return true;
+        }
+
         // Delete via user when moodle user deleted.
         via_synch_users();
 

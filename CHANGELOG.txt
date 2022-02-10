@@ -1,14 +1,39 @@
 This file defines the changes made to Via - Virtual classroom
 
+last update 10/02/2022 2021011112
+- Cleanup in code
+- Prevent multiple API calls when unsubscribing a user
+- Fix updating multimediaquality in viaassign
+
+last update 12/01/2022 2021011111
+- Fix for Via HTML when Moodle is not at root
+- Add validation to end tasks if configuration is empty
+- Fix for emailstop property which was nos correctly used
+- Add log to understand why some participant have no userid
+- Add validation to prevent error in presence list
+
+last update 09/12/2021 2021011110
+- New option in viahtml API: PortalID
+- Fix test of API before saving
+
+last update 30/11/2021 2021011109
+- Fix duration of playback could exceed the max size allowed
+- Fix encoding error in language file
+
+last update 17/11/2021 2021011108
+- Handle activity version in activity template
+- Fix text with invalid char resulting in SQL error
+
 last update 09/09/2021 2021011107
 - Fix bug of users becoming animators unexpectedly.
 - Fix diplay of record options
-- Options for ViaHTML5 are shown if company is in VRoomOnly mode
+- Fix : Options for ViaHTML5 are shown if company is in VRoomOnly mode
+- Fix : Admin not subscribed can now access to the activity
 
 last update 26/07/2021 2021011106
-- New parameter to link activities and users to a Lära branch.
+- New parameter to link activities and users to a LÃ¤ra branch.
 - Apply this new settings to activity and users
-- Fix for data not synchronized between Lära and Moodle
+- Fix for data not synchronized between LÃ¤ra and Moodle
 - Show record options for ViaHTML5.
 
 last update 22/07/2021 2021011105
@@ -130,8 +155,8 @@ last update 08/09/2015 (2015050106)
 - correction to the list of recordings; if isnewvia(Via 8) recordings can be viewed on mobiles.
 
 last update 28/08/2015 (2015050105)
-- A new button was added for M@gistère to synchronise large groupes before the start of an activity.
-- M@gistère we be the only ones with this version.
+- A new button was added for M@gistÃ¨re to synchronise large groupes before the start of an activity.
+- M@gistÃ¨re we be the only ones with this version.
 
 last update 01/05/2015 (2015050103)
 - corrections were made to the activity duplication function which was not passing on the isnewvia value.

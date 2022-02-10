@@ -35,7 +35,7 @@ require_login();
 if ($site = get_site()) {
     if (function_exists('require_capability')) {
         require_capability('moodle/site:config', via_get_system_instance());
-    } else if (!isadmin) {
+    } else if (!isadmin()) {
         print_error("You need to be admin to use this page");
     }
 }

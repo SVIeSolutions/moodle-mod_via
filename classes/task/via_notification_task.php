@@ -38,6 +38,12 @@ class via_notification_task extends \core\task\scheduled_task
         require_once($CFG->dirroot.'/mod/via/lib.php');
         require_once($CFG->dirroot.'/config.php');
 
+        $viaapiurl = get_config('via', 'via_apiurl');
+
+        if (!isset($viaapiurl) || $viaapiurl == '') {
+            return true;
+        }
+
         $viatask = $DB->get_record('task_scheduled', array('classname' => '\mod_via\task\via_notification_task'));
 
         // Export notification.

@@ -2035,7 +2035,7 @@ class mod_via_api {
      * @return Array containing response from Via
      *
      */
-    public function via_user_create_html5($muser, $edit=false, $infoplus=null, $viauser=null, $userbranchid = null) {
+    public function via_user_create_html5($muser, $edit=false, $infoplus=null, $viauser=null, $userbranchid = null, $apiurl = null, $apiid = null) {
         global $CFG;
 
         require_once($CFG->dirroot . '/mod/via/lib.php');
@@ -2092,6 +2092,10 @@ class mod_via_api {
                 $muser->branchid = get_config('via', 'lara_branch');
             }
 
+            $portalid = get_config('via', 'lara_portal');
+            if (isset($portalid) && $portalid != '') {
+                $data .= " 'portalID': '".$portalid."',";
+            }
         }
 
         if (isset($infoplus) && get_config('via', 'via_participantsynchronization')) {
@@ -2103,7 +2107,7 @@ class mod_via_api {
         $data .= "'enableNotifications' : 0";
         $data .= "}";
 
-        $response = $this->send_soap_enveloppe_json($data, $url);
+        $response = $this->send_soap_enveloppe_json($data, $url, $apiurl, $apiid);
 
         if (!$resultdata = $response['datajson']) {
             throw new Exception("Problem creating ViaHTML5 User");
@@ -2128,13 +2132,13 @@ class mod_via_api {
      * Deletes a Via HTML5 user, used in html5 connection test.
      * @param mixed $viauserid
      */
-    public function via_user_delete_html5($viauserid) {
+    public function via_user_delete_html5($viauserid, $apiurl = null, $apiid = null) {
         global $CFG;
 
         $url = 'user/delete';
 
         $data = "{'id': '".$viauserid."'}";
-        $response = $this->send_soap_enveloppe_json($data, $url);
+        $response = $this->send_soap_enveloppe_json($data, $url, $apiurl, $apiid);
 
         if (!$resultdata = $response['datajson']) {
             throw new Exception("Problem deleting ViaHTML5 User");
@@ -2268,8 +2272,8 @@ class mod_via_api {
         $useridlist = [];
         foreach ($usersdatalist as $userdata) {
             $userid = $this->get_user_via_id($userdata[0], false, false, true);
-            if (in_array($userid, $useridlist)) {
-                // Each user should be unique.
+            if (in_array($userid, $useridlist) || !isset($userdata[0])) {
+                // Each user should be unique and userid should not be null.
                 continue;
             } else {
                 array_push($useridlist, $userid);
@@ -2442,8 +2446,12 @@ class mod_via_api {
         $data .= ", 'refId' : '". $via->viaactivityid . "'";
 
         $data .= ", 'subRefId': '".$playbackid."'
-                , 'redirectType': ".$redirect . "
+                , 'redirectType': ".$redirect ."
                 , 'forceAccess': ".$forceaccess;
+        $portalid = get_config('via', 'lara_portal');
+        if (isset($portalid) && $portalid != '') {
+            $data .= " ,'portalID': '".$portalid."'";
+        }
         $data .= "}";
 
         $response = $this->send_soap_enveloppe_json($data, $url);
@@ -2583,19 +2591,43 @@ class mod_via_api {
 
         return $resultdata["id"];
     }
+
+    /**
+     * Get portal to validate if it exists
+     * @param string $portalid the id of the branch
+     * @return string containing response from Via
+     */
+    public function get_portal($portalid, $apiurl = null, $apiid = null) {
+        global $CFG;
+
+        $url = "portal/get";
+
+        $data = "{'id' : '" . $portalid . "'}";
+
+        $response = $this->send_soap_enveloppe_json($data, $url, $apiurl, $apiid);
+
+        if (!$resultdata = $response['datajson']) {
+            throw new Exception("Problem Getting portal");
+        }
+
+        $this->check_api_error($resultdata);
+
+        return $resultdata["id"];
+    }
+
     /**
      * Add branch from parameter to specified activity
      * @param string $branchid the id of the branch
      * @return string containing response from Via
      */
-    public function get_branch($branchid) {
+    public function get_branch($branchid, $apiurl = null, $apiid = null) {
         global $CFG;
 
         $url = "branch/get";
 
         $data = "{'id' : '" . $branchid . "'}";
 
-        $response = $this->send_soap_enveloppe_json($data, $url);
+        $response = $this->send_soap_enveloppe_json($data, $url, $apiurl, $apiid);
 
         if (!$resultdata = $response['datajson']) {
             throw new Exception("Problem Getting branch");

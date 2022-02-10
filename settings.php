@@ -89,6 +89,8 @@ if ($ADMIN->fulltree) {
 
                 $settings->add(new admin_setting_configtext('via/lara_branch', get_string('apibranch', 'via'),
                    get_string('apibranchsetting', 'via'), "", PARAM_TEXT));
+                $settings->add(new admin_setting_configtext('via/lara_portal', get_string('apiportal', 'via'),
+                   get_string('apiportalsetting', 'via'), "", PARAM_TEXT));
 
                 $settings->add(new admin_setting_heading('via_testconnhtml5',  '<input type="button"
                 onclick="testhtml5Connection(document.getElementById(\'adminsettings\'));" value="'.

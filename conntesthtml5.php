@@ -47,6 +47,7 @@ $site = get_site();
 $apiurl = required_param('apiurl', PARAM_NOTAGS);
 $apiid  = required_param('apiid', PARAM_NOTAGS);
 $branchid  = required_param('branchid', PARAM_NOTAGS);
+$portalid  = required_param('pid', PARAM_NOTAGS);
 
 // Initialize $PAGE!
 $PAGE->set_url('/mod/via/conntesthtml5.php');
@@ -71,11 +72,14 @@ try {
     $user->firstname = 'test';
     $user->lastname = 'test';
     $user->lang = '2';
-    $response = $api->via_user_create_html5($user);
-    $response = $api->via_user_delete_html5($response["id"]);
+    $response = $api->via_user_create_html5($user, false, null, null, null, $apiurl, $apiid);
+    $response = $api->via_user_delete_html5($response["id"], $apiurl, $apiid);
 
     if ($branchid != null && $branchid != '') {
-        $response = $api->get_branch($branchid);
+        $response = $api->get_branch($branchid,$apiurl, $apiid);
+    }
+    if ($portalid != null && $portalid != '') {
+        $response = $api->get_portal($portalid,$apiurl, $apiid);
     }
 
 } catch (Exception $e) {

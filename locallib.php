@@ -554,11 +554,11 @@ function via_get_list_profils() {
 
                             try {
                                 // If the profile has changed we need to update all viaassign using the old id.
-                                $viasss = $DB->get_records_sql('SELECT * FROM {via_assign}
+                                $viasss = $DB->get_records_sql('SELECT * FROM {viaassign}
                                                             WHERE multimediaquality = ?', array($exists->value));
                                 foreach ($viasss as $via) {
                                     $via->multimediaquality = $info['ProfilID'];
-                                    $DB->update_record('via_assign', $via);
+                                    $DB->update_record('viaassign', $via);
                                 }
                             } catch (Exception $e) {
                                 $result = false;
@@ -1112,13 +1112,18 @@ function via_userlogs($participant, $vroomlogdata) {
                 $presence->status = $status;
                 $presence->timemodified = time();
 
-                if ($exists) {
-                    $presence->id = $exists->id;
-                    $DB->update_record('via_presence', $presence);
+                if (isset($participant->userid)) {
+                    if ($exists) {
+                        $presence->id = $exists->id;
+                        $DB->update_record('via_presence', $presence);
+                    } else {
+                        $presence->userid = $participant->userid;
+                        $presence->activityid = $participant->activityid;
+                        $DB->insert_record('via_presence', $presence);
+                    }
                 } else {
-                    $presence->userid = $participant->userid;
-                    $presence->activityid = $participant->activityid;
-                    $DB->insert_record('via_presence', $presence);
+                    // TODO: remove after investigations.
+                    mtrace("via_userlogs - userid empty in via_participant : ".json_encode($presence));
                 }
             } else {
                 $live = $userlog;
@@ -1137,13 +1142,18 @@ function via_userlogs($participant, $vroomlogdata) {
             $presence->status = 0;
             $presence->timemodified = time();
 
-            if ($exists) {
-                $presence->id = $exists->id;
-                $DB->update_record('via_presence', $presence);
-            } else {
-                $presence->userid = $participant->userid;
-                $presence->activityid = $participant->activityid;
-                $DB->insert_record('via_presence', $presence);
+            if (isset($participant->userid)) {
+                if ($exists) {
+                    $presence->id = $exists->id;
+                    $DB->update_record('via_presence', $presence);
+                } else {
+                    $presence->userid = $participant->userid;
+                    $presence->activityid = $participant->activityid;
+                    $DB->insert_record('via_presence', $presence);
+                }
+             } else {
+                // TODO: remove after investigations.
+                 mtrace("via_userlogs - empty \$participant->viauserid : ".json_encode($presence));
             }
         }
     } else {
@@ -1307,7 +1317,7 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
                 $text = get_string("view", "via");
             }
             if ($via->activitytype != 4) {
-                $url = '/mod/via/view.via.php?'.$viaurlparam.'='.$cmid.'&playbackid='.urlencode($playback->playbackid).'&review=1'.$param;
+                $url = new moodle_url('/mod/via/view.via.php?'.$viaurlparam.'='.$cmid.'&playbackid='.urlencode($playback->playbackid).'&review=1'.$param);
                 if ($via->activityversion == 0) {
                     // Via9.
                     $script = ' this.target=\'viewplayback\';
@@ -1837,7 +1847,7 @@ function via_add_button($recordingmode,
         if ($active) {
             $id = 'id="active"';
             $class = "active hide";
-            $url = '/mod/via/view.via.php?'.$viaurlparam.'='. $cmid . $fa;
+            $url = new moodle_url('/mod/via/view.via.php?'.$viaurlparam.'='. $cmid . $fa);
             if ($ishtml5) {
                 return '<a href="'.$url.'" referrerpolicy="origin" target="_blank" class="btn btn-primary">'.$text.'</a>';
 
@@ -1855,7 +1865,7 @@ function via_add_button($recordingmode,
     } else {
         $id = '';
         $class = '';
-        $url = '/mod/via/view.via.php?'.$viaurlparam.'='. $cmid . $fa;
+        $url = new moodle_url('/mod/via/view.via.php?'.$viaurlparam.'='. $cmid . $fa);
         if ($ishtml5) {
             return '<a href="'.$url.'" referrerpolicy="origin" target="_blank" class="btn btn-primary">'.$text.'</a>';
         } else {

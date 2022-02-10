@@ -507,7 +507,22 @@ function xmldb_via_upgrade($oldversion = 0) {
         upgrade_mod_savepoint($result, 2021011106, 'via');
     }
 
-    if ($oldversion < 2021011107) {
-        upgrade_mod_savepoint($result, 2021011107, 'via');
+    if ($oldversion < 2021011108) {
+        upgrade_mod_savepoint($result, 2021011108, 'via');
+    }
+
+    if ($oldversion < 2021011109) {
+
+        $table = new xmldb_table('via_playbacks');
+        $field = new xmldb_field('duration', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, 'creationdate');
+        if ($dbman->field_exists($table, $field)) {
+            $dbman->change_field_precision($table, $field);
+        }
+        // Savepoint reached!
+        upgrade_mod_savepoint($result, 2021011109, 'via');
+    }
+
+    if ($oldversion < 2021011112) {
+        upgrade_mod_savepoint($result, 2021011112, 'via');
     }
 }

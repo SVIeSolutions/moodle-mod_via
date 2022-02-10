@@ -588,6 +588,20 @@ class mod_via_mod_form extends moodleform_mod {
                         case 'IsH264' :
                             $defaultvalues['ish264'] = $svi->value;
                             break;
+
+                        case 'DefaultActivityVersion' :
+                            switch($svi->value) {
+                                case 3:
+                                    //Vroom.
+                                    $defaultvalues['activityversion'] = 1;
+                                    break;
+                                default:
+                                    //Via.
+                                    $defaultvalues['activityversion'] = 0;
+                                    break;
+                            }
+                            break;
+
                     }
                 }
             }
@@ -629,6 +643,7 @@ class mod_via_mod_form extends moodleform_mod {
                     break;
             }
         }
+
     }
 
     /**

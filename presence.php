@@ -97,7 +97,10 @@ foreach ($participants as $participant) {
             $presence->userid = $participant->userid;
             $presence->activityid = $participant->activityid;
 
-            $DB->insert_record('via_presence', $presence);
+            // TODO Provisional : userid should never be  null.
+            if(isset($participant->userid)) {
+                $DB->insert_record('via_presence', $presence);
+            }
         }
     } else if ($participant->connection_duration >= $via->presence) {
         $string = get_string('present', 'via');

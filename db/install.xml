@@ -144,7 +144,7 @@ xsi:noNamespaceSchemaLocation="../../lib/xmldb/xmldb.xsd">
         <FIELD NAME="activityid" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" NEXT="title" PREVIOUS="playbackidref" />;
         <FIELD NAME="title" TYPE="char" LENGTH="100" NOTNULL="true" SEQUENCE="false" NEXT="creationdate" PREVIOUS="activityid" />;
         <FIELD NAME="creationdate" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" NEXT="duration" PREVIOUS="title" />;
-        <FIELD NAME="duration" TYPE="int" LENGTH="4" NOTNULL="true" SEQUENCE="false" NEXT="accesstype" PREVIOUS="creationdate" />;
+        <FIELD NAME="duration" TYPE="int" LENGTH="10" NOTNULL="true" SEQUENCE="false" NEXT="accesstype" PREVIOUS="creationdate" />;
         <FIELD NAME="accesstype" TYPE="int" LENGTH="2" NOTNULL="true" SEQUENCE="false" NEXT="isdownloadable" PREVIOUS="duration" />;
         <FIELD NAME="isdownloadable" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" NEXT="hasfullvideorecord" PREVIOUS="accesstype" />;
         <FIELD NAME="hasfullvideorecord" TYPE="int" LENGTH="1" NOTNULL="true" SEQUENCE="false" NEXT="hasmobilevideorecord" PREVIOUS="isdownloadable" />;

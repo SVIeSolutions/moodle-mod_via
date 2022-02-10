@@ -227,7 +227,13 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
         $data->timemodified = time();
         $data->timesynched = time();
         if (isset($data->activityid) && $data->activityid > 0) {
-            $newitemid = $DB->insert_record('via_participants', $data);
+            if(!isset($data->userid)) {
+                // TODO: remove after investigations.
+                mtrace("process_via_participant - userid empty in viahtml_participant : ".json_encode($data));
+            } else {
+                $newitemid = $DB->insert_record('via_participants', $data);
+            }
+
         }
     }
 
