@@ -1,6 +1,10 @@
 This file defines the changes made to Via - Virtual classroom
 
-last update 10/02/2022 2021011112
+last update 07/06/2022 2022060701
+- Plugin is now compatible with Moodle 4.0 
+- Fix PHP 8.0 compatibility issues
+
+last update 12/01/2022 2021011112
 - Cleanup in code
 - Prevent multiple API calls when unsubscribing a user
 - Fix updating multimediaquality in viaassign

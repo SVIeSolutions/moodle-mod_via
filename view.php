@@ -519,7 +519,7 @@ if ($deleted) {
             $api = new mod_via_api();
             $dlfiles = $api->list_downloadablefiles($via);
 
-            echo via_get_downlodablefiles_table($dlfiles, $via, $context, $viaurlparam, $cancreatevia);
+            echo via_get_downlodablefiles_table($dlfiles, $via, $context, $cancreatevia, $viaurlparam);
         }
 
         // No point validating everthing, the activity is not yet planned, there are no playbacks and no users!
@@ -530,7 +530,7 @@ if ($deleted) {
                     echo  'this title aready exists';
                 }
 
-                echo via_get_playbacks_table($via, $context, $viaurlparam, $cancreatevia);
+                echo via_get_playbacks_table($via, $context, $cancreatevia, $viaurlparam);
             }
 
             // If activity is finished and the user has the right to see reports, we display the report.

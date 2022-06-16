@@ -1183,7 +1183,7 @@ function via_userlogs($participant, $vroomlogdata) {
  * @param object $context moodle object
  * @return table
  */
-function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreatevia) {
+function via_get_playbacks_table($via, $context, $cancreatevia, $viaurlparam = 'id' ) {
     global $CFG, $DB;
 
     $cmid = $context->instanceid;
@@ -1351,7 +1351,7 @@ function via_get_playbacks_table($via, $context, $viaurlparam = 'id', $cancreate
  * @param object $context moodle object
  * @return table
  */
-function via_get_downlodablefiles_table($files, $via, $context, $viaurlparam = 'id', $cancreatevia) {
+function via_get_downlodablefiles_table($files, $via, $context, $cancreatevia, $viaurlparam = 'id') {
     global $CFG;
 
     $cmid = $context->instanceid;

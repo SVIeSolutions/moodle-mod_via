@@ -119,7 +119,7 @@ class xml{
         return xml_parse($this->parser, $data, true) ? $this->document : null;
     }
 
-    public function open(&$parser, $tag, $attributes) {
+    public function open($parser, $tag, $attributes) {
         $this->data = '';// Stores temporary cdata!
         $this->lastopenedtag = $tag;
         if (is_array($this->parent) and array_key_exists($tag, $this->parent)) {
@@ -148,13 +148,13 @@ class xml{
         $this->stack[] = &$this->parent;
     }
 
-    public function data(&$parser, $data) {
+    public function data($parser, $data) {
         if ($this->lastopenedtag != null) {
             $this->data .= $data;
         }
     }
 
-    public function close(&$parser, $tag) {
+    public function close($parser, $tag) {
         if ($this->lastopenedtag == $tag) {
             $this->parent = $this->data;
             $this->lastopenedtag = null;

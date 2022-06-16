@@ -1,4 +1,4 @@
-Version 2021011112
+Version 2022060701
 
 /* for more information on the version please see mod/via/version.php */
 /* This plugin requires Via 8.7 or greater */
@@ -9,7 +9,7 @@ Procedure for a NEW installation of this plugin :
 
 1 - Copy the Via folder into the mod folder of your moodle.
 
-2 - You will need to contact SVIeSolutions (http://sviesolutions.com/) for the following access codes.
+2 - You will need to contact SVIeSolutions (https://sviesolutions.com/) for USA/Canada or Classilio (https://www.classilio.com) for Europe for the following access codes.
     - API's URL
     - Via ID (CieID)
     - Via API ID (ApiID)
