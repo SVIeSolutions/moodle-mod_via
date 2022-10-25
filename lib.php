@@ -2358,3 +2358,45 @@ function view_delete_via_page($params) {
 
     return $o;
 }
+
+/**
+ * Validate if user has an edition capability
+ * @param integer $viaid : Id of the via activity
+ * @param context $context : Context
+ * @param string $error : error to raise
+ * @return void
+ */
+function via_validate_edition_capability($viaid, $context, $error) : void {
+    global $USER, $DB;
+    try {
+        if (!has_edition_capability($viaid, $context)) {
+            // Host should be able to edit resources
+            throw new moodle_exception($error);
+        }
+    } catch (Exception $e) {
+        throw new moodle_exception(get_error_message($e));
+    }
+}
+
+/**
+ * Validate if user has an edition capability
+ * @param integer $viaid : Id of the via activity
+ * @param context $context : Context
+ * @return boolean
+ */
+function has_edition_capability($viaid, $context) {
+    global $USER, $DB;
+    try {
+        if (!has_capability('mod/via:manage', $context)) {
+            $viauser = $DB->get_record('via_participants', array('userid' => $USER->id, 'activityid' => $viaid));
+            // Host should be able to edit resources
+            if (!isset($viauser) || $viauser->participanttype != 2) {
+                return false;
+            }
+        }
+        return true;
+    }
+    catch (Exception $e) {
+        return false;
+    }
+}

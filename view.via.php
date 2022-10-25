@@ -111,7 +111,7 @@ if (!has_capability('mod/via:access', $context) && !has_capability('moodle/site:
                 $uservalidated = $api->validate_via_user($USER, $ishtml5);
                 $viauser = $DB->get_record('via_users', array('viauserid' => $uservalidated));
             } catch (Exception $e) {
-                print_error('error:'.$e->getMessage(), 'via'). $muser->firstname.' '.$muser->lastname;
+                throw new moodle_exception(get_error_message($e). $muser->firstname.' '.$muser->lastname);
             }
         }
         try {
@@ -125,7 +125,7 @@ if (!has_capability('mod/via:access', $context) && !has_capability('moodle/site:
             }
             $connexion = true;
         } catch (Exception $e) {
-            print_error('error:'.$e->getMessage(), 'via'). $muser->firstname.' '.$muser->lastname;
+            throw new moodle_exception(get_error_message($e). $muser->firstname.' '.$muser->lastname);
         }
     }
 } else {
@@ -179,10 +179,10 @@ try {
             $reload = $CFG->wwwroot.'/mod/via/view.via.php?id='.$id.'&review='.$review.'&fa='.$fa.'&playbackid='.$playbackid.'&r=1';
             redirect($reload);
         } else {
-            $error = get_string('error:'.$e->getMessage(), 'via');
+            $error = get_error_message($e);
         }
     } else {
-        $error = get_string('error:'.$e->getMessage(), 'via');
+        $error = get_error_message($e);
     }
 
     $PAGE->set_title($course->shortname);

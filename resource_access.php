@@ -32,9 +32,7 @@ require_once($CFG->dirroot.'/mod/via/lib.php');
 require_once(get_vialib());
 
 $viaid = required_param('viaid', PARAM_INT);
-$fid = required_param('fid', PARAM_TEXT);// Edit viahtml recording.
-$subroomid = optional_param('srid',"", PARAM_TEXT);
-$isviahtml = $subroomid !== "";
+$fid = required_param('fid', PARAM_TEXT);
 
 if (! $via = $DB->get_record('via', array('id' => $viaid))) {
     print_error('Activity ID was incorrect');
@@ -43,24 +41,21 @@ if (! $via = $DB->get_record('via', array('id' => $viaid))) {
 
 $PAGE->set_url('/mod/via/view.php', array('id' => $viaid));
 
+$viauser = $DB->get_record('via_users', array('userid' => $USER->id));
+$vuserid = $viauser->viauserid;
+
+if (! $cm = get_coursemodule_from_instance("via", $via->id, null)) {
+    $cm->id = 0;
+}
+$context = via_get_module_instance($cm->id);
+$forceaccess = has_edition_capability($via->id, $context);
 
 $api = new mod_via_api();
 
 try {
-    $uservalidated = $api->validate_via_user($USER, $isviahtml);
-    $viauser = $DB->get_record('via_users', array('viauserid' => $uservalidated));
-    $vuserid = $viauser->viauserid;
-    if ($isviahtml){
-        $response = $api->get_resource_download_token_viahtml($vuserid, $fid, $subroomid);
-        if ($response) {
-            redirect($response['urlToken']);
-        }
-    } else {
-        $response = $api->via_download_document($via, $vuserid, $fid);
-
-        if ($response) {
-            redirect($response['DownloadToken']);
-        }
+    $response = $api->get_survey_token_viahtml($vuserid, $fid, $via->viaactivityid, $forceaccess);
+    if ($response) {
+        redirect($response['urlToken']);
     }
 
 } catch (Exception $e) {

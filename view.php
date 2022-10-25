@@ -41,6 +41,7 @@ $pbsync = optional_param('pbsync', null, PARAM_CLEAN);
 $id = optional_param('id', null, PARAM_INT);
 $viaid = optional_param('viaid', null, PARAM_INT);
 $viaidpage = optional_param('viaidpage', null, PARAM_INT);
+$subroomid = optional_param('subroomid', null, PARAM_TEXT);
 
 $viaurlparam = 'id';
 if ($viaidpage) {
@@ -140,8 +141,25 @@ try {
 }
 
 if (!$deleted) {
+    $cancreatevia = false;
 
-    if (has_capability('mod/via:manage', $context)) {
+    if ($viaid) {
+        require_once($CFG->dirroot.'/mod/viaassign/locallib.php');
+        $button = "";
+        $PAGE->navbar->add(format_string($via->name), '/mod/via/view.php?viaid='.$viaid);
+        $viaassign = new viaassign($context,  $cm, $course);
+
+        // Only the host can modify the activity! OR someone with editing rights!
+        if ($host = $DB->get_record('via_participants',
+                array('userid' => $USER->id, 'activityid' => $via->id, 'participanttype' => 2))
+            || has_capability('mod/viaassign:deleteothers', $context)) {
+            $cancreatevia = true;
+        }
+    } else {
+        $cancreatevia = has_edition_capability($via->id, $context);
+    }
+
+    if ($cancreatevia) {
         if (($via->usersynchronization + 300) < time() && $via->enroltype == 0 &&
             $via->activitytype == 1 && time() > ($via->datebegin + $via->duration * 60)) {
             // Check to sync users to the activity : permanent and not ended activities are already checked in the task.
@@ -162,7 +180,7 @@ if (!$deleted) {
     if (has_capability('mod/via:view', $context) && (is_mobile_phone() == false || $via->isnewvia == 1)
         && $via->activitytype != 3 && $via->activitytype != 4 && ($via->recordingmode != 0 || $via->activityversion == 1)
         && $via->viaactivityid <> null) {
-        if ($via->recordingmode == 1 || (isset($pbsync) && has_capability('mod/via:manage', $context))) { // Si on est en mode unifié
+        if ($via->recordingmode == 1 || (isset($pbsync) && $cancreatevia)) { // Si on est en mode unifié
             $via->playbacksync = 0;
         }
         via_sync_activity_playbacks($via);
@@ -172,27 +190,10 @@ if (!$deleted) {
     $PAGE->set_url('/mod/via/view.php', array('id' => $cm->id));
     $PAGE->requires->jquery();
     $PAGE->requires->js('/mod/via/javascript/viabutton.js');
+    $PAGE->requires->js('/mod/via/javascript/resource.js');
 
     $PAGE->set_title($course->shortname . ': ' . format_string($via->name));
     $PAGE->set_heading($course->fullname);
-
-    $cancreatevia = false;
-
-    if ($viaid) {
-        require_once($CFG->dirroot.'/mod/viaassign/locallib.php');
-        $button = "";
-        $PAGE->navbar->add(format_string($via->name), '/mod/via/view.php?viaid='.$viaid);
-        $viaassign = new viaassign($context,  $cm, $course);
-
-        // Only the host can modify the activity! OR someone with editing rights!
-        if ($host = $DB->get_record('via_participants',
-                array('userid' => $USER->id, 'activityid' => $via->id, 'participanttype' => 2))
-            || has_capability('mod/viaassign:deleteothers', $context)) {
-            $cancreatevia = true;
-        }
-    } else {
-        $cancreatevia = has_capability('mod/via:manage', $context);
-    }
 
     // Show some info for guests.
     if (isguestuser()) {
@@ -511,15 +512,28 @@ if ($deleted) {
         echo $OUTPUT->box_end();
 
         // Print downloadable files list.
-        if ( !$ishtml5 && $via->activitytype != 4 && $viewinfo && $via->activitytype != 3  && has_capability('mod/via:view', $context)) {
+        if ( $via->activitytype != 4 && $viewinfo && $via->activitytype != 3  && has_capability('mod/via:view', $context)) {
             if (isset($error)) {
                 echo  'this title aready exists';
             }
 
             $api = new mod_via_api();
-            $dlfiles = $api->list_downloadablefiles($via);
+            if (!$ishtml5) {
+                $dlfiles = $api->list_downloadablefiles($via);
 
-            echo via_get_downlodablefiles_table($dlfiles, $via, $context, $cancreatevia, $viaurlparam);
+                echo via_get_downlodablefiles_table($dlfiles, $via, $context, $cancreatevia, $viaurlparam);
+            } else {
+                // We get all subrooms of activity.
+                $subrooms = $api->viahtml_getsubroomlist($via->viaactivityid);
+
+                if (!isset($subroomid) || $subroomid == "" || !$cancreatevia) {
+                    // If no subroom is specified (or user has no rights), we use the main room (the first one).
+                    $subroomid = $subrooms[0]["subRoomId"];
+                }
+
+                $dlfiles = $api->viahtml_getsubroomresourcelist($via->viaactivityid, $subroomid);
+                echo via_get_downlodablefiles_table_viahtml($dlfiles, $subrooms, $via, $cancreatevia, $id, $subroomid);
+            }
         }
 
         // No point validating everthing, the activity is not yet planned, there are no playbacks and no users!

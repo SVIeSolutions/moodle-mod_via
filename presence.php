@@ -26,11 +26,11 @@
  */
 
 ?><link href="styles.css" rel="stylesheet" type="text/css" /><?php
-header('Content-type: text/html; charset=utf-8;');
 
 require_once("../../config.php");
 require_once($CFG->dirroot.'/mod/via/lib.php');
 require_once(get_vialib());
+header('Content-type: text/html; charset=utf-8;');
 
 global $CFG, $DB;
 
@@ -68,7 +68,7 @@ $table->width = '100%';
 
 if ($ishtml5) {
     $api = new mod_via_api();
-    $vroomLogData =  $api->via_get_user_logs_html5($via->viaactivityid);
+    $vroomlogdata =  $api->via_get_user_logs_html5($via->viaactivityid);
 }
 
 $participants = $DB->get_records_sql("SELECT v.id, v.userid, v.activityid, vu.viauserid, u.lastname, u.firstname,
@@ -84,7 +84,7 @@ $participants = $DB->get_records_sql("SELECT v.id, v.userid, v.activityid, vu.vi
 foreach ($participants as $participant) {
     if (!isset($participant->connection_duration)) {
         if (isset($participant->viauserid)) {
-            $userlogs = via_userlogs($participant, $vroomLogData);
+            $userlogs = via_userlogs($participant, $vroomlogdata, $ishtml5);
             $completestring = explode('(', $userlogs['0']);
             $string = $completestring['0'];
         } else {
@@ -98,7 +98,7 @@ foreach ($participants as $participant) {
             $presence->activityid = $participant->activityid;
 
             // TODO Provisional : userid should never be  null.
-            if(isset($participant->userid)) {
+            if (isset($participant->userid)) {
                 $DB->insert_record('via_presence', $presence);
             }
         }

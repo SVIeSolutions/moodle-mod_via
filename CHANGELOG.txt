@@ -1,4 +1,9 @@
 This file defines the changes made to Via - Virtual classroom
+last update 25/07/2022 2022060702
+- Add resource management for ViaHTML
+- Fix for Presence page which could have an "communication with the server" error
+- Allow Host to manage resources and playbacks
+- Show playback presence duration for viahtml5 activities
 
 last update 07/06/2022 2022060701
 - Plugin is now compatible with Moodle 4.0 

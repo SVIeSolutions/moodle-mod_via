@@ -83,7 +83,7 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
     /**
      * This is method process_via
      *
-     * @param mixed $data This is a description
+     * @param mixed $data data processed
      * @return mixed This is the return value description
      *
      */
@@ -105,25 +105,7 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                 // We change the activity type!
                 // There is no start date!
                 // And no users!
-                if (strpos($data->name, get_string('unplanned', 'via')) == false) {
-                    $data->name = $data->name . ' - ' . get_string('unplanned', 'via');
-                } else {
-                    $data->name = $data->name;
-                }
-                $data->include_userInfo = 0;
-                $data->include_surveyandwboards = get_config('via', 'via_duplicatecontent');
-                $data->activitytype = 3; // New type which is unplanned!
-                $data->datebegin = 0;
-                $data->playbacksynch = 0;
-                $data->viaactivityid = 0;
-                // We do not want to have a group mode imposed on the unplanned activity!
-                if ($data->groupingid != 0 || $data->groupid != 0) {
-                    $data->groupingid = 0;
-                    $data->groupid = 0;
-
-                    $DB->set_field('course_modules', 'groupmode', 0, array('id' => $this->task->get_moduleid()));
-                    $DB->set_field('course_modules', 'groupingid', 0, array('id' => $this->task->get_moduleid()));
-                }
+                $this->process_unplanned_via($data);
 
             } else {
                 // Full restore!
@@ -142,41 +124,45 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
                 // If it exists we are duplicating or restoring a course and therefore create a new id!
                 if ($exists) {
 
-                    if ( $controller->type == "activity") {
-                        $data->include_userInfo = 1;
-                        $data->include_surveyandwboards = get_config('via', 'via_duplicatecontent');
-                    } else {
-                        // Course backup/restore.
-                        $data->include_userInfo = 1;
-                        $data->include_surveyandwboards = get_config('via', 'via_backupcontent');
-                        $data->course = $controller->itemid;
+                     if ( get_config('via', 'via_unplanned')) {
+                         $this->process_unplanned_via($data);
+                     } else {
+                        if ( $controller->type == "activity") {
+                            $data->include_userInfo = 1;
+                            $data->include_surveyandwboards = get_config('via', 'via_duplicatecontent');
+                        } else {
+                            // Course backup/restore.
+                            $data->include_userInfo = 1;
+                            $data->include_surveyandwboards = get_config('via', 'via_backupcontent');
+                            $data->course = $controller->itemid;
 
-                        // We also need to update the groupingid if there is one.
-                        if ($data->groupingid != 0) {
-                            $oldgroup = $DB->get_record('groupings', array('id' => $data->groupingid));
-                            $newgroup = $DB->get_record('groupings', array('courseid' => $data->course, 'name' => $oldgroup->name));
-                            $data->groupingid = $newgroup->id;
-                        }
-                    }
-
-                    $data->datebegin = strtotime("+1 month", time());
-
-                    // Creates new activity in Via too!
-                    $api = new mod_via_api();
-                    if ($data->viaactivityid != null) {
-                        try {
-                            if ($data->activityversion == 0) {
-                                $newactivityid = $api->activity_duplicate($data);
-                            } else {
-                                $newactivityid = $api->activity_duplicate_html5($data);
+                            // We also need to update the groupingid if there is one.
+                            if ($data->groupingid != 0) {
+                                $oldgroup = $DB->get_record('groupings', array('id' => $data->groupingid));
+                                $newgroup = $DB->get_record('groupings', array('courseid' => $data->course, 'name' => $oldgroup->name));
+                                $data->groupingid = $newgroup->id;
                             }
-                        } catch (Exception $exception) {
-                            mtrace(strftime('%c').' '.$exception->getMessage().' file '.__FILE__.', line '.__LINE__.', data '.json_encode($data));
                         }
-                    }
 
-                    $data->id = "";
-                    $data->viaactivityid = $newactivityid;
+                        $data->datebegin = strtotime("+1 month", time());
+
+                        // Creates new activity in Via too!
+                        $api = new mod_via_api();
+                        if ($data->viaactivityid != null) {
+                            try {
+                                if ($data->activityversion == 0) {
+                                    $newactivityid = $api->activity_duplicate($data);
+                                } else {
+                                    $newactivityid = $api->activity_duplicate_html5($data);
+                                }
+                            } catch (Exception $exception) {
+                                mtrace(strftime('%c').' '.$exception->getMessage().' file '.__FILE__.', line '.__LINE__.', data '.json_encode($data));
+                            }
+                        }
+
+                        $data->id = "";
+                        $data->viaactivityid = $newactivityid;
+                    }
                 } else {
                     // If it is an unplanned activity, there's no reason to plan it!
                     if ($data->activitytype != 3) {
@@ -211,9 +197,39 @@ class restore_via_activity_structure_step extends restore_activity_structure_ste
     }
 
     /**
+     * This is method process_unplanned_via
+     *
+     * @param mixed $data data processed
+     *
+     */
+    protected function process_unplanned_via($data) {
+        global $DB;
+
+        if (strpos($data->name, get_string('unplanned', 'via')) == false) {
+                    $data->name = $data->name . ' - ' . get_string('unplanned', 'via');
+                } else {
+                    $data->name = $data->name;
+                }
+                $data->include_userInfo = 0;
+                $data->include_surveyandwboards = get_config('via', 'via_duplicatecontent');
+                $data->activitytype = 3; // New type which is unplanned!
+                $data->datebegin = 0;
+                $data->playbacksynch = 0;
+                $data->viaactivityid = 0;
+                // We do not want to have a group mode imposed on the unplanned activity!
+                if ($data->groupingid != 0 || $data->groupid != 0) {
+                    $data->groupingid = 0;
+                    $data->groupid = 0;
+
+                    $DB->set_field('course_modules', 'groupmode', 0, array('id' => $this->task->get_moduleid()));
+                    $DB->set_field('course_modules', 'groupingid', 0, array('id' => $this->task->get_moduleid()));
+                }
+    }
+
+    /**
      * This is method process_via_participant
      *
-     * @param mixed $data This is a description
+     * @param mixed $data data processed
      * @return mixed This is the return value description
      *
      */

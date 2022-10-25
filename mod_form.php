@@ -592,11 +592,11 @@ class mod_via_mod_form extends moodleform_mod {
                         case 'DefaultActivityVersion' :
                             switch($svi->value) {
                                 case 3:
-                                    //Vroom.
+                                    // Vroom.
                                     $defaultvalues['activityversion'] = 1;
                                     break;
                                 default:
-                                    //Via.
+                                    // Via.
                                     $defaultvalues['activityversion'] = 0;
                                     break;
                             }

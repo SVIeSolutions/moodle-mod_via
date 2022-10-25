@@ -96,7 +96,7 @@ try {
         .$CFG->wwwroot.'/mod/via/view.php?'.$viaurlparam.'='.$viaurlparamvalue.'">'
         .get_string('return', 'via').'</a></p>';
     echo $OUTPUT->box_start('notice');
-    echo get_string('error:'.$e->getMessage(), 'via');
+    echo get_error_message($e);
     echo $OUTPUT->box_end();
     echo $OUTPUT->footer();
 }

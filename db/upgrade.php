@@ -527,7 +527,7 @@ function xmldb_via_upgrade($oldversion = 0) {
     }
 
     // Moodle 4.0 update
-    if ($oldversion < 2022060701) {
-        upgrade_mod_savepoint($result, 2022060701, 'via');
+    if ($oldversion < 2022060702) {
+        upgrade_mod_savepoint($result, 2022060702, 'via');
     }
 }

@@ -66,18 +66,14 @@ if (!$course = $DB->get_record('course', array('id' => $via->course))) {
 require_login($course->id, false, $cm);
 $context = via_get_module_instance($cm->id);
 
-$cancreatevia = has_capability('mod/via:manage', $context);
-
 if ($viaid) {
     require_once($CFG->dirroot.'/mod/viaassign/locallib.php');
     $viaassign = new viaassign($context,  $cm, $course);
-    if ($viaassign->can_create_via($USER->id, $viaassign->get_instance()->userrole)) {
-        $cancreatevia = true;
+    if (!$viaassign->can_create_via($USER->id, $viaassign->get_instance()->userrole)) {
+        throw new moodle_exception('You do not have the permission to edit via playbacks');
     }
-}
-
-if (!$cancreatevia) {
-    print_error('You do not have the permission to edit via playbacks');
+} else {
+    via_validate_edition_capability($id, $context, 'You do not have the permission to edit via playbacks');
 }
 
 if ($edit == get_string('cancel', 'via')) {

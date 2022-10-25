@@ -341,9 +341,11 @@ class mod_via_api {
             $data .= "<DateBegin>".$this->change_date_format($via->datebegin)."</DateBegin>";
             $data .= "<Duration>".$via->duration."</Duration>";
         }
-        $data .= "<IncludeUsers>".$via->include_userInfo."</IncludeUsers>";// 0 = No; 1 = Yes!
+
+        $data .= "<IncludeUsers>".$via->include_userInfo."</IncludeUsers>";
         $data .= "<IncludeDocuments>1</IncludeDocuments>";// 1 = Yes : documents are always added!
-        $data .= "<IncludeSurveyAndWBoards>".$via->include_surveyandwboards."</IncludeSurveyAndWBoards>";// 0 = No; 1 = Yes!
+        // 0 = No; 1 = Yes.
+        $data .= "<IncludeSurveyAndWBoards>".$via->include_surveyandwboards."</IncludeSurveyAndWBoards>";
         $data .= "</cApiActivityDuplicate>";
         $data .= "</soap:Body>";
         $data .= "</soap:Envelope>";
@@ -671,7 +673,7 @@ class mod_via_api {
      * @param object $via the via
      * @param integer $redirect where to redirect
      * @param string $playback id of the playback to redirect to
-     * @param boolean $forceaccess permits those with editing rights in moodle to view recording taht are not public
+     * @param boolean $forceaccess permits those with editing rights in moodle to view recording that are not public
      * @param boolean $forceedit permits those with editing rights in moodle to edit recording
      * @param integer $mobile is userid already validated by uapi/auth
      * @return string URL for redirect
@@ -2082,7 +2084,12 @@ class mod_via_api {
         $data .= "'email' : '".strtolower($muser->email)."',";
         if ($edit) {
             if (get_config('via', 'lara_branch') != null && get_config('via', 'lara_branch') != '' && get_config('via', 'lara_branch') != $userbranchid) {
-                $this->user_add_branch($muser->viauserid, get_config('via', 'lara_branch'));
+                try {
+                    $this->user_add_branch($muser->viauserid, get_config('via', 'lara_branch'));
+                 }
+                 catch (Exception $e) {
+                    // Do Nothing and keep going.
+                 }
             }
 
         } else {
@@ -2172,8 +2179,6 @@ class mod_via_api {
             if ($resultdata["errors"]["code"] == 1701) {
                 $resultdata = "ACTIVITY_DOES_NOT_EXIST";
                 return $resultdata;
-            } else {
-                $this->check_api_error($resultdata);
             }
         }
 
@@ -2391,7 +2396,7 @@ class mod_via_api {
 
         $this->check_api_error($resultdata);
 
-        return $resultdata->id;
+        return $resultdata["id"];
     }
 
     /**
@@ -2657,8 +2662,206 @@ class mod_via_api {
             throw new Exception("Problem adding branch for VIA activity");
         }
 
+        if (isset($resultdata["errors"])) {
+            // "User already in branch".
+            if ($resultdata["errors"]["code"] == 211) {
+                // This should not return an error.
+                return $resultdata;
+            }
+        }
         $this->check_api_error($resultdata);
 
         return $resultdata["id"];
+    }
+
+    /**
+     * Add branch to a user
+     * @param string $activityid the id of the activity
+     * @return  array containing response from Via
+     */
+    public function viahtml_getsubroomlist($activityid) {
+        global $CFG;
+
+        $url = "activity/getsubroomlist";
+
+        $data = "{'id' : '" . $activityid . "'}";
+
+        $response = $this->send_soap_enveloppe_json($data, $url);
+
+        if (!$resultdata = $response['datajson']) {
+            throw new Exception("Problem getting subrooms for VIA activity");
+        }
+
+        $this->check_api_error($resultdata);
+
+        return $resultdata;
+    }
+
+    /**
+     * Add branch to a user
+     * @param string $activityid the id of the activity
+     * @param string $subroomid the id of the subroom
+     * @return  array containing response from Via
+     */
+    public function viahtml_getsubroomresourcelist($activityid, $subroomid) {
+        global $CFG;
+
+        $url = "activityresource/getsubroomresourcelist";
+
+        $data = "{'activityId' : '" . $activityid . "', 'subRoomId' : '" . $subroomid . "'}";
+
+        $response = $this->send_soap_enveloppe_json($data, $url);
+
+        if (!$resultdata = $response['datajson']) {
+            throw new Exception("Problem getting resources for VIA activity");
+        }
+
+        $this->check_api_error($resultdata);
+
+        return $resultdata;
+    }
+    /**
+     * download document for a given viahtml activity
+     *
+     * @param string $viauserid the userid
+     * @param string $fileid the id of the document
+     * @param string $resourceid the id of the subroom
+     * @return string with download token for redirect
+     */
+    public function get_resource_download_token_viahtml($viauserid, $resourceid, $subroomid) {
+        global $CFG;
+
+        $url = "activityresource/getresourcedownloadtoken";
+
+        $data = "{subRoomId : '".$subroomid."', userId : '".$viauserid."', resourceId : '".$resourceid."'}";
+
+        $response = $this->send_soap_enveloppe_json($data, $url);
+
+        if (!$resultdata = $response['datajson']) {
+            throw new Exception("Problem getting download token to access resource");
+        }
+
+        $this->check_api_error($resultdata);
+
+        return $resultdata;
+    }
+
+    /**
+     * Get a link with a token to access a survey
+     *
+     * @param string $viauserid the userid
+     * @param string $resourceid the id of the resource
+     * @param string $activityid the id of the activity
+     * @param bool $forceaccess show all results for admin only
+     * @return string with download token for redirect
+     */
+    public function get_survey_token_viahtml($viauserid, $resourceid, $activityid, $forceaccess = false) {
+        global $CFG;
+
+        $url = "activityresource/getactivitysurveytoken";
+
+        $data = "{activityId : '".$activityid."', userId : '".$viauserid."', resourceId : '".$resourceid."', forceAccess : '". ($forceaccess ? "true" : "false")."'}";
+
+        $response = $this->send_soap_enveloppe_json($data, $url);
+
+        if (!$resultdata = $response['datajson']) {
+            throw new Exception("Problem getting access token for survey");
+        }
+
+        $this->check_api_error($resultdata);
+
+        return $resultdata;
+    }
+
+    /**
+     * Get a link with a token to access my resources in lara.
+     *
+     * @param string $viauserid the userid
+     * @param string $activityid the id of the activity
+     * @param string $resourceid optional id of specific resource
+     * @return string with download token for redirect
+     */
+    public function get_resources_token_viahtml($viauserid, $activityid, $resourceid = null) {
+        global $CFG;
+
+        $url = "activityresource/getmyresourcetoken";
+
+        $data = "{activityId : '".$activityid."', userId : '".$viauserid."'";
+
+        if (isset($resourceid)) {
+            $data .= ", resourceId : '".$resourceid."'";
+        }
+        $data .= "}";
+
+        $response = $this->send_soap_enveloppe_json($data, $url);
+
+        if (!$resultdata = $response['datajson']) {
+            throw new Exception("Problem getting access token for myresources");
+        }
+
+        $this->check_api_error($resultdata);
+
+        return $resultdata;
+    }
+
+    /**
+     * delete a document for a given viahtml activity
+     *
+     * @param string $activityid the id of the activity
+     * @param string $subroomid the id of the subroom
+     * @param string $resourceid the id of the resource
+     * @return string with download token for redirect
+     */
+    public function delete_resource_viahtml($activityid, $subroomid, $resourceid) {
+        global $CFG;
+
+        $url = "activityresource/delete";
+
+        $data = "{activityId : '".$activityid."', subRoomId : '".$subroomid."', resourceId : '".$resourceid."'}";
+
+        $response = $this->send_soap_enveloppe_json($data, $url);
+
+        if (!$resultdata = $response['datajson']) {
+            throw new Exception("Problem deleting resource");
+        }
+
+        $this->check_api_error($resultdata);
+
+        return $resultdata;
+    }
+
+    /**
+     * delete a document for a given viahtml activity
+     *
+     * @param string $activityid the id of the activity
+     * @param string $subroomid the id of the subroom
+     * @param string $resourceid the id of the resource
+     * @param string $visibilitytype enum corresponding to visibility
+     * @param bool $isdownloadable can the resource be downloaded
+     * @return string with download token for redirect
+     */
+    public function edit_resource_viahtml($activityid, $subroomid, $resourceid, $visibilitytype = null, $isdownloadable = null) {
+        global $CFG;
+
+        $url = "activityresource/editresource";
+
+        $data = "{activityId : '".$activityid."', subRoomId : '".$subroomid."', resourceId : '".$resourceid."'";
+        if (isset($visibilitytype)) {
+            $data .= ", visibilityType : '".$visibilitytype."'";
+        }
+        if (isset($isdownloadable)) {
+            $data .= ", isDownloadable : ". (int) $isdownloadable ."";
+        }
+        $data .= "}";
+
+        $response = $this->send_soap_enveloppe_json($data, $url);
+
+        if (!$resultdata = $response['datajson']) {
+            throw new Exception("Problem deleting resource");
+        }
+
+        $this->check_api_error($resultdata);
+
+        return $resultdata;
     }
 }

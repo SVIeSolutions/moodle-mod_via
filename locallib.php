@@ -817,34 +817,29 @@ function via_get_table_head($via, $presence = null) {
     $table->head[] = get_string("role", "via");
     $table->head[] = get_string("lastname").', '.get_string("firstname");
 
-    if (!$ishtml5) {
-        if ($presence) {
-            $table->id = 'viapresence';
-            $table->head[] = get_string("presenceheader", "via");
-            $table->align = array ('left', 'left', 'center');
+    if ($presence) {
+        $table->id = 'viapresence';
+        $table->head[] = get_string("presenceheader", "via");
+        $table->align = array ('left', 'left', 'center');
 
-            if ($via->recordingmode != 0) {
-                $table->head[] = get_string("playbackheader", "via");
-                $table->align[] = 'center';
-            }
-            if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation) {
-                $table->head[] = get_string("confirmationstatus", "via");
-                $table->align[] = 'center';
-            }
-
-        } else {
-            $table->id = 'viaparticipants';
-            $table->head[] = get_string("config", "via");
-            $table->align = array ('left', 'left', 'center');
-
-            if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation) {
-                $table->head[] = get_string("confirmationstatus", "via");
-                $table->align[] = 'center';
-            }
+        if ($via->recordingmode != 0 || $ishtml5) {
+            $table->head[] = get_string("playbackheader", "via");
+            $table->align[] = 'center';
         }
-    } else {
+        if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation && !$ishtml5) {
+            $table->head[] = get_string("confirmationstatus", "via");
+            $table->align[] = 'center';
+        }
+
+    } else if (!$ishtml5) {
         $table->id = 'viaparticipants';
-        $table->align = array ('left', 'left');
+        $table->head[] = get_string("config", "via");
+        $table->align = array ('left', 'left', 'center');
+
+        if (get_config('via', 'via_participantmustconfirm') && $via->needconfirmation ) {
+            $table->head[] = get_string("confirmationstatus", "via");
+            $table->align[] = 'center';
+        }
     }
 
     return $table;
@@ -854,7 +849,7 @@ function via_get_table_head($via, $presence = null) {
  * Builds presence status or user list table
  *
  * @param object $via
- * @param object $conext
+ * @param object $context
  * @param integer $presence
  * @param integer $viaidpage
  * @return populated table
@@ -974,7 +969,7 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
                 }
 
                 if ($presence) {
-                    $userlogs = via_userlogs($participant, $vroomlogdata);
+                    $userlogs = via_userlogs($participant, $vroomlogdata, $ishtml5);
 
                     $i = 1;
                     // Values; $info2 = live time, $info1 = playback time!
@@ -1013,7 +1008,7 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
                     $info3 = via_get_confirmationstatus($participant->confirmationstatus);
                 }
 
-                if ((!$presence && isset($info2)) || ($presence && $via->recordingmode != 0)) {
+                if ((!$presence && isset($info2)) || ($presence && ($via->recordingmode != 0 || $ishtml5))) {
                     if (isset($info3)) {
                         $table->data[] = array ($role, $userlink, $info1, $info2, $info3);
                     } else {
@@ -1052,16 +1047,18 @@ function via_get_participants_table($via, $context, $presence = null, $viaidpage
  *
  * @param object $participant
  * @param array $vroomlogdata VRoomSession array of all activity's users logs
+ * @param bool $ishtml5 If Via is an html5 activity
  * @return array presence and playback times.
  */
-function via_userlogs($participant, $vroomlogdata) {
+function via_userlogs($participant, $vroomlogdata, $ishtml5) {
     global $DB;
 
     $playback = "";
+    $hasrecording = $participant->recordingmode != 0 || $ishtml5;
 
     // We only update the information if the status was not already calcultated and
     // that we don't need to update the recording information!
-    if (!isset($participant->status) || $participant->recordingmode != 0) {
+    if (!isset($participant->status) || $hasrecording) {
         if ($participant->viauserid) {
 
             if (!isset($vroomlogdata)) {
@@ -1095,7 +1092,7 @@ function via_userlogs($participant, $vroomlogdata) {
                     $live = get_string('absent', 'via') .' (<span class="viared">'.$duration.'</span>)';
                 }
 
-                if ($participant->recordingmode != 0 && $playbackduration) {
+                if ($hasrecording && $playbackduration) {
                     $duration = via_get_converted_time($playbackduration);
                     $playback = '<span class="viagreen">'.$duration. '</span>';
                 } else {
@@ -2192,4 +2189,222 @@ function via_synch_branches_activity($branchid) {
         return false;
     }
     return true;
+}
+/**
+ * Create file table for via activity details page.
+ *
+ * @param array $files list of via downloadable files to the activity
+ * @param array $subrooms list of via subrooms to add in the select
+ * @param object $via the via object
+ * @param bool $cancreatevia validate rights of user
+ * @param int $cmid id of the course module
+ * @param string $subroomid id of the selected subroom
+ * @return array table containing the resources
+ */
+function via_get_downlodablefiles_table_viahtml($files, $subrooms, $via, $cancreatevia, $cmid, $subroomid) {
+    global $CFG;
+    $table ="";
+    $isbreakout = false;
+    if($cancreatevia && count($subrooms) > 1) {
+        $table .= "<select class='custom-select' onchange='subroomselect(this.value,".$cmid.");'>";
+        foreach($subrooms as $subroom) {
+            $selected = (urldecode($subroomid) == urldecode($subroom["subRoomId"]))? "selected = 'true'" : "";
+            // "Main Room" is default title and not localized.
+            if ($subroom == $subrooms[0]){
+                $title = get_string("resources_mainroom", "via");
+            } else {
+                $title = $subroom["title"];
+                if (urldecode($subroomid) == urldecode($subroom["subRoomId"])) {
+                    $isbreakout = true;
+                }
+            }
+            $table .= "<option value='".$subroom["subRoomId"]."' ". $selected .">".$title."</option>";
+        }
+        $table .= "</select>";
+    }
+
+    $table .= "<table cellpadding='2' cellspacing='0' class='generaltable boxalignleft' id='via_downloadablefiles'>";
+
+    $resourcecount = 0;
+
+    $downloadbtntemplate = '<a title="'.get_string("df_header_download", "via").'"';
+    $downloadbtntemplate .=' href="'.$CFG->wwwroot.'/mod/via/download_document.php?viaid='.$via->id.'&srid='.urlencode($subroomid);
+    $downloadbtntemplate .= '&fid=%RESOURCEID%">'.get_string("df_header_download", "via").'</a>';
+
+    $accessbtntemplate = '<a target="_blank" title="'.get_string("resources_access_result", "via").'" href="'.$CFG->wwwroot;
+    $accessbtntemplate .= '/mod/via/resource_access.php?viaid='.$via->id;
+    $accessbtntemplate .= '&fid=%RESOURCEID%">'.get_string("resources_access_result", "via").'</a>';
+
+    $removebtntemplate = '<a class="menubtn" title="'.get_string("resources_remove", "via").'" href="'.$CFG->wwwroot;
+    $removebtntemplate .= '/mod/via/delete_resource.php?viaid='.$via->id.'&srid='.urlencode($subroomid);
+    $removebtntemplate .= '&rid=%RESOURCEID%&rname=%RESOURCENAME%&ft=%RESOURCETYPE%"/>';
+    $removebtntemplate .= ' <i class="fa fa-times via"></i>'.get_string("resources_remove", "via").'</a>';
+
+    $editbtntemplate = '<a class="menubtn" title="'.get_string("resources_visibility_edit", "via").'" href="'.$CFG->wwwroot;
+    $editbtntemplate .= '/mod/via/edit_resource.php?viaid='.$via->id.'&srid='.urlencode($subroomid);
+    $editbtntemplate .= '&rid=%RESOURCEID%&rname=%RESOURCENAME%&ft=%RESOURCETYPE%&isd=%ISDOWNLOADABLE%&vtype=%VISIBILITYTYPE%&ibo=%ISBREAKOUT%"/>';
+    $editbtntemplate .= ' <i class="fa fa-pencil via"></i>'.get_string("resources_visibility_edit", "via").'</a>';
+
+    if ($files && $files != "[]") {
+        $tableheader = "<thead><th>" . get_string("df_header_title", "via") . "</th>
+            <th>".get_string("df_header_type", "via")."</th><th>".get_string("df_header_size", "via")."</th>
+            <th class=\"tdcenter\">".get_string("df_header_nbpages", "via"). "</th>";
+        if ($cancreatevia) {
+            $tableheader .= "<th class=\"tdcenter\">".get_string("df_header_visibility", "via")."</th>";
+        }
+        $tableheader .= "<th class=\"tdcenter\">".get_string("df_header_view", "via")."</th>";
+        if ($cancreatevia) {
+            $tableheader .= "<th class=\"tdcenter\">".get_string("df_header_option", "via")."</th>";
+        }
+        $tableheader .= "</thead>";
+        $tablecontent = "";
+        $isempty = true;
+        foreach ($files as $key => $file) {
+            $resourcetype = $file["resourceType"];
+            if (!$cancreatevia && ($file["visibilityType"] == "0" || ($resourcetype == "1" && !$file["isDownloadable"]))) {
+                // Resource should be public or user should be admin.
+                // Document should be downloadable for non admin.
+                continue;
+            }
+            $isempty = false;
+            $tablecontent .= "<tr>";
+
+            $tablecontent .= "<td class='title'>";
+
+            $tablecontent .= $file["title"];
+
+            $tablecontent .= "</td>";
+
+            $tablecontent .= "<td class='type'>";
+
+            if ( $resourcetype == 1) {
+                switch ($file["category"]) {
+                    case "Audio":
+                        $tablecontent .= get_string("resource_audio", "via");
+                        break;
+                    case "Video":
+                        $tablecontent .= get_string("resource_video", "via");
+                        break;
+                    case "Image":
+                        $tablecontent .= get_string("resource_image", "via");
+                        break;
+                    case "Url":
+                        $tablecontent .= get_string("resource_url", "via");
+                        break;
+                    default:
+                        $tablecontent .= get_string("resource_document", "via");
+                }
+                if (isset($file["fileType"])) {
+                    $tablecontent .= ' '.$file["fileType"];
+                }
+            } else if ($resourcetype == 5) {
+                $tablecontent .= get_string("resource_survey", "via");
+            } else if ($resourcetype == 10) {
+                $tablecontent .= get_string("resource_quiz", "via");
+            } else if ($resourcetype == 11) {
+                $tablecontent .= get_string("resource_formative_quiz", "via");
+            } else if ($resourcetype == 14) {
+                $tablecontent .= get_string("resource_whiteboard", "via");
+            }
+
+            $tablecontent .= "</td>";
+
+            $tablecontent .= "<td class='size'>";
+            if ($resourcetype == 1) {
+                $size = round($file["fileSize"] / (float)1024, 2);
+                if ($size > 1024) {
+                    $size = round($size / (float)1024, 2);
+                    $size .= " Mo";
+                } else {
+                    $size .= " Ko";
+                }
+
+                $tablecontent .= $size;
+            }
+
+            $tablecontent .= "</td>";
+
+            $tablecontent .= "<td class='tdcenter'>";
+
+            if ($resourcetype == 1) {
+                // Only for documents.
+                $tablecontent .= $file["nbPages"];
+            }
+
+            $tablecontent .= "</td>";
+            if ($cancreatevia) {
+                $tablecontent .= "<td class='tdcenter'>";
+
+                if ($resourcetype == "1" && $file["isDownloadable"]) {
+                    // For document : isDownloadable means visible for all users.
+                    $tablecontent .= get_string("resource_visibility_1", "via");
+                } else if ($resourcetype == "1" && !$file["isDownloadable"]) {
+                    // For document : Not isDownloadable means visible only for admins.
+                    $tablecontent .= get_string("resource_visibility_0", "via");
+                } else {
+                    $tablecontent .= get_string("resource_visibility_".$file["visibilityType"], "via");
+                }
+
+                $tablecontent .= "</td>";
+            }
+
+            $tablecontent .= "<td class='tdcenter'>";
+
+            if ($resourcetype == "1" && ($file["isDownloadable"]|| $cancreatevia)) {
+                 // 1 = File_document_.
+                $tablecontent .= str_replace("%RESOURCEID%", $file["resourceId"], $downloadbtntemplate);
+            } else if ($resourcetype == "5" || $resourcetype == "10" || $resourcetype == "11") {
+                // Survey = 5 || Quiz = 10 || FormativeQuiz = 11.
+                $tablecontent .= str_replace("%RESOURCEID%", $file["resourceId"], $accessbtntemplate);
+            } else {
+                // 14 = Whiteboard.
+            }
+
+            $tablecontent .= "</td>";
+            if ($cancreatevia) {
+                $tablecontent .= "<td class='tdcenter menucell'>";
+                if ($resourcetype == "1") {
+                    // 1 = Document.
+                    // Survey = 5 || Quiz = 10 || FormativeQuiz = 11.
+                    $tablecontent .= str_replace(array("%RESOURCEID%", "%RESOURCENAME%", "%RESOURCETYPE%", "%ISDOWNLOADABLE%", "%VISIBILITYTYPE%", "%ISBREAKOUT%"),
+                        array( $file["resourceId"],urlencode($file["title"]), $resourcetype, (int) $file["isDownloadable"],
+                        $file["visibilityType"], (int) $isbreakout), $editbtntemplate);
+                } else if (($resourcetype == "5" || $resourcetype == "10" || $resourcetype == "11") && !$isbreakout) {
+                    // Survey = 5 || Quiz = 10 || FormativeQuiz = 11.
+                    $tablecontent .= str_replace(array("%RESOURCEID%", "%RESOURCENAME%", "%RESOURCETYPE%", "%ISDOWNLOADABLE%", "%VISIBILITYTYPE%", "%ISBREAKOUT%"),
+                       array($file["resourceId"],urlencode($file["title"]), $resourcetype, (int) $file["isDownloadable"],
+                       $file["visibilityType"], (int) $isbreakout), $editbtntemplate);
+                }
+
+                $tablecontent .= str_replace(array("%RESOURCEID%", "%RESOURCENAME%", "%RESOURCETYPE%"),
+                    array($file["resourceId"], urlencode($file["title"]), $resourcetype), $removebtntemplate)."</td>";
+            }
+
+            $tablecontent .= "</tr>";
+
+            $resourcecount = $resourcecount + 1;
+        }
+        if ($isempty) {
+            $table .= "<tr><td>".get_string("df_nofiles", "via")."</td></tr>";
+        } else {
+            $table .= $tableheader . $tablecontent;
+        }
+    } else {
+        $table .= "<tr><td>".get_string("df_nofiles", "via")."</td></tr>";
+    }
+
+    $managebtn = "";
+
+    if ($cancreatevia) {
+        $managebtn = '<a target="_blank" style="float:right;padding-top:10px;cursor:pointer;" class="viabtnlink" title="'.get_string("df_button_manage", "via").
+        $managebtn .= '" href="'.$CFG->wwwroot.'/mod/via/access_lara_resources.php?viaid='.$via->id.'"/>';
+        $managebtn .= ' <i class="fa fa-folder via"></i>'.get_string("df_button_manage", "via").'</a>';
+
+    }
+
+    echo $managebtn. "<h2 class='main'>".get_string("resources", "via"). " (".$resourcecount.")</h2>";
+
+    $table .= "</table>";
+
+    return $table;
 }

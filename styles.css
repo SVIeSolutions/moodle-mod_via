@@ -398,3 +398,19 @@ a.btn-primary.dimmed_text {
     color: #212529 !important;
     padding: 6px 12px;
 }
+.resourceaccess {
+    height: 24px;
+    width: 24px;
+    padding-right: 5px;
+}
+.menubtn {
+    float: left;
+    cursor: pointer;
+    text-align: left;
+}
+
+.menucell {
+    display: flex;
+    flex-direction: column;
+    text-align: left !important;
+}
