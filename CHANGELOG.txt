@@ -1,4 +1,7 @@
 This file defines the changes made to Via - Virtual classroom
+last update 01/03/2024 2024030101
+- Ensure Azure compatibility
+
 last update 25/07/2022 2022060702
 - Add resource management for ViaHTML
 - Fix for Presence page which could have an "communication with the server" error

@@ -1872,7 +1872,7 @@ class mod_via_api {
         $headers = array("Content-type: text/json;charset=\"utf-8\"",
             "Accept: text/json",
             "Content-length: ".strlen($data),
-            "ApiID :".$apiid
+            "ApiID: ".$apiid
             );
 
         // Setting the curl parameters.
