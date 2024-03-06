@@ -1,4 +1,7 @@
 This file defines the changes made to Via - Virtual classroom
+last update 01/03/2024 2024030601
+- Fix install error
+
 last update 01/03/2024 2024030101
 - Ensure Azure compatibility
 
