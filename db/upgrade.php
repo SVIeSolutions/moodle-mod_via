@@ -530,4 +530,9 @@ function xmldb_via_upgrade($oldversion = 0) {
     if ($oldversion < 2022060702) {
         upgrade_mod_savepoint($result, 2022060702, 'via');
     }
+
+    // Moodle Azure Compatibility
+    if ($oldversion < 2024030602) {
+        upgrade_mod_savepoint($result, 2024030602, 'via');
+    }
 }
